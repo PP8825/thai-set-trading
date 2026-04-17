@@ -1,0 +1,46 @@
+name: SET EOD Portfolio Report
+
+on:
+  schedule:
+    # 4:35 PM Bangkok = 09:35 UTC, Monday–Friday
+    - cron: '35 9 * * 1-5'
+  workflow_dispatch:   # Allow manual trigger from GitHub UI
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance pandas requests openpyxl -q
+
+      - name: Run EOD report
+        env:
+          LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: python set_eod_report.py
+
+      - name: Save report and portfolio state
+        run: |
+          git config user.name "SET Trading Bot"
+          git config user.email "bot@set-trading.local"
+          git add set_portfolio.json Portfolio_Reports/
+          git diff --staged --quiet || git commit -m "EOD report $(date +%Y%m%d) [skip ci]"
+          git push
+
+      - name: Upload Excel report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: portfolio-report-${{ github.run_id }}
+          path: Portfolio_Reports/Portfolio_*.xlsx
+          retention-days: 30

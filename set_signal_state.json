@@ -1,0 +1,592 @@
+{
+  "SCC.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 47.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "MINT.BK": {
+    "score": 2,
+    "signal": "BUY",
+    "price": 19.899999618530273,
+    "buy_alerted": true,
+    "sell_alerted": false
+  },
+  "PTTGC.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 47.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "TOP.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 47.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "IVL.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 47.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "GULF.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 47.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "BANPU.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 353.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "RATCH.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 353.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "PTTEP.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 353.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "GPSC.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 353.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "BGRIM.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 353.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "BPP.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 353.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "BBL.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 353.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "EGCO.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 353.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "ROBINS.BK": {
+    "score": 2,
+    "signal": "BUY",
+    "price": 301.0,
+    "buy_alerted": true,
+    "sell_alerted": false
+  },
+  "MAKRO.BK": {
+    "score": 2,
+    "signal": "BUY",
+    "price": 301.0,
+    "buy_alerted": true,
+    "sell_alerted": false
+  },
+  "CPF.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 57.75,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "CRC.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 57.75,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "GFPT.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 14.100000381469727,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "HMPRO.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 14.100000381469727,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "MTC.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 25.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "BJC.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 25.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "TIDLOR.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 25.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "IRPC.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 22.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "CBG.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 22.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "BAM.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 5.400000095367432,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "TISCO.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 5.400000095367432,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "TU.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 5.400000095367432,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "THRE.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 5.400000095367432,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "WHA.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 9.300000190734863,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "TTB.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 9.300000190734863,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "TQM.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 9.300000190734863,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "GLOBAL.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 9.300000190734863,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "BLA.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 9.300000190734863,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "BAY.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 9.300000190734863,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "COM7.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 9.300000190734863,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "AMATA.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 9.300000190734863,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "STEC.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 1.6299999952316284,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "BA.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 36.75,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "CK.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 164.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "TPIPP.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 35.25,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "BEM.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 11.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "OSP.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 46.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "JASIF.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 29.25,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "INTUCH.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 29.25,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "BTS.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 110.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "JMART.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 110.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "THAI.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 11.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "ITD.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 11.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "JMT.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 11.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "LH.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 11.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "NOK.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 11.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "SINGER.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 11.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "DTAC.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 11.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "MTL.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 11.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "AAV.BK": {
+    "score": -2,
+    "signal": "SELL",
+    "price": 11.5,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "DUSIT.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 4.940000057220459,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "SIRI.BK": {
+    "score": 2,
+    "signal": "BUY",
+    "price": 19.899999618530273,
+    "buy_alerted": true,
+    "sell_alerted": false
+  },
+  "ERW.BK": {
+    "score": 2,
+    "signal": "BUY",
+    "price": 19.899999618530273,
+    "buy_alerted": true,
+    "sell_alerted": false
+  },
+  "NOBLE.BK": {
+    "score": 2,
+    "signal": "BUY",
+    "price": 19.899999618530273,
+    "buy_alerted": true,
+    "sell_alerted": false
+  },
+  "BDMS.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 15.100000381469727,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "NTV.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 15.100000381469727,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "ORI.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 15.100000381469727,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "CENTEL.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 15.100000381469727,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "SC.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 15.100000381469727,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "BCH.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 15.100000381469727,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "AP.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 15.100000381469727,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "SHR.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 15.100000381469727,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "THG.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 15.100000381469727,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "SPALI.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 15.100000381469727,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "WORK.BK": {
+    "score": 2,
+    "signal": "BUY",
+    "price": 29.25,
+    "buy_alerted": true,
+    "sell_alerted": false
+  },
+  "MEGA.BK": {
+    "score": 2,
+    "signal": "BUY",
+    "price": 29.25,
+    "buy_alerted": true,
+    "sell_alerted": false
+  },
+  "PR9.BK": {
+    "score": 2,
+    "signal": "BUY",
+    "price": 29.25,
+    "buy_alerted": true,
+    "sell_alerted": false
+  },
+  "LALIN.BK": {
+    "score": 2,
+    "signal": "BUY",
+    "price": 29.25,
+    "buy_alerted": true,
+    "sell_alerted": false
+  },
+  "VGI.BK": {
+    "score": 2,
+    "signal": "BUY",
+    "price": 29.25,
+    "buy_alerted": true,
+    "sell_alerted": false
+  },
+  "GLAND.BK": {
+    "score": 2,
+    "signal": "BUY",
+    "price": 29.25,
+    "buy_alerted": true,
+    "sell_alerted": false
+  },
+  "PYLON.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 145.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "CPN.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 145.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "PSH.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 145.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "SPRC.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 145.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "ANAN.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 145.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "PLANB.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 145.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "ESSO.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 145.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "SF.BK": {
+    "score": 0,
+    "signal": "HOLD",
+    "price": 145.0,
+    "buy_alerted": false,
+    "sell_alerted": false
+  },
+  "_last_reset_date": "2026-04-17",
+  "_check_count": 1
+}

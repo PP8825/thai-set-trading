@@ -1,0 +1,11 @@
+# Don't commit lock files or logs
+*.log
+logs/
+.~lock.*
+
+# Don't commit local Python cache
+__pycache__/
+*.pyc
+
+# Keep Portfolio_Reports folder but ignore lock files inside
+Portfolio_Reports/.~lock.*

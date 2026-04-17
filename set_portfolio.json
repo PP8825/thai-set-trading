@@ -1,0 +1,211 @@
+{
+  "capital": 300000.0,
+  "cash": 29936.527141571045,
+  "holdings": {
+    "WORK.BK": {
+      "name": "WORK",
+      "shares": 900,
+      "avg_cost": 29.25,
+      "entry_date": "2026-04-17",
+      "entry_score": 2
+    },
+    "MEGA.BK": {
+      "name": "MEGA",
+      "shares": 900,
+      "avg_cost": 29.25,
+      "entry_date": "2026-04-17",
+      "entry_score": 2
+    },
+    "PR9.BK": {
+      "name": "PR9",
+      "shares": 900,
+      "avg_cost": 29.25,
+      "entry_date": "2026-04-17",
+      "entry_score": 2
+    },
+    "LALIN.BK": {
+      "name": "LALIN",
+      "shares": 900,
+      "avg_cost": 29.25,
+      "entry_date": "2026-04-17",
+      "entry_score": 2
+    },
+    "VGI.BK": {
+      "name": "VGI",
+      "shares": 900,
+      "avg_cost": 29.25,
+      "entry_date": "2026-04-17",
+      "entry_score": 2
+    },
+    "GLAND.BK": {
+      "name": "GLAND",
+      "shares": 900,
+      "avg_cost": 29.25,
+      "entry_date": "2026-04-17",
+      "entry_score": 2
+    },
+    "SIRI.BK": {
+      "name": "SIRI",
+      "shares": 1400,
+      "avg_cost": 19.9,
+      "entry_date": "2026-04-17",
+      "entry_score": 2
+    },
+    "ERW.BK": {
+      "name": "ERW",
+      "shares": 1400,
+      "avg_cost": 19.9,
+      "entry_date": "2026-04-17",
+      "entry_score": 2
+    },
+    "NOBLE.BK": {
+      "name": "NOBLE",
+      "shares": 1400,
+      "avg_cost": 19.9,
+      "entry_date": "2026-04-17",
+      "entry_score": 2
+    },
+    "MINT.BK": {
+      "name": "MINOR",
+      "shares": 1400,
+      "avg_cost": 19.9,
+      "entry_date": "2026-04-17",
+      "entry_score": 2
+    }
+  },
+  "trades": [
+    {
+      "date": "2026-04-17",
+      "action": "BUY",
+      "ticker": "WORK.BK",
+      "name": "WORK",
+      "shares": 900,
+      "price": 29.25,
+      "value": 26325.0,
+      "avg_cost": 29.25,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "21:16"
+    },
+    {
+      "date": "2026-04-17",
+      "action": "BUY",
+      "ticker": "MEGA.BK",
+      "name": "MEGA",
+      "shares": 900,
+      "price": 29.25,
+      "value": 26325.0,
+      "avg_cost": 29.25,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "21:16"
+    },
+    {
+      "date": "2026-04-17",
+      "action": "BUY",
+      "ticker": "PR9.BK",
+      "name": "PR9",
+      "shares": 900,
+      "price": 29.25,
+      "value": 26325.0,
+      "avg_cost": 29.25,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "21:16"
+    },
+    {
+      "date": "2026-04-17",
+      "action": "BUY",
+      "ticker": "LALIN.BK",
+      "name": "LALIN",
+      "shares": 900,
+      "price": 29.25,
+      "value": 26325.0,
+      "avg_cost": 29.25,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "21:16"
+    },
+    {
+      "date": "2026-04-17",
+      "action": "BUY",
+      "ticker": "VGI.BK",
+      "name": "VGI",
+      "shares": 900,
+      "price": 29.25,
+      "value": 26325.0,
+      "avg_cost": 29.25,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "21:16"
+    },
+    {
+      "date": "2026-04-17",
+      "action": "BUY",
+      "ticker": "GLAND.BK",
+      "name": "GLAND",
+      "shares": 900,
+      "price": 29.25,
+      "value": 26325.0,
+      "avg_cost": 29.25,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "21:16"
+    },
+    {
+      "date": "2026-04-17",
+      "action": "BUY",
+      "ticker": "SIRI.BK",
+      "name": "SIRI",
+      "shares": 1400,
+      "price": 19.9,
+      "value": 27860.0,
+      "avg_cost": 19.9,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "21:16"
+    },
+    {
+      "date": "2026-04-17",
+      "action": "BUY",
+      "ticker": "ERW.BK",
+      "name": "ERW",
+      "shares": 1400,
+      "price": 19.9,
+      "value": 27860.0,
+      "avg_cost": 19.9,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "21:16"
+    },
+    {
+      "date": "2026-04-17",
+      "action": "BUY",
+      "ticker": "NOBLE.BK",
+      "name": "NOBLE",
+      "shares": 1400,
+      "price": 19.9,
+      "value": 27860.0,
+      "avg_cost": 19.9,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "21:16"
+    },
+    {
+      "date": "2026-04-17",
+      "action": "BUY",
+      "ticker": "MINT.BK",
+      "name": "MINOR",
+      "shares": 1400,
+      "price": 19.9,
+      "value": 27860.0,
+      "avg_cost": 19.9,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "21:16"
+    }
+  ],
+  "start_date": "2026-04-16",
+  "day_count": 1,
+  "peak_value": 299326.5250053406
+}
