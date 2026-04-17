@@ -85,6 +85,14 @@ SELL_SCORE_MAX = -1    # score <= -1 triggers SELL
 BUY_PREV_MAX   = 0     # only if previous score was <= 0
 SELL_PREV_MIN  = 1     # only if previous score was >= +1
 
+# ─── Fundamental filter thresholds ────────────────────────────────────────────
+_ff            = cfg.get("fundamental_filter", {})
+FUND_ENABLED   = _ff.get("enabled", True)
+MAX_PE         = _ff.get("max_pe", 15)
+MAX_PBV        = _ff.get("max_pbv", 3)
+MIN_ROE        = _ff.get("min_roe", 0.08)     # 8% minimum ROE
+REQ_DIVIDEND   = _ff.get("require_dividend", True)
+
 # ─── Bangkok time (UTC+7, no pytz needed) ─────────────────────────────────────
 BKK_OFFSET = datetime.timezone(datetime.timedelta(hours=7))
 
@@ -164,6 +172,85 @@ def score_signals(rsi, close, sma, macd, msig):
     }[sc]
     return sc, label, rs, ms, mc
 
+# ─── Fundamental filter ───────────────────────────────────────────────────────
+def fetch_fundamentals(ticker):
+    """Fetch P/E, P/BV, ROE, dividend from yfinance .info"""
+    try:
+        info = yf.Ticker(ticker).info
+        pe      = info.get("trailingPE") or info.get("forwardPE")
+        pbv     = info.get("priceToBook")
+        roe     = info.get("returnOnEquity")
+        div_yld = info.get("dividendYield") or 0.0
+        # Check dividend history: any payout in last 3 years?
+        try:
+            divs = yf.Ticker(ticker).dividends
+            cutoff = pd.Timestamp.now(tz="UTC") - pd.DateOffset(years=3)
+            has_div = len(divs[divs.index >= cutoff]) > 0
+        except Exception:
+            has_div = div_yld > 0
+        return {
+            "pe":      pe,
+            "pbv":     pbv,
+            "roe":     roe,
+            "div_yld": div_yld,
+            "has_div": has_div,
+        }
+    except Exception:
+        return {}
+
+def check_fundamentals(fund):
+    """
+    Returns (passes: bool, reasons: list, summary: str)
+    If data is missing for a metric, that metric is skipped (benefit of the doubt).
+    """
+    if not FUND_ENABLED or not fund:
+        return True, [], "N/A"
+
+    fails  = []
+    checks = []
+
+    pe  = fund.get("pe")
+    pbv = fund.get("pbv")
+    roe = fund.get("roe")
+    has_div = fund.get("has_div", True)
+
+    if pe is not None:
+        if pe > 0 and pe <= MAX_PE:
+            checks.append("P/E {:.1f} OK".format(pe))
+        elif pe > MAX_PE:
+            fails.append("P/E {:.1f}>{:.0f}".format(pe, MAX_PE))
+        # Negative P/E (loss-making) = fail
+        elif pe < 0:
+            fails.append("P/E neg (loss)")
+    else:
+        checks.append("P/E N/A")
+
+    if pbv is not None:
+        if pbv <= MAX_PBV:
+            checks.append("PBV {:.2f} OK".format(pbv))
+        else:
+            fails.append("PBV {:.2f}>{:.1f}".format(pbv, MAX_PBV))
+    else:
+        checks.append("PBV N/A")
+
+    if roe is not None:
+        if roe >= MIN_ROE:
+            checks.append("ROE {:.0%} OK".format(roe))
+        else:
+            fails.append("ROE {:.0%}<{:.0%}".format(roe, MIN_ROE))
+    else:
+        checks.append("ROE N/A")
+
+    if REQ_DIVIDEND:
+        if has_div:
+            checks.append("DIV OK")
+        else:
+            fails.append("No dividend")
+
+    passes  = len(fails) == 0
+    summary = " | ".join(checks + ["❌ " + f for f in fails])
+    return passes, fails, summary
+
 # ─── Parallel stock analysis ──────────────────────────────────────────────────
 def analyze(name, ticker):
     try:
@@ -186,6 +273,15 @@ def analyze(name, ticker):
         pct            = (price - prev) / prev * 100
         sc, label, rs, ms, mc = score_signals(rsi_v, price, sma_v, macd_v, msig_v)
 
+        # Fundamental check (only fetch if stock is a BUY candidate — saves time)
+        fund        = {}
+        fund_ok     = True
+        fund_fails  = []
+        fund_summary = "N/A"
+        if sc >= BUY_SCORE_MIN and FUND_ENABLED:
+            fund = fetch_fundamentals(ticker)
+            fund_ok, fund_fails, fund_summary = check_fundamentals(fund)
+
         return {
             "ticker": ticker, "name": name, "error": None,
             "price":  price,  "pct":  pct,
@@ -193,6 +289,8 @@ def analyze(name, ticker):
             "macd":   macd_v, "msig": msig_v,
             "score":  sc,     "signal": label,
             "rsi_sig": rs,    "ma_sig": ms, "macd_sig": mc,
+            "fund":   fund,   "fund_ok": fund_ok,
+            "fund_fails": fund_fails, "fund_summary": fund_summary,
         }
     except Exception as e:
         return {"ticker": ticker, "name": name, "error": str(e)[:60]}
@@ -271,11 +369,26 @@ def execute_sell(port, ticker, price, reason):
 
 # ─── Day-1 initialisation ─────────────────────────────────────────────────────
 def init_day_one(port, ok_results, prices):
-    """Buy top-10 BUY signals on the very first run."""
-    buys = sorted(
-        [r for r in ok_results if r["score"] >= BUY_SCORE_MIN],
-        key=lambda x: (-x["score"], x["rsi"])
-    )[:10]
+    """Buy top-10 BUY signals on the very first run — fundamentals required."""
+    candidates = [r for r in ok_results if r["score"] >= BUY_SCORE_MIN]
+
+    # Fetch fundamentals for all BUY candidates (if not already fetched)
+    for r in candidates:
+        if "fund_ok" not in r:
+            fund = fetch_fundamentals(r["ticker"])
+            r["fund_ok"], r["fund_fails"], r["fund_summary"] = check_fundamentals(fund)
+
+    # Only buy stocks that pass fundamental filter
+    passed  = [r for r in candidates if r.get("fund_ok", True)]
+    skipped = [r for r in candidates if not r.get("fund_ok", True)]
+
+    if skipped:
+        print("  Fundamental filter blocked {0} stock(s): {1}".format(
+            len(skipped),
+            ", ".join("{0}({1})".format(r["name"], ",".join(r.get("fund_fails",[])))
+                      for r in skipped)))
+
+    buys = sorted(passed, key=lambda x: (-x["score"], x["rsi"]))[:10]
 
     trades = []
     cash_floor = INITIAL_CAPITAL * CASH_FLOOR_PCT
@@ -351,7 +464,7 @@ def build_trade_alert(trade, port, prices, result=None):
     if result:
         lines += [
             "",
-            "📊 Indicators",
+            "📊 Technical",
             "   RSI {0:.0f}  {1}RSI  {2}MA  {3}MACD  Score: {4:+d}/3".format(
                 result["rsi"],
                 "▲" if result["rsi_sig"] > 0 else "▼",
@@ -360,6 +473,21 @@ def build_trade_alert(trade, port, prices, result=None):
                 result["score"],
             ),
         ]
+        # Show fundamental data if available
+        fund = result.get("fund", {})
+        if fund:
+            pe  = fund.get("pe")
+            pbv = fund.get("pbv")
+            roe = fund.get("roe")
+            div = fund.get("has_div")
+            lines += [
+                "",
+                "📈 Fundamentals",
+                "   P/E   : {0}".format("{:.1f}".format(pe)  if pe  is not None else "N/A"),
+                "   P/BV  : {0}".format("{:.2f}".format(pbv) if pbv is not None else "N/A"),
+                "   ROE   : {0}".format("{:.1%}".format(roe)  if roe is not None else "N/A"),
+                "   Div   : {0}".format("Yes ✅" if div else "No ⚠️"),
+            ]
 
     lines += [
         "",
@@ -569,12 +697,16 @@ def main():
             "sell_alerted": prev.get("sell_alerted", False) if isinstance(prev, dict) else False,
         }
 
-        # BUY trigger
+        # BUY trigger — also check fundamental filter
+        fund_ok = r.get("fund_ok", True)
         if (score >= BUY_SCORE_MIN
                 and prev_score <= BUY_PREV_MAX
                 and ticker not in alerted
                 and not (new_state[ticker].get("buy_alerted"))):
-            trade = execute_buy(port, r)
+            if not fund_ok:
+                print("  SKIP {0:12s} — failed fundamentals: {1}".format(
+                    r["name"], ", ".join(r.get("fund_fails", []))))
+            trade = execute_buy(port, r) if fund_ok else None
             if trade:
                 print("  BUY  {0:12s} {1:,d}sh @ \u0e3f{2:.2f}".format(
                     r["name"], trade["shares"], r["price"]))
