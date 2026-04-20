@@ -1,211 +1,211 @@
 {
   "capital": 300000.0,
-  "cash": 29936.527141571045,
+  "cash": 29448.30848187208,
   "holdings": {
-    "WORK.BK": {
-      "name": "WORK",
-      "shares": 900,
-      "avg_cost": 29.25,
-      "entry_date": "2026-04-17",
-      "entry_score": 2
-    },
-    "MEGA.BK": {
-      "name": "MEGA",
-      "shares": 900,
-      "avg_cost": 29.25,
-      "entry_date": "2026-04-17",
-      "entry_score": 2
-    },
-    "PR9.BK": {
-      "name": "PR9",
-      "shares": 900,
-      "avg_cost": 29.25,
-      "entry_date": "2026-04-17",
-      "entry_score": 2
-    },
-    "LALIN.BK": {
-      "name": "LALIN",
-      "shares": 900,
-      "avg_cost": 29.25,
-      "entry_date": "2026-04-17",
-      "entry_score": 2
-    },
-    "VGI.BK": {
-      "name": "VGI",
-      "shares": 900,
-      "avg_cost": 29.25,
-      "entry_date": "2026-04-17",
-      "entry_score": 2
-    },
-    "GLAND.BK": {
-      "name": "GLAND",
-      "shares": 900,
-      "avg_cost": 29.25,
-      "entry_date": "2026-04-17",
+    "TISCO.BK": {
+      "name": "TISCO",
+      "shares": 200,
+      "avg_cost": 113.5,
+      "entry_date": "2026-04-20",
       "entry_score": 2
     },
     "SIRI.BK": {
       "name": "SIRI",
-      "shares": 1400,
-      "avg_cost": 19.9,
-      "entry_date": "2026-04-17",
+      "shares": 20200,
+      "avg_cost": 1.41,
+      "entry_date": "2026-04-20",
       "entry_score": 2
     },
-    "ERW.BK": {
-      "name": "ERW",
-      "shares": 1400,
-      "avg_cost": 19.9,
-      "entry_date": "2026-04-17",
+    "TU.BK": {
+      "name": "TU",
+      "shares": 2500,
+      "avg_cost": 11.4,
+      "entry_date": "2026-04-20",
       "entry_score": 2
     },
-    "NOBLE.BK": {
-      "name": "NOBLE",
-      "shares": 1400,
-      "avg_cost": 19.9,
-      "entry_date": "2026-04-17",
+    "BAY.BK": {
+      "name": "BAY",
+      "shares": 1000,
+      "avg_cost": 26.0,
+      "entry_date": "2026-04-20",
       "entry_score": 2
     },
-    "MINT.BK": {
-      "name": "MINOR",
-      "shares": 1400,
-      "avg_cost": 19.9,
-      "entry_date": "2026-04-17",
+    "KTC.BK": {
+      "name": "KTC",
+      "shares": 900,
+      "avg_cost": 29.25,
+      "entry_date": "2026-04-20",
+      "entry_score": 2
+    },
+    "TQM.BK": {
+      "name": "TQM",
+      "shares": 2000,
+      "avg_cost": 13.7,
+      "entry_date": "2026-04-20",
+      "entry_score": 2
+    },
+    "WHA.BK": {
+      "name": "WHA",
+      "shares": 6400,
+      "avg_cost": 4.4,
+      "entry_date": "2026-04-20",
+      "entry_score": 2
+    },
+    "JASIF.BK": {
+      "name": "JASIF",
+      "shares": 4200,
+      "avg_cost": 6.7,
+      "entry_date": "2026-04-20",
+      "entry_score": 2
+    },
+    "CK.BK": {
+      "name": "CK",
+      "shares": 1600,
+      "avg_cost": 17.2,
+      "entry_date": "2026-04-20",
+      "entry_score": 2
+    },
+    "AMATA.BK": {
+      "name": "AMATA",
+      "shares": 1300,
+      "avg_cost": 20.5,
+      "entry_date": "2026-04-20",
       "entry_score": 2
     }
   },
   "trades": [
     {
-      "date": "2026-04-17",
+      "date": "2026-04-20",
       "action": "BUY",
-      "ticker": "WORK.BK",
-      "name": "WORK",
-      "shares": 900,
-      "price": 29.25,
-      "value": 26325.0,
-      "avg_cost": 29.25,
+      "ticker": "TISCO.BK",
+      "name": "TISCO",
+      "shares": 200,
+      "price": 113.5,
+      "value": 22700.0,
+      "avg_cost": 113.5,
       "pnl": 0,
       "reason": "BUY (Day 1)",
-      "time": "21:16"
+      "time": "15:47"
     },
     {
-      "date": "2026-04-17",
-      "action": "BUY",
-      "ticker": "MEGA.BK",
-      "name": "MEGA",
-      "shares": 900,
-      "price": 29.25,
-      "value": 26325.0,
-      "avg_cost": 29.25,
-      "pnl": 0,
-      "reason": "BUY (Day 1)",
-      "time": "21:16"
-    },
-    {
-      "date": "2026-04-17",
-      "action": "BUY",
-      "ticker": "PR9.BK",
-      "name": "PR9",
-      "shares": 900,
-      "price": 29.25,
-      "value": 26325.0,
-      "avg_cost": 29.25,
-      "pnl": 0,
-      "reason": "BUY (Day 1)",
-      "time": "21:16"
-    },
-    {
-      "date": "2026-04-17",
-      "action": "BUY",
-      "ticker": "LALIN.BK",
-      "name": "LALIN",
-      "shares": 900,
-      "price": 29.25,
-      "value": 26325.0,
-      "avg_cost": 29.25,
-      "pnl": 0,
-      "reason": "BUY (Day 1)",
-      "time": "21:16"
-    },
-    {
-      "date": "2026-04-17",
-      "action": "BUY",
-      "ticker": "VGI.BK",
-      "name": "VGI",
-      "shares": 900,
-      "price": 29.25,
-      "value": 26325.0,
-      "avg_cost": 29.25,
-      "pnl": 0,
-      "reason": "BUY (Day 1)",
-      "time": "21:16"
-    },
-    {
-      "date": "2026-04-17",
-      "action": "BUY",
-      "ticker": "GLAND.BK",
-      "name": "GLAND",
-      "shares": 900,
-      "price": 29.25,
-      "value": 26325.0,
-      "avg_cost": 29.25,
-      "pnl": 0,
-      "reason": "BUY (Day 1)",
-      "time": "21:16"
-    },
-    {
-      "date": "2026-04-17",
+      "date": "2026-04-20",
       "action": "BUY",
       "ticker": "SIRI.BK",
       "name": "SIRI",
-      "shares": 1400,
-      "price": 19.9,
-      "value": 27860.0,
-      "avg_cost": 19.9,
+      "shares": 20200,
+      "price": 1.41,
+      "value": 28482.0,
+      "avg_cost": 1.41,
       "pnl": 0,
       "reason": "BUY (Day 1)",
-      "time": "21:16"
+      "time": "15:47"
     },
     {
-      "date": "2026-04-17",
+      "date": "2026-04-20",
       "action": "BUY",
-      "ticker": "ERW.BK",
-      "name": "ERW",
-      "shares": 1400,
-      "price": 19.9,
-      "value": 27860.0,
-      "avg_cost": 19.9,
+      "ticker": "TU.BK",
+      "name": "TU",
+      "shares": 2500,
+      "price": 11.4,
+      "value": 28500.0,
+      "avg_cost": 11.4,
       "pnl": 0,
       "reason": "BUY (Day 1)",
-      "time": "21:16"
+      "time": "15:47"
     },
     {
-      "date": "2026-04-17",
+      "date": "2026-04-20",
       "action": "BUY",
-      "ticker": "NOBLE.BK",
-      "name": "NOBLE",
-      "shares": 1400,
-      "price": 19.9,
-      "value": 27860.0,
-      "avg_cost": 19.9,
+      "ticker": "BAY.BK",
+      "name": "BAY",
+      "shares": 1000,
+      "price": 26.0,
+      "value": 26000.0,
+      "avg_cost": 26.0,
       "pnl": 0,
       "reason": "BUY (Day 1)",
-      "time": "21:16"
+      "time": "15:47"
     },
     {
-      "date": "2026-04-17",
+      "date": "2026-04-20",
       "action": "BUY",
-      "ticker": "MINT.BK",
-      "name": "MINOR",
-      "shares": 1400,
-      "price": 19.9,
-      "value": 27860.0,
-      "avg_cost": 19.9,
+      "ticker": "KTC.BK",
+      "name": "KTC",
+      "shares": 900,
+      "price": 29.25,
+      "value": 26325.0,
+      "avg_cost": 29.25,
       "pnl": 0,
       "reason": "BUY (Day 1)",
-      "time": "21:16"
+      "time": "15:47"
+    },
+    {
+      "date": "2026-04-20",
+      "action": "BUY",
+      "ticker": "TQM.BK",
+      "name": "TQM",
+      "shares": 2000,
+      "price": 13.7,
+      "value": 27400.0,
+      "avg_cost": 13.7,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "15:47"
+    },
+    {
+      "date": "2026-04-20",
+      "action": "BUY",
+      "ticker": "WHA.BK",
+      "name": "WHA",
+      "shares": 6400,
+      "price": 4.4,
+      "value": 28160.0,
+      "avg_cost": 4.4,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "15:47"
+    },
+    {
+      "date": "2026-04-20",
+      "action": "BUY",
+      "ticker": "JASIF.BK",
+      "name": "JASIF",
+      "shares": 4200,
+      "price": 6.7,
+      "value": 28140.0,
+      "avg_cost": 6.7,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "15:47"
+    },
+    {
+      "date": "2026-04-20",
+      "action": "BUY",
+      "ticker": "CK.BK",
+      "name": "CK",
+      "shares": 1600,
+      "price": 17.2,
+      "value": 27520.0,
+      "avg_cost": 17.2,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "15:47"
+    },
+    {
+      "date": "2026-04-20",
+      "action": "BUY",
+      "ticker": "AMATA.BK",
+      "name": "AMATA",
+      "shares": 1300,
+      "price": 20.5,
+      "value": 26650.0,
+      "avg_cost": 20.5,
+      "pnl": 0,
+      "reason": "BUY (Day 1)",
+      "time": "15:47"
     }
   ],
-  "start_date": "2026-04-16",
+  "start_date": "2026-04-21",
   "day_count": 1,
-  "peak_value": 299326.5250053406
+  "peak_value": 299325.30750244856
 }

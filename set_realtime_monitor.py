@@ -254,10 +254,10 @@ def check_fundamentals(fund):
 # ─── Parallel stock analysis ──────────────────────────────────────────────────
 def analyze(name, ticker):
     try:
-        df = yf.download(ticker, period="{0}d".format(LOOKBACK),
-                         auto_adjust=True, progress=False, timeout=25)
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
+        # Use Ticker.history() instead of yf.download() — download() mixes up
+        # prices when called in parallel for Thai .BK tickers (known yfinance bug).
+        df = yf.Ticker(ticker).history(period="{0}d".format(LOOKBACK),
+                                        auto_adjust=True)
         if df is None or df.empty or "Close" not in df.columns:
             return {"ticker": ticker, "name": name, "error": "No data"}
 
@@ -491,11 +491,30 @@ def build_trade_alert(trade, port, prices, result=None):
 
     lines += [
         "",
-        "💼 Portfolio",
-        "   Value : \u0e3f{0:,.0f}  ({1}{2:.2f}%)".format(
+        "💼 Portfolio (real-time)",
+        "   Total : \u0e3f{0:,.0f}  ({1}{2:.2f}%)".format(
             total, ps, pnl_t / start * 100),
         "   Cash  : \u0e3f{0:,.0f}".format(port["cash"]),
         "   Held  : {0}/{1} stocks".format(len(port["holdings"]), MAX_POSITIONS),
+    ]
+
+    # Show live value of each holding
+    if port["holdings"]:
+        lines.append("")
+        lines.append("📈 Live holdings:")
+        for ticker, h in sorted(port["holdings"].items(),
+                                key=lambda x: -(x[1]["shares"] *
+                                                prices.get(x[0], x[1]["avg_cost"]))):
+            px     = prices.get(ticker, h["avg_cost"])
+            mval   = h["shares"] * px
+            upnl   = mval - h["shares"] * h["avg_cost"]
+            upct   = (px - h["avg_cost"]) / h["avg_cost"] * 100
+            icon   = "▲" if upnl >= 0 else "▼"
+            ps2    = "+" if upnl >= 0 else ""
+            lines.append("  {0} {1:8s} \u0e3f{2:,.2f}  val:\u0e3f{3:,.0f}  {4}{5:.1f}%".format(
+                icon, h["name"], px, mval, ps2, upct))
+
+    lines += [
         "",
         "─" * 32,
         "⚠️ Educational only. Not financial advice.",
@@ -503,54 +522,89 @@ def build_trade_alert(trade, port, prices, result=None):
     return "\n".join(lines)
 
 def build_status_update(results, port, prices):
-    """30-minute status message when no trades triggered."""
-    total  = portfolio_value(port, prices)
-    start  = port["capital"]
-    pnl    = total - start
-    ps     = "+" if pnl >= 0 else ""
-    n_buy  = sum(1 for r in results if r.get("score", 0) >= BUY_SCORE_MIN)
-    n_sell = sum(1 for r in results if r.get("score", 0) <= SELL_SCORE_MAX)
+    """30-minute real-time portfolio snapshot."""
+    total    = portfolio_value(port, prices)
+    start    = port["capital"]
+    pnl_tot  = total - start
+    ps       = "+" if pnl_tot >= 0 else ""
+    n_buy    = sum(1 for r in results if r.get("score", 0) >= BUY_SCORE_MIN)
+    n_sell   = sum(1 for r in results if r.get("score", 0) <= SELL_SCORE_MAX)
 
+    # Per-holding real-time values
+    holdings_data = []
+    invested = 0.0
+    unreal_pnl = 0.0
+    for ticker, h in port["holdings"].items():
+        px       = prices.get(ticker, h["avg_cost"])
+        mkt_val  = h["shares"] * px
+        cost_val = h["shares"] * h["avg_cost"]
+        upnl     = mkt_val - cost_val
+        upnl_pct = (px - h["avg_cost"]) / h["avg_cost"] * 100
+        invested    += cost_val
+        unreal_pnl  += upnl
+        holdings_data.append({
+            "name": h["name"], "ticker": ticker,
+            "shares": h["shares"],
+            "avg_cost": h["avg_cost"],
+            "price": px,
+            "mkt_val": mkt_val,
+            "upnl": upnl,
+            "upnl_pct": upnl_pct,
+        })
+    # Sort by market value descending
+    holdings_data.sort(key=lambda x: -x["mkt_val"])
+
+    # Top 3 movers from all scanned stocks
     movers = sorted(
         [r for r in results if not r.get("error")],
         key=lambda x: abs(x.get("pct", 0)), reverse=True
     )[:3]
-    mover_str = "  ".join(
-        "{0} {1}{2:.1f}%".format(
-            r["name"], "+" if r["pct"] >= 0 else "", r["pct"])
-        for r in movers
-    )
 
     lines = [
-        "🇹🇭 Market Update  {0}  {1}".format(
+        "📊 LIVE PORTFOLIO  {0}  {1}".format(
             time_str(), datetime.date.today().strftime("%d %b %Y")),
-        "Screened {0} stocks  |  🟢{1} BUY  🔴{2} SELL".format(
-            len(results), n_buy, n_sell),
-        "No new signals — no trades executed.",
+        "─" * 32,
         "",
-        "💼 \u0e3f{0:,.0f}  ({1}{2:.2f}%)".format(total, ps, pnl / start * 100),
-        "   Cash: \u0e3f{0:,.0f}  |  Positions: {1}/{2}".format(
-            port["cash"], len(port["holdings"]), MAX_POSITIONS),
+        "💼 Total Value  : \u0e3f{0:,.0f}".format(total),
+        "   Start Capital: \u0e3f{0:,.0f}".format(start),
+        "   Total P&L    : {0}\u0e3f{1:,.0f}  ({0}{2:.2f}%)".format(
+            ps, abs(pnl_tot), abs(pnl_tot) / start * 100),
+        "   Unrealised   : {0}\u0e3f{1:,.0f}".format(
+            "+" if unreal_pnl >= 0 else "", unreal_pnl),
+        "   Cash         : \u0e3f{0:,.0f}".format(port["cash"]),
+        "   Positions    : {0}/{1}".format(len(port["holdings"]), MAX_POSITIONS),
+        "",
+        "─" * 32,
     ]
 
-    if port["holdings"]:
+    if holdings_data:
+        lines.append("📈 Holdings (live prices):")
         lines.append("")
-        lines.append("📊 Holdings:")
-        for i, (ticker, h) in enumerate(
-                sorted(port["holdings"].items(),
-                       key=lambda x: -(x[1]["shares"] *
-                                       prices.get(x[0], x[1]["avg_cost"]))),
-                1):
-            px   = prices.get(ticker, h["avg_cost"])
-            up   = (px - h["avg_cost"]) / h["avg_cost"] * 100
-            icon = "▲" if up >= 0 else "▼"
-            lines.append(
-                "  {0:2d}. {1:8s} \u0e3f{2:,.2f}  {3}{4}{5:.1f}%".format(
-                    i, h["name"], px, icon, "+" if up >= 0 else "", up)
-            )
+        for d in holdings_data:
+            icon   = "▲" if d["upnl_pct"] >= 0 else "▼"
+            ps2    = "+" if d["upnl"] >= 0 else ""
+            lines.append("{0} {1}".format(icon, d["name"]))
+            lines.append("   Price  : \u0e3f{0:,.2f}  (entry \u0e3f{1:,.2f})".format(
+                d["price"], d["avg_cost"]))
+            lines.append("   Shares : {0:,d} ({1:,d} lots)".format(
+                d["shares"], d["shares"] // 100))
+            lines.append("   Value  : \u0e3f{0:,.0f}".format(d["mkt_val"]))
+            lines.append("   P&L    : {0}\u0e3f{1:,.0f}  ({0}{2:.1f}%)".format(
+                ps2, abs(d["upnl"]), abs(d["upnl_pct"])))
+            lines.append("")
+    else:
+        lines.append("No holdings — cash only.")
+        lines.append("")
+
+    lines.append("─" * 32)
+    lines.append("🔍 Market signals: 🟢{0} BUY  🔴{1} SELL  ({2} scanned)".format(
+        n_buy, n_sell, len(results)))
 
     if movers:
-        lines += ["", "📈 Top movers: {0}".format(mover_str)]
+        lines.append("📊 Top movers: " + "  ".join(
+            "{0} {1}{2:.1f}%".format(
+                r["name"], "+" if r["pct"] >= 0 else "", r["pct"])
+            for r in movers))
 
     return "\n".join(lines)
 
