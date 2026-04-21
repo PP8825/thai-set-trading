@@ -2,8 +2,8 @@ name: SET EOD Portfolio Report
 
 on:
   schedule:
-    # 4:35 PM Bangkok = 09:35 UTC, Monday–Friday
-    - cron: '35 9 * * 1-5'
+    # 4:40 PM Bangkok = 09:40 UTC — backup in case afternoon session misses EOD
+    - cron: '40 9 * * 1-5'
   workflow_dispatch:   # Allow manual trigger from GitHub UI
 
 jobs:

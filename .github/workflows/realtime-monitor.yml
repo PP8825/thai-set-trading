@@ -2,17 +2,23 @@ name: SET Realtime Monitor
 
 on:
   schedule:
-    # Every 15 min during Bangkok morning session (10:00-12:30 BKK = 03:00-05:30 UTC)
-    - cron: '0,15,30,45 3,4,5 * * 1-5'
-    # Every 15 min during Bangkok afternoon session (14:30-16:30 BKK = 07:30-09:30 UTC)
-    - cron: '0,15,30,45 7,8,9 * * 1-5'
-  workflow_dispatch:   # Allow manual trigger from GitHub UI
+    # Trigger at 09:55 Bangkok (02:55 UTC) — script waits internally until 10:00 market open
+    - cron: '55 2 * * 1-5'
+    # Trigger at 14:25 Bangkok (07:25 UTC) — script waits internally until 14:30 market open
+    - cron: '25 7 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      session:
+        description: 'Session to run: morning or afternoon (leave blank to auto-detect)'
+        required: false
+        default: ''
 
 jobs:
-  monitor:
+  session:
     runs-on: ubuntu-latest
+    timeout-minutes: 200
     permissions:
-      contents: write   # Needed to commit portfolio state back
+      contents: write
 
     steps:
       - name: Checkout repo
@@ -26,16 +32,23 @@ jobs:
       - name: Install dependencies
         run: pip install yfinance pandas requests openpyxl -q
 
-      - name: Run realtime monitor
+      - name: Detect session
+        id: session
+        run: |
+          INPUT="${{ github.event.inputs.session }}"
+          if [ -n "$INPUT" ]; then
+            echo "name=$INPUT" >> $GITHUB_OUTPUT
+          else
+            HOUR=$(TZ=Asia/Bangkok date +%H)
+            if [ "$HOUR" -lt 14 ]; then
+              echo "name=morning" >> $GITHUB_OUTPUT
+            else
+              echo "name=afternoon" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Run session
         env:
           LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
-        run: python set_realtime_monitor.py
-
-      - name: Save portfolio state to repo
-        run: |
-          git config user.name "SET Trading Bot"
-          git config user.email "bot@set-trading.local"
-          git add set_portfolio.json set_signal_state.json
-          git diff --staged --quiet || git commit -m "Update portfolio state [skip ci]"
-          git push
+        run: python set_session_runner.py ${{ steps.session.outputs.name }}
