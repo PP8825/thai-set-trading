@@ -323,9 +323,10 @@ tr:hover td{background:rgba(109,186,127,.04)}
               </div>
             </div>
             <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
-              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">P/BV Ratio · max 2 pts</div>
+              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">P/BV Ratio · max 3 pts</div>
               <div style="font-size:11px;color:var(--muted);line-height:1.8">
-                ≤ 1.5 → <strong style="color:var(--green)">2 pts</strong> (undervalued vs book)<br>
+                &lt; 1.0 → <strong style="color:var(--green)">3 pts</strong> (trading below book — deep value)<br>
+                1.0–1.5 → <strong style="color:var(--green)">2 pts</strong> (undervalued vs book)<br>
                 1.5–3 → <strong style="color:var(--text)">1 pt</strong> (acceptable)<br>
                 &gt; 3 &nbsp;→ <strong style="color:var(--red)">0 pts</strong> (overvalued)
               </div>
@@ -340,12 +341,16 @@ tr:hover td{background:rgba(109,186,127,.04)}
               </div>
             </div>
             <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
-              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">Dividend · max 2 pts</div>
+              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">Dividend Yield · max 4 pts</div>
               <div style="font-size:11px;color:var(--muted);line-height:1.8">
-                Yield ≥ 3% → <strong style="color:var(--green)">2 pts</strong> (consistent &amp; meaningful)<br>
-                Paid some → <strong style="color:var(--text)">1 pt</strong><br>
+                ≥ 9% → <strong style="color:var(--green)">4.0 pts</strong> (exceptional)<br>
+                ≥ 8% → <strong style="color:var(--green)">3.5 pts</strong> (very high)<br>
+                ≥ 6.5% → <strong style="color:var(--green)">3.0 pts</strong> (high)<br>
+                ≥ 5% &nbsp;→ <strong style="color:var(--green)">2.5 pts</strong> (solid)<br>
+                ≥ 3% &nbsp;→ <strong style="color:var(--text)">2.0 pts</strong> (meaningful)<br>
+                Paid (any) → <strong style="color:var(--text)">1.0 pt</strong><br>
                 No dividend → <strong style="color:var(--red)">0 pts</strong><br>
-                Data missing → 1 pt (benefit of doubt)
+                <span style="color:var(--dim)">Missing data → 1 pt (benefit of doubt)</span>
               </div>
             </div>
           </div>
@@ -353,13 +358,21 @@ tr:hover td{background:rgba(109,186,127,.04)}
           <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px">
             <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">Composite Score formula</div>
             <div style="font-size:12px;font-family:monospace;color:var(--accent);background:rgba(0,0,0,.2);padding:10px;border-radius:7px;margin-bottom:10px">
-              Tech normalised = (Tech score + 3) ÷ 6 × 10 &nbsp;&nbsp;→ 0–10<br>
+              Raw fund score (0–13) ÷ 13 × 10 → Fund/10<br>
+              Tech normalised = (Tech score + 3) ÷ 6 × 10 → 0–10<br>
               Composite = Tech normalised × 60% + Fund score × 40%
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;font-size:11px;color:var(--muted)">
-              <div>Example A: Tech +2, Fund 8.0<br>→ <strong style="color:var(--green)">(8.33×0.6) + (8.0×0.4) = 8.2/10</strong></div>
-              <div>Example B: Tech +2, Fund 4.0<br>→ <strong style="color:var(--yellow)">(8.33×0.6) + (4.0×0.4) = 6.6/10</strong></div>
+              <div>Example A: Tech +2, Fund 8.5 (high div)<br>→ <strong style="color:var(--green)">(8.33×0.6) + (8.5×0.4) = 8.4/10</strong></div>
+              <div>Example B: Tech +2, Fund 5.0 (low div)<br>→ <strong style="color:var(--yellow)">(8.33×0.6) + (5.0×0.4) = 7.0/10</strong></div>
               <div>Both get BUY signal, but A is bought first ↑</div>
+            </div>
+          </div>
+
+          <div style="background:rgba(212,170,69,.08);border:1px solid rgba(212,170,69,.25);border-radius:10px;padding:14px">
+            <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:6px">📅 Ex-Dividend Date Guard</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.7">
+              If a holding's ex-dividend date is within <strong style="color:var(--text)">14 days</strong>, the system will <strong style="color:var(--yellow)">delay any SELL or ROTATION</strong> until after the dividend record date. This protects the dividend income — missing a 6–8% yield by selling 10 days early is a real cost. Stop-loss (-8%) overrides this guard regardless.
             </div>
           </div>
         </div>
@@ -537,6 +550,8 @@ function compositeScore(techScore, fundScore){
 }
 
 // Fundamental score from raw fund data (mirrors Python calc_fundamental_score)
+// Max raw = 13 (3 P/E + 3 P/BV + 3 ROE + 4 Div), normalised to 0-10
+const FUND_MAX_RAW = 13;
 function calcFundScore(fund){
   if(!fund) return null;
   let s = 0;
@@ -547,8 +562,9 @@ function calcFundScore(fund){
   else if(pe<=8)     s+=3;
   else if(pe<=12)    s+=2;
   else if(pe<=15)    s+=1;
-  // P/BV (0-2)
+  // P/BV (0-3) — new: <1 earns 3pts
   if(pbv==null)      s+=1;
+  else if(pbv<1)     s+=3;
   else if(pbv<=1.5)  s+=2;
   else if(pbv<=3)    s+=1;
   // ROE (0-3)
@@ -556,10 +572,25 @@ function calcFundScore(fund){
   else if(roe>=0.20) s+=3;
   else if(roe>=0.12) s+=2;
   else if(roe>=0.08) s+=1;
-  // Dividend (0-2)
-  if(hasDiv && divYld>=0.03) s+=2;
-  else if(hasDiv)    s+=1;
-  return Math.round(s*10)/10;
+  // Dividend (0-4) — graduated yield tiers
+  if(hasDiv){
+    if(divYld>=0.09)      s+=4.0;
+    else if(divYld>=0.08) s+=3.5;
+    else if(divYld>=0.065)s+=3.0;
+    else if(divYld>=0.05) s+=2.5;
+    else if(divYld>=0.03) s+=2.0;
+    else                  s+=1.0;
+  }
+  // Normalise raw (0-13) → 0-10
+  return Math.round(Math.min(10, s / FUND_MAX_RAW * 10) * 10) / 10;
+}
+
+// Days until ex-dividend date (returns null if unknown)
+function daysToExDiv(fund){
+  if(!fund || !fund.ex_div_date) return null;
+  const ex = new Date(fund.ex_div_date);
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((ex - today) / 86400000);
 }
 
 function showPage(name){
@@ -774,8 +805,11 @@ function renderSignals(){
     const techN = techNorm(s.score);
     const csReal = hasFundData ? compositeScore(s.score, fs) : null;
     const csColor = csReal!=null ? (csReal>=7?'var(--green)':csReal>=5?'var(--text)':'var(--red)') : 'var(--muted)';
+    const exDays = daysToExDiv(s.fund);
+    const exBadge = (exDays!=null && exDays>=0 && exDays<=21)
+      ? `<span style="background:rgba(212,170,69,.18);color:var(--yellow);border-radius:4px;padding:1px 5px;font-size:10px;margin-left:4px">📅 Ex-div ${exDays}d</span>` : '';
     return`<div class="stat-block" style="${s.signal==='BUY'?'border-color:rgba(77,205,122,.4)':'border-color:rgba(240,100,100,.3)'}">
-      <div class="stat-label">${name} ${held?'💼':''}</div>
+      <div class="stat-label">${name} ${held?'💼':''}${exBadge}</div>
       <div class="stat-val ${cc(s.score)}">${s.score>0?'+':''}${s.score}/3</div>
       <div class="stat-sub" style="line-height:1.8">
         ฿${s.price?.toFixed(2)||'–'} · <span class="${pchip}">${s.signal}</span><br>
@@ -841,6 +875,7 @@ function renderSignals(){
           <span style="color:var(--dim)">Fund/10</span>
           <span style="color:var(--dim)">sync for real</span>
         </div>`}
+        ${(()=>{const d=daysToExDiv(s.fund);return(d!=null&&d>=0&&d<=21)?`<div style="display:flex;justify-content:space-between;margin-top:3px"><span style="color:var(--yellow);font-size:9px">📅 Ex-div</span><span style="color:var(--yellow);font-size:9px;font-weight:600">${d}d</span></div>`:''})()}
       </div>
     </div>`;
   }).join('');

@@ -94,6 +94,9 @@ ROTATION_MAX_LOSS_PCT   = 0.03  # don't rotate out if down > 3% (avoid locking i
 ROTATION_MAX_PER_DAY    = 2     # max rotation swaps per trading day
 ROTATION_COOLDOWN_DAYS  = 5     # days before a rotated-out stock can re-enter
 
+# ─── Dividend timing guard ────────────────────────────────────────────────────
+EX_DIV_HOLD_DAYS = 14           # don't sell/rotate within this many days before ex-div
+
 # ─── Fundamental filter thresholds ────────────────────────────────────────────
 _ff            = cfg.get("fundamental_filter", {})
 FUND_ENABLED   = _ff.get("enabled", True)
@@ -188,26 +191,36 @@ def score_signals(rsi, close, sma, macd, msig):
 
 # ─── Fundamental filter ───────────────────────────────────────────────────────
 def fetch_fundamentals(ticker):
-    """Fetch P/E, P/BV, ROE, dividend from yfinance .info"""
+    """Fetch P/E, P/BV, ROE, dividend, and ex-dividend date from yfinance .info"""
     try:
-        info = yf.Ticker(ticker).info
+        tk      = yf.Ticker(ticker)
+        info    = tk.info
         pe      = info.get("trailingPE") or info.get("forwardPE")
         pbv     = info.get("priceToBook")
         roe     = info.get("returnOnEquity")
         div_yld = info.get("dividendYield") or 0.0
         # Check dividend history: any payout in last 3 years?
         try:
-            divs = yf.Ticker(ticker).dividends
+            divs = tk.dividends
             cutoff = pd.Timestamp.now(tz="UTC") - pd.DateOffset(years=3)
             has_div = len(divs[divs.index >= cutoff]) > 0
         except Exception:
             has_div = div_yld > 0
+        # Ex-dividend date (Unix timestamp → ISO date string)
+        ex_div_date = None
+        ex_ts = info.get("exDividendDate")
+        if ex_ts:
+            try:
+                ex_div_date = datetime.date.fromtimestamp(ex_ts).isoformat()
+            except Exception:
+                pass
         return {
-            "pe":      pe,
-            "pbv":     pbv,
-            "roe":     roe,
-            "div_yld": div_yld,
-            "has_div": has_div,
+            "pe":          pe,
+            "pbv":         pbv,
+            "roe":         roe,
+            "div_yld":     div_yld,
+            "has_div":     has_div,
+            "ex_div_date": ex_div_date,
         }
     except Exception:
         return {}
@@ -266,23 +279,27 @@ def check_fundamentals(fund):
     return passes, fails, summary
 
 
+_FUND_MAX_RAW = 13.0   # 3 (P/E) + 3 (P/BV) + 3 (ROE) + 4 (Dividend) — for normalisation
+
 def calc_fundamental_score(fund):
     """
-    Graduated fundamental quality score: 0 – 10.
+    Graduated fundamental quality score: 0 – 10 (normalised from raw 0–13).
 
     P/E  ratio (0–3 pts):  ≤8 → 3 | 8–12 → 2 | 12–15 → 1 | >15 or neg → 0
-    P/BV ratio (0–2 pts):  ≤1.5 → 2 | 1.5–3 → 1 | >3 → 0
+    P/BV ratio (0–3 pts):  <1 → 3 | 1–1.5 → 2 | 1.5–3 → 1 | >3 → 0
     ROE        (0–3 pts):  ≥20% → 3 | 12–20% → 2 | 8–12% → 1 | <8% → 0
-    Dividend   (0–2 pts):  high yield → 2 | paid some → 1 | none → 0
+    Dividend   (0–4 pts):  ≥9% → 4 | ≥8% → 3.5 | ≥6.5% → 3 | ≥5% → 2.5
+                           ≥3% → 2 | has_div → 1 | none → 0
 
     Missing data → 1 pt each (benefit of the doubt, not penalised).
+    Raw total is normalised to 0–10 scale (÷13 × 10).
     """
     if not fund:
         return 5.0          # neutral when no data at all
 
     score = 0.0
 
-    # P/E — 3 points
+    # P/E — max 3 pts
     pe = fund.get("pe")
     if pe is None:
         score += 1          # unknown → neutral
@@ -296,17 +313,19 @@ def calc_fundamental_score(fund):
         score += 1          # fair (still passes filter)
     # else 0               # expensive
 
-    # P/BV — 2 points
+    # P/BV — max 3 pts (new: <1 earns bonus tier)
     pbv = fund.get("pbv")
     if pbv is None:
         score += 1
+    elif pbv < 1.0:
+        score += 3          # trading below book — deeply undervalued
     elif pbv <= 1.5:
         score += 2          # undervalued vs book
     elif pbv <= 3:
         score += 1          # acceptable
     # else 0               # overvalued
 
-    # ROE — 3 points
+    # ROE — max 3 pts
     roe = fund.get("roe")
     if roe is None:
         score += 1
@@ -318,16 +337,21 @@ def calc_fundamental_score(fund):
         score += 1          # acceptable (meets minimum)
     # else 0               # poor
 
-    # Dividend — 2 points
-    has_div  = fund.get("has_div", False)
-    div_yld  = fund.get("div_yld") or 0.0
-    if has_div and div_yld >= 0.03:
-        score += 2          # consistent & meaningful yield (≥3%)
-    elif has_div:
-        score += 1          # paid dividend but small/irregular
-    # else 0               # no dividend
+    # Dividend — max 4 pts (graduated yield tiers)
+    has_div = fund.get("has_div", False)
+    div_yld = fund.get("div_yld") or 0.0
+    if has_div:
+        if div_yld >= 0.09:    score += 4.0   # exceptional: ≥9%
+        elif div_yld >= 0.08:  score += 3.5   # very high: ≥8%
+        elif div_yld >= 0.065: score += 3.0   # high: ≥6.5%
+        elif div_yld >= 0.05:  score += 2.5   # solid: ≥5%
+        elif div_yld >= 0.03:  score += 2.0   # meaningful: ≥3%
+        else:                  score += 1.0   # paid but small/irregular
+    # else 0               # no dividend history
 
-    return round(float(score), 1)
+    # Normalise raw score (0–13) → 0–10 scale
+    normalised = score / _FUND_MAX_RAW * 10.0
+    return round(min(10.0, normalised), 1)
 
 
 def calc_composite_score(tech_score, fund_score):
@@ -339,6 +363,27 @@ def calc_composite_score(tech_score, fund_score):
     tech_norm = (tech_score + 3) / 6.0 * 10.0
     composite = tech_norm * WEIGHT_TECH + fund_score * WEIGHT_FUND
     return round(composite, 2)
+
+
+# ─── Dividend timing guard ────────────────────────────────────────────────────
+def days_to_ex_div(fund):
+    """
+    Returns number of days until next ex-dividend date, or None if unknown.
+    Negative means ex-div has already passed.
+    """
+    ex_date_str = (fund or {}).get("ex_div_date")
+    if not ex_date_str:
+        return None
+    try:
+        ex = datetime.date.fromisoformat(ex_date_str)
+        return (ex - datetime.date.today()).days
+    except Exception:
+        return None
+
+def is_near_ex_div(fund):
+    """True if ex-dividend date is within EX_DIV_HOLD_DAYS days (don't sell yet)."""
+    days = days_to_ex_div(fund)
+    return days is not None and 0 <= days <= EX_DIV_HOLD_DAYS
 
 
 # ─── Rotation logic ───────────────────────────────────────────────────────────
@@ -380,6 +425,13 @@ def find_rotation_pair(port, buy_candidates, prices, state, today_str):
         curr_score = curr_score.get("score", 2) if isinstance(curr_score, dict) else 2
         if curr_score > ROTATION_HELD_SCORE_MAX:
             continue                               # still a strong hold — keep it
+
+        # Ex-dividend guard: don't rotate out if ex-div is imminent
+        held_fund = state.get(ticker, {}).get("fund", {}) if isinstance(state.get(ticker), dict) else {}
+        if is_near_ex_div(held_fund):
+            d = days_to_ex_div(held_fund)
+            print(f"  ⏳ Skip rotation of {ticker}: ex-div in {d}d — holding for dividend")
+            continue
 
         weak_holdings.append({
             "ticker":    ticker,
@@ -1037,7 +1089,13 @@ def main():
                 and ticker not in alerted
                 and not new_state[ticker].get("sell_alerted")
                 and ticker in port["holdings"]):
-            sell_pending.append(r)
+            # Ex-dividend guard: defer sell if ex-div is imminent
+            held_fund = new_state[ticker].get("fund", {}) if isinstance(new_state.get(ticker), dict) else {}
+            if is_near_ex_div(held_fund):
+                d = days_to_ex_div(held_fund)
+                print(f"  ⏳ Defer SELL {r['name']}: ex-div in {d}d — waiting for dividend")
+            else:
+                sell_pending.append(r)
 
     # Pass 2: execute sells first (free up slots / cash)
     for r in sell_pending:

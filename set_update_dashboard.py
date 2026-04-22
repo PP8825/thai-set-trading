@@ -24,9 +24,26 @@ def ensure_packages():
         try:
             importlib.import_module(pkg)
         except ImportError:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", pkg,
-                                   "--break-system-packages", "-q"],
-                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            # Try several install strategies for different environments
+            strategies = [
+                [sys.executable, "-m", "pip", "install", pkg, "-q"],
+                [sys.executable, "-m", "pip", "install", pkg, "--user", "-q"],
+                [sys.executable, "-m", "pip", "install", pkg, "--break-system-packages", "-q"],
+            ]
+            installed = False
+            for cmd in strategies:
+                try:
+                    subprocess.check_call(cmd,
+                                          stdout=subprocess.DEVNULL,
+                                          stderr=subprocess.DEVNULL)
+                    installed = True
+                    break
+                except subprocess.CalledProcessError:
+                    continue
+            if not installed:
+                print(f"⚠  Could not auto-install '{pkg}'. Run manually:")
+                print(f"   pip3 install {pkg} --user")
+                sys.exit(1)
 
 ensure_packages()
 import yfinance as yf
@@ -47,6 +64,8 @@ BKK = datetime.timezone(datetime.timedelta(hours=7))
 
 
 # ─── Scoring functions (mirrors set_realtime_monitor.py) ─────────────────────
+_FUND_MAX_RAW = 13.0   # 3 + 3 + 3 + 4
+
 def calc_fundamental_score(fund):
     if not fund:
         return 5.0
@@ -55,25 +74,35 @@ def calc_fundamental_score(fund):
     has_div = fund.get("has_div", False)
     div_yld = fund.get("div_yld") or 0.0
 
+    # P/E — max 3 pts
     if pe is None:      s += 1
     elif pe <= 0:       s += 0
     elif pe <= 8:       s += 3
     elif pe <= 12:      s += 2
     elif pe <= 15:      s += 1
 
+    # P/BV — max 3 pts (new: <1 earns extra tier)
     if pbv is None:     s += 1
+    elif pbv < 1.0:     s += 3
     elif pbv <= 1.5:    s += 2
     elif pbv <= 3:      s += 1
 
+    # ROE — max 3 pts
     if roe is None:     s += 1
     elif roe >= 0.20:   s += 3
     elif roe >= 0.12:   s += 2
     elif roe >= 0.08:   s += 1
 
-    if has_div and div_yld >= 0.03: s += 2
-    elif has_div:                   s += 1
+    # Dividend — max 4 pts (graduated yield tiers)
+    if has_div:
+        if div_yld >= 0.09:    s += 4.0
+        elif div_yld >= 0.08:  s += 3.5
+        elif div_yld >= 0.065: s += 3.0
+        elif div_yld >= 0.05:  s += 2.5
+        elif div_yld >= 0.03:  s += 2.0
+        else:                  s += 1.0
 
-    return round(float(s), 1)
+    return round(min(10.0, s / _FUND_MAX_RAW * 10.0), 1)
 
 
 def calc_composite_score(tech_score, fund_score):
@@ -83,20 +112,30 @@ def calc_composite_score(tech_score, fund_score):
 
 def fetch_fund(ticker):
     try:
-        info    = yf.Ticker(ticker).info
+        tk      = yf.Ticker(ticker)
+        info    = tk.info
         pe      = info.get("trailingPE") or info.get("forwardPE")
         pbv     = info.get("priceToBook")
         roe     = info.get("returnOnEquity")
         div_yld = info.get("dividendYield") or 0.0
         try:
             import pandas as pd
-            divs   = yf.Ticker(ticker).dividends
+            divs   = tk.dividends
             cutoff = pd.Timestamp.now(tz="UTC") - pd.DateOffset(years=3)
             has_div = len(divs[divs.index >= cutoff]) > 0
         except Exception:
             has_div = div_yld > 0
+        # Ex-dividend date
+        ex_div_date = None
+        ex_ts = info.get("exDividendDate")
+        if ex_ts:
+            try:
+                ex_div_date = datetime.date.fromtimestamp(ex_ts).isoformat()
+            except Exception:
+                pass
         return {"pe": pe, "pbv": pbv, "roe": roe,
-                "div_yld": div_yld, "has_div": has_div}
+                "div_yld": div_yld, "has_div": has_div,
+                "ex_div_date": ex_div_date}
     except Exception as e:
         print(f"  ⚠  {ticker}: {e}")
         return {}
