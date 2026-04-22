@@ -66,13 +66,25 @@ BKK = datetime.timezone(datetime.timedelta(hours=7))
 # ─── Scoring functions (mirrors set_realtime_monitor.py) ─────────────────────
 _FUND_MAX_RAW = 13.0   # 3 + 3 + 3 + 4
 
+def _to_float(v):
+    """Safely convert a value to float, returning None if not numeric."""
+    if v is None:
+        return None
+    try:
+        f = float(v)
+        return f if f == f else None   # NaN check
+    except (TypeError, ValueError):
+        return None
+
 def calc_fundamental_score(fund):
     if not fund:
         return 5.0
     s = 0.0
-    pe, pbv, roe = fund.get("pe"), fund.get("pbv"), fund.get("roe")
+    pe  = _to_float(fund.get("pe"))
+    pbv = _to_float(fund.get("pbv"))
+    roe = _to_float(fund.get("roe"))
     has_div = fund.get("has_div", False)
-    div_yld = fund.get("div_yld") or 0.0
+    div_yld = _to_float(fund.get("div_yld")) or 0.0
 
     # P/E — max 3 pts
     if pe is None:      s += 1
@@ -114,10 +126,10 @@ def fetch_fund(ticker):
     try:
         tk      = yf.Ticker(ticker)
         info    = tk.info
-        pe      = info.get("trailingPE") or info.get("forwardPE")
-        pbv     = info.get("priceToBook")
-        roe     = info.get("returnOnEquity")
-        div_yld = info.get("dividendYield") or 0.0
+        pe      = _to_float(info.get("trailingPE") or info.get("forwardPE"))
+        pbv     = _to_float(info.get("priceToBook"))
+        roe     = _to_float(info.get("returnOnEquity"))
+        div_yld = _to_float(info.get("dividendYield")) or 0.0
         try:
             import pandas as pd
             divs   = tk.dividends
