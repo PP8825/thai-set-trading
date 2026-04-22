@@ -102,6 +102,11 @@ MAX_PBV        = _ff.get("max_pbv", 3)
 MIN_ROE        = _ff.get("min_roe", 0.08)     # 8% minimum ROE
 REQ_DIVIDEND   = _ff.get("require_dividend", True)
 
+# ─── Composite scoring weights ─────────────────────────────────────────────────
+_sw          = cfg.get("scoring_weights", {})
+WEIGHT_TECH  = _sw.get("technical",   0.6)   # technical contributes 60%
+WEIGHT_FUND  = _sw.get("fundamental", 0.4)   # fundamental contributes 40%
+
 # ─── Bangkok time (UTC+7, no pytz needed) ─────────────────────────────────────
 BKK_OFFSET = datetime.timezone(datetime.timedelta(hours=7))
 
@@ -260,6 +265,82 @@ def check_fundamentals(fund):
     summary = " | ".join(checks + ["❌ " + f for f in fails])
     return passes, fails, summary
 
+
+def calc_fundamental_score(fund):
+    """
+    Graduated fundamental quality score: 0 – 10.
+
+    P/E  ratio (0–3 pts):  ≤8 → 3 | 8–12 → 2 | 12–15 → 1 | >15 or neg → 0
+    P/BV ratio (0–2 pts):  ≤1.5 → 2 | 1.5–3 → 1 | >3 → 0
+    ROE        (0–3 pts):  ≥20% → 3 | 12–20% → 2 | 8–12% → 1 | <8% → 0
+    Dividend   (0–2 pts):  high yield → 2 | paid some → 1 | none → 0
+
+    Missing data → 1 pt each (benefit of the doubt, not penalised).
+    """
+    if not fund:
+        return 5.0          # neutral when no data at all
+
+    score = 0.0
+
+    # P/E — 3 points
+    pe = fund.get("pe")
+    if pe is None:
+        score += 1          # unknown → neutral
+    elif pe <= 0:
+        score += 0          # loss-making
+    elif pe <= 8:
+        score += 3          # very cheap
+    elif pe <= 12:
+        score += 2          # cheap
+    elif pe <= 15:
+        score += 1          # fair (still passes filter)
+    # else 0               # expensive
+
+    # P/BV — 2 points
+    pbv = fund.get("pbv")
+    if pbv is None:
+        score += 1
+    elif pbv <= 1.5:
+        score += 2          # undervalued vs book
+    elif pbv <= 3:
+        score += 1          # acceptable
+    # else 0               # overvalued
+
+    # ROE — 3 points
+    roe = fund.get("roe")
+    if roe is None:
+        score += 1
+    elif roe >= 0.20:
+        score += 3          # excellent capital efficiency
+    elif roe >= 0.12:
+        score += 2          # good
+    elif roe >= 0.08:
+        score += 1          # acceptable (meets minimum)
+    # else 0               # poor
+
+    # Dividend — 2 points
+    has_div  = fund.get("has_div", False)
+    div_yld  = fund.get("div_yld") or 0.0
+    if has_div and div_yld >= 0.03:
+        score += 2          # consistent & meaningful yield (≥3%)
+    elif has_div:
+        score += 1          # paid dividend but small/irregular
+    # else 0               # no dividend
+
+    return round(float(score), 1)
+
+
+def calc_composite_score(tech_score, fund_score):
+    """
+    Blend technical (−3 to +3) and fundamental (0–10) into a single 0–10 score.
+    Technical is first normalised to 0–10: (score + 3) / 6 × 10.
+    Weights are set in set_config.json under scoring_weights.
+    """
+    tech_norm = (tech_score + 3) / 6.0 * 10.0
+    composite = tech_norm * WEIGHT_TECH + fund_score * WEIGHT_FUND
+    return round(composite, 2)
+
+
 # ─── Rotation logic ───────────────────────────────────────────────────────────
 def find_rotation_pair(port, buy_candidates, prices, state, today_str):
     """
@@ -329,8 +410,8 @@ def find_rotation_pair(port, buy_candidates, prices, state, today_str):
     if not allowed_buys:
         return None, None
 
-    # Sort buy candidates: highest score first, then lowest RSI (more oversold)
-    allowed_buys.sort(key=lambda x: (-x["score"], x["rsi"]))
+    # Sort buy candidates: highest composite score first
+    allowed_buys.sort(key=lambda x: -x.get("comp_score", 0))
 
     # Match: find first (weak holding, strong buy) pair where the upgrade is real
     # Two-tier hold rule:
@@ -375,16 +456,20 @@ def build_rotation_alert(sell_trade, buy_trade, buy_result, port, prices):
     ]
 
     if buy_result:
+        fs = buy_result.get("fund_score", 5.0)
+        cs = buy_result.get("comp_score", calc_composite_score(buy_result["score"], fs))
         lines += [
             "",
-            "📊 New position signals",
-            "   RSI {0:.0f}  {1}RSI  {2}MA  {3}MACD  Score: {4:+d}/3".format(
-                buy_result["rsi"],
+            "📊 New position scores",
+            "   Technical  : {0:+d}/3  ({1}RSI {2}MA {3}MACD  RSI={4:.0f})".format(
+                buy_result["score"],
                 "▲" if buy_result["rsi_sig"] > 0 else "▼",
                 "▲" if buy_result["ma_sig"]  > 0 else "▼",
                 "▲" if buy_result["macd_sig"]> 0 else "▼",
-                buy_result["score"],
+                buy_result["rsi"],
             ),
+            "   Fundamental : {0:.1f}/10".format(fs),
+            "   Composite   : {0:.1f}/10".format(cs),
         ]
         fund = buy_result.get("fund", {})
         if fund:
@@ -434,23 +519,28 @@ def analyze(name, ticker):
         sc, label, rs, ms, mc = score_signals(rsi_v, price, sma_v, macd_v, msig_v)
 
         # Fundamental check (only fetch if stock is a BUY candidate — saves time)
-        fund        = {}
-        fund_ok     = True
-        fund_fails  = []
+        fund         = {}
+        fund_ok      = True
+        fund_fails   = []
         fund_summary = "N/A"
+        fund_score   = 5.0   # neutral default when not fetched
         if sc >= BUY_SCORE_MIN and FUND_ENABLED:
             fund = fetch_fundamentals(ticker)
             fund_ok, fund_fails, fund_summary = check_fundamentals(fund)
+            fund_score = calc_fundamental_score(fund)
+
+        comp_score = calc_composite_score(sc, fund_score)
 
         return {
-            "ticker": ticker, "name": name, "error": None,
-            "price":  price,  "pct":  pct,
-            "rsi":    rsi_v,  "sma":  sma_v,
-            "macd":   macd_v, "msig": msig_v,
-            "score":  sc,     "signal": label,
-            "rsi_sig": rs,    "ma_sig": ms, "macd_sig": mc,
-            "fund":   fund,   "fund_ok": fund_ok,
+            "ticker": ticker,    "name":     name,       "error":    None,
+            "price":  price,     "pct":      pct,
+            "rsi":    rsi_v,     "sma":      sma_v,
+            "macd":   macd_v,    "msig":     msig_v,
+            "score":  sc,        "signal":   label,
+            "rsi_sig": rs,       "ma_sig":   ms,         "macd_sig": mc,
+            "fund":   fund,      "fund_ok":  fund_ok,
             "fund_fails": fund_fails, "fund_summary": fund_summary,
+            "fund_score": fund_score, "comp_score":   comp_score,
         }
     except Exception as e:
         return {"ticker": ticker, "name": name, "error": str(e)[:60]}
@@ -548,7 +638,12 @@ def init_day_one(port, ok_results, prices):
             ", ".join("{0}({1})".format(r["name"], ",".join(r.get("fund_fails",[])))
                       for r in skipped)))
 
-    buys = sorted(passed, key=lambda x: (-x["score"], x["rsi"]))[:10]
+    # Rank by composite score (best fundamental quality among equal tech scores)
+    for r in passed:
+        if "fund_score" not in r:
+            r["fund_score"]  = calc_fundamental_score(r.get("fund", {}))
+        r["comp_score"] = calc_composite_score(r["score"], r["fund_score"])
+    buys = sorted(passed, key=lambda x: -x["comp_score"])[:10]
 
     trades = []
     cash_floor = INITIAL_CAPITAL * CASH_FLOOR_PCT
@@ -622,16 +717,21 @@ def build_trade_alert(trade, port, prices, result=None):
     lines.append("   Signal : {0}".format(trade["reason"]))
 
     if result:
+        fs = result.get("fund_score", 5.0)
+        cs = result.get("comp_score", calc_composite_score(result["score"], fs))
         lines += [
             "",
-            "📊 Technical",
-            "   RSI {0:.0f}  {1}RSI  {2}MA  {3}MACD  Score: {4:+d}/3".format(
-                result["rsi"],
+            "📊 Scores",
+            "   Technical  : {0:+d}/3  ({1}RSI {2}MA {3}MACD  RSI={4:.0f})".format(
+                result["score"],
                 "▲" if result["rsi_sig"] > 0 else "▼",
                 "▲" if result["ma_sig"]  > 0 else "▼",
                 "▲" if result["macd_sig"]> 0 else "▼",
-                result["score"],
+                result["rsi"],
             ),
+            "   Fundamental : {0:.1f}/10".format(fs),
+            "   Composite   : {0:.1f}/10  (Tech {1:.0f}% · Fund {2:.0f}%)".format(
+                cs, WEIGHT_TECH * 100, WEIGHT_FUND * 100),
         ]
         # Show fundamental data if available
         fund = result.get("fund", {})
@@ -846,6 +946,8 @@ def main():
                 "score":        r["score"],
                 "signal":       r["signal"],
                 "price":        r["price"],
+                "fund_score":   r.get("fund_score", 5.0),
+                "comp_score":   r.get("comp_score", calc_composite_score(r["score"], 5.0)),
                 "buy_alerted":  r["score"] >= BUY_SCORE_MIN,
                 "sell_alerted": False,
             }
@@ -896,54 +998,73 @@ def main():
                 trades_executed.append((trade, None))
                 alerted.add(ticker)
 
-    # Signal-change detection
-    sig_map = {r["ticker"]: r for r in ok}
+    # Signal-change detection — pass 1: update state for all stocks
+    sig_map      = {r["ticker"]: r for r in ok}
+    sell_pending = []   # sells execute immediately, order doesn't matter
+    buy_pending  = []   # buys sorted by composite score — best quality first
+
     for ticker, r in sig_map.items():
-        score = r["score"]
-        prev  = prev_state.get(ticker, {})
+        score      = r["score"]
+        prev       = prev_state.get(ticker, {})
         prev_score = prev.get("score", 0) if isinstance(prev, dict) else 0
 
         new_state[ticker] = {
             "score":        score,
             "signal":       r["signal"],
             "price":        r["price"],
+            "fund_score":   r.get("fund_score", 5.0),
+            "comp_score":   r.get("comp_score", calc_composite_score(score, 5.0)),
             "buy_alerted":  prev.get("buy_alerted",  False) if isinstance(prev, dict) else False,
             "sell_alerted": prev.get("sell_alerted", False) if isinstance(prev, dict) else False,
         }
 
-        # BUY trigger — also check fundamental filter
         fund_ok = r.get("fund_ok", True)
+
+        # Queue BUY candidates
         if (score >= BUY_SCORE_MIN
                 and prev_score <= BUY_PREV_MAX
                 and ticker not in alerted
-                and not (new_state[ticker].get("buy_alerted"))):
-            if not fund_ok:
+                and not new_state[ticker].get("buy_alerted")):
+            if fund_ok:
+                buy_pending.append(r)
+            else:
                 print("  SKIP {0:12s} — failed fundamentals: {1}".format(
                     r["name"], ", ".join(r.get("fund_fails", []))))
-            trade = execute_buy(port, r) if fund_ok else None
-            if trade:
-                print("  BUY  {0:12s} {1:,d}sh @ \u0e3f{2:.2f}".format(
-                    r["name"], trade["shares"], r["price"]))
-                trades_executed.append((trade, r))
-                alerted.add(ticker)
-                new_state[ticker]["buy_alerted"]  = True
-                new_state[ticker]["sell_alerted"] = False
 
-        # SELL trigger
+        # Queue SELL candidates
         elif (score <= SELL_SCORE_MAX
                 and prev_score >= SELL_PREV_MIN
                 and ticker not in alerted
-                and not (new_state[ticker].get("sell_alerted"))):
-            if ticker in port["holdings"]:
-                trade = execute_sell(port, ticker, r["price"], r["signal"])
-                if trade:
-                    print("  SELL {0:12s} {1:,d}sh @ \u0e3f{2:.2f}"
-                          "  P&L: \u0e3f{3:,.0f}".format(
-                        r["name"], trade["shares"], r["price"], trade["pnl"]))
-                    trades_executed.append((trade, r))
-                    alerted.add(ticker)
-                    new_state[ticker]["sell_alerted"] = True
-                    new_state[ticker]["buy_alerted"]  = False
+                and not new_state[ticker].get("sell_alerted")
+                and ticker in port["holdings"]):
+            sell_pending.append(r)
+
+    # Pass 2: execute sells first (free up slots / cash)
+    for r in sell_pending:
+        trade = execute_sell(port, r["ticker"], r["price"], r["signal"])
+        if trade:
+            print("  SELL {0:12s} {1:,d}sh @ \u0e3f{2:.2f}  P&L: \u0e3f{3:,.0f}".format(
+                r["name"], trade["shares"], r["price"], trade["pnl"]))
+            trades_executed.append((trade, r))
+            alerted.add(r["ticker"])
+            new_state[r["ticker"]]["sell_alerted"] = True
+            new_state[r["ticker"]]["buy_alerted"]  = False
+
+    # Pass 3: execute buys — ranked by composite score (best quality first)
+    buy_pending.sort(key=lambda x: -x.get("comp_score", 0))
+    for r in buy_pending:
+        if r["ticker"] in alerted:
+            continue
+        trade = execute_buy(port, r)
+        if trade:
+            print("  BUY  {0:12s} {1:,d}sh @ \u0e3f{2:.2f}  "
+                  "Tech:{3:+d} Fund:{4:.1f}/10 Comp:{5:.1f}/10".format(
+                r["name"], trade["shares"], r["price"],
+                r["score"], r.get("fund_score", 5.0), r.get("comp_score", 0)))
+            trades_executed.append((trade, r))
+            alerted.add(r["ticker"])
+            new_state[r["ticker"]]["buy_alerted"]  = True
+            new_state[r["ticker"]]["sell_alerted"] = False
 
     # ── Portfolio rotation ────────────────────────────────────────────────────
     if (ROTATION_ENABLED

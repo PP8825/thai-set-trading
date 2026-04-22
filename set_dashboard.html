@@ -199,6 +199,7 @@ tr:hover td{background:rgba(109,186,127,.04)}
     <div class="nav-tab" onclick="showPage('history')">📈 History</div>
     <div class="nav-tab" onclick="showPage('signals')">🔍 Signals</div>
     <div class="nav-tab" onclick="showPage('trades')">📋 Trades</div>
+    <div class="nav-tab" onclick="showPage('rules')">📖 Rules</div>
   </div>
 
   <!-- ═══════════════════════════ OVERVIEW PAGE ═══════════════════════════ -->
@@ -296,6 +297,252 @@ tr:hover td{background:rgba(109,186,127,.04)}
     </div>
   </div>
 
+  <!-- ═══════════════════════════ RULES PAGE ════════════════════════════ -->
+  <div class="page" id="page-rules">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+
+      <!-- SCORING -->
+      <div class="box" style="grid-column:1/-1">
+        <div class="box-head"><div class="box-title">⚡ How Signals Are Scored</div><span class="chip">runs every 15 min during market hours</span></div>
+        <div style="padding:18px">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Each stock gets checked on 3 technical indicators. Each votes +1 or −1. Total score ranges from −3 to +3.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">① RSI — 14 day</div>
+              <div style="font-size:11px;color:var(--text);line-height:1.7">
+                Measures momentum & overbought/oversold levels<br>
+                <span style="color:var(--green)">RSI &lt; 30</span> → Oversold → <strong>+1</strong><br>
+                <span style="color:var(--red)">RSI &gt; 70</span> → Overbought → <strong>−1</strong><br>
+                <span style="color:var(--muted)">RSI 30–70</span> → Neutral → <strong>0</strong>
+              </div>
+            </div>
+
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">② SMA — 50 day</div>
+              <div style="font-size:11px;color:var(--text);line-height:1.7">
+                Compares current price to 50-day average trend<br>
+                <span style="color:var(--green)">Price &gt; SMA</span> → Uptrend → <strong>+1</strong><br>
+                <span style="color:var(--red)">Price &lt; SMA</span> → Downtrend → <strong>−1</strong>
+              </div>
+            </div>
+
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">③ MACD — 12/26/9</div>
+              <div style="font-size:11px;color:var(--text);line-height:1.7">
+                Compares short-term vs long-term momentum<br>
+                <span style="color:var(--green)">MACD &gt; Signal line</span> → Building → <strong>+1</strong><br>
+                <span style="color:var(--red)">MACD &lt; Signal line</span> → Fading → <strong>−1</strong>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- score table -->
+          <div style="margin-top:16px;overflow-x:auto">
+            <table style="width:100%;font-size:12px">
+              <thead><tr>
+                <th style="width:80px">Score</th><th>Label</th><th>Meaning</th>
+              </tr></thead>
+              <tbody>
+                <tr><td style="font-weight:700;color:var(--green)">+3</td><td><span class="pill pill-b">STRONG BUY</span></td><td style="color:var(--muted)">All 3 indicators agree — strong upward signal</td></tr>
+                <tr><td style="font-weight:700;color:var(--green)">+2</td><td><span class="pill pill-b">BUY</span></td><td style="color:var(--muted)">2 of 3 indicators positive — buy signal fires</td></tr>
+                <tr><td style="font-weight:700;color:var(--muted)">+1</td><td><span class="pill pill-h">WATCH</span></td><td style="color:var(--muted)">Weak positive — monitor only, no action</td></tr>
+                <tr><td style="font-weight:700;color:var(--muted)">0</td><td><span class="pill pill-h">HOLD</span></td><td style="color:var(--muted)">Mixed signals — no action</td></tr>
+                <tr><td style="font-weight:700;color:var(--red)">−1</td><td><span class="pill pill-s">SELL</span></td><td style="color:var(--muted)">2 of 3 indicators negative — sell signal fires</td></tr>
+                <tr><td style="font-weight:700;color:var(--red)">−2</td><td><span class="pill pill-s">SELL</span></td><td style="color:var(--muted)">Stronger negative — sell signal fires</td></tr>
+                <tr><td style="font-weight:700;color:var(--red)">−3</td><td><span class="pill pill-s">STRONG SELL</span></td><td style="color:var(--muted)">All 3 negative — sell signal fires</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- FUNDAMENTAL + COMPOSITE SCORE -->
+      <div class="box" style="grid-column:1/-1">
+        <div class="box-head">
+          <div class="box-title">🏆 Fundamental Score (0–10) &amp; Composite Score (0–10)</div>
+          <span class="chip">weights: Technical 60% · Fundamental 40%</span>
+        </div>
+        <div style="padding:18px">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7">
+            The fundamental score converts each financial metric into graduated points — not just pass/fail. Combined with the technical score it produces a single <strong style="color:var(--text)">composite score</strong> used to rank and prioritise which stocks to buy or rotate into.
+          </p>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px">
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">P/E Ratio · max 3 pts</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.8">
+                ≤ 8 &nbsp;→ <strong style="color:var(--green)">3 pts</strong> (very cheap)<br>
+                8–12 → <strong style="color:var(--green)">2 pts</strong> (cheap)<br>
+                12–15 → <strong style="color:var(--text)">1 pt</strong> (fair)<br>
+                &gt;15 or negative → <strong style="color:var(--red)">0 pts</strong>
+              </div>
+            </div>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">P/BV Ratio · max 2 pts</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.8">
+                ≤ 1.5 → <strong style="color:var(--green)">2 pts</strong> (undervalued vs book)<br>
+                1.5–3 → <strong style="color:var(--text)">1 pt</strong> (acceptable)<br>
+                &gt; 3 &nbsp;→ <strong style="color:var(--red)">0 pts</strong> (overvalued)
+              </div>
+            </div>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">ROE · max 3 pts</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.8">
+                ≥ 20% → <strong style="color:var(--green)">3 pts</strong> (excellent)<br>
+                12–20% → <strong style="color:var(--green)">2 pts</strong> (good)<br>
+                8–12% → <strong style="color:var(--text)">1 pt</strong> (acceptable)<br>
+                &lt; 8% &nbsp;→ <strong style="color:var(--red)">0 pts</strong>
+              </div>
+            </div>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">Dividend · max 2 pts</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.8">
+                Yield ≥ 3% → <strong style="color:var(--green)">2 pts</strong> (consistent &amp; meaningful)<br>
+                Paid some → <strong style="color:var(--text)">1 pt</strong><br>
+                No dividend → <strong style="color:var(--red)">0 pts</strong><br>
+                Data missing → 1 pt (benefit of doubt)
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">Composite Score formula</div>
+            <div style="font-size:12px;font-family:monospace;color:var(--accent);background:rgba(0,0,0,.2);padding:10px;border-radius:7px;margin-bottom:10px">
+              Tech normalised = (Tech score + 3) ÷ 6 × 10 &nbsp;&nbsp;→ 0–10<br>
+              Composite = Tech normalised × 60% + Fund score × 40%
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;font-size:11px;color:var(--muted)">
+              <div>Example A: Tech +2, Fund 8.0<br>→ <strong style="color:var(--green)">(8.33×0.6) + (8.0×0.4) = 8.2/10</strong></div>
+              <div>Example B: Tech +2, Fund 4.0<br>→ <strong style="color:var(--yellow)">(8.33×0.6) + (4.0×0.4) = 6.6/10</strong></div>
+              <div>Both get BUY signal, but A is bought first ↑</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BUY RULES -->
+      <div class="box">
+        <div class="box-head"><div class="box-title" style="color:var(--green)">🟢 BUY Criteria</div></div>
+        <div style="padding:16px;font-size:12px;line-height:1.8">
+
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Technical gate (all must pass)</div>
+          <div style="color:var(--muted);margin-bottom:4px">✅ Score jumps to <strong style="color:var(--text)">≥ +2</strong> (was ≤ 0 last scan)</div>
+          <div style="color:var(--muted);margin-bottom:4px">✅ Stock not already held</div>
+          <div style="color:var(--muted);margin-bottom:16px">✅ Portfolio has &lt; 10 positions</div>
+
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Fundamental gate (all must pass to buy)</div>
+          <div style="color:var(--muted);margin-bottom:4px">✅ P/E ratio <strong style="color:var(--text)">&lt; 15</strong></div>
+          <div style="color:var(--muted);margin-bottom:4px">✅ P/BV ratio <strong style="color:var(--text)">&lt; 3</strong></div>
+          <div style="color:var(--muted);margin-bottom:4px">✅ ROE <strong style="color:var(--text)">≥ 8%</strong></div>
+          <div style="color:var(--muted);margin-bottom:16px">✅ Paid dividend in last 3 years</div>
+
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">When multiple stocks qualify — ranked by Composite Score</div>
+          <div style="color:var(--muted);margin-bottom:16px">Higher composite score → bought first. Equal technical score → better fundamentals wins.</div>
+
+          <div style="background:rgba(77,205,122,.07);border:1px solid rgba(77,205,122,.2);border-radius:8px;padding:10px;font-size:11px;color:var(--muted)">
+            ℹ️ Signal change rule: only fires when score crosses from neutral (≤0) into buy territory (≥+2) — prevents re-buying the same stock repeatedly on the same session.
+          </div>
+        </div>
+      </div>
+
+      <!-- SELL RULES -->
+      <div class="box">
+        <div class="box-head"><div class="box-title" style="color:var(--red)">🔴 SELL Criteria</div></div>
+        <div style="padding:16px;font-size:12px;line-height:1.8">
+
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Signal sell (score reversal)</div>
+          <div style="color:var(--muted);margin-bottom:4px">⚠️ Score drops to <strong style="color:var(--text)">≤ −1</strong> (was ≥ +1 last scan)</div>
+          <div style="color:var(--muted);margin-bottom:16px">⚠️ Stock must be currently held</div>
+
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Stop-loss (automatic, any scan)</div>
+          <div style="color:var(--muted);margin-bottom:4px">🛑 Price falls <strong style="color:var(--text)">≥ 8%</strong> below average buy price</div>
+          <div style="color:var(--muted);margin-bottom:16px">🛑 Fires immediately regardless of score</div>
+
+          <div style="background:rgba(240,100,100,.07);border:1px solid rgba(240,100,100,.2);border-radius:8px;padding:10px;font-size:11px;color:var(--muted)">
+            ℹ️ Stop-loss example: bought at ฿100 → auto-sell if price hits ฿92 or below, no matter what the technical score says.
+          </div>
+        </div>
+      </div>
+
+      <!-- ROTATION RULES -->
+      <div class="box" style="grid-column:1/-1">
+        <div class="box-head"><div class="box-title">🔄 Rotation Criteria</div><span class="chip">runs only when portfolio is full (10/10) and no regular trade fired</span></div>
+        <div style="padding:16px;font-size:12px">
+
+          <p style="color:var(--muted);margin-bottom:16px;line-height:1.7">When the portfolio is full, the model checks whether any current holding should be swapped for a better opportunity. Two-tier hold time rule applies.</p>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px">
+
+            <div style="background:var(--card2);border:1px solid rgba(77,205,122,.3);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px">⚡ Fast-track (3+ days)</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.8">
+                Held stock score dropped to <strong style="color:var(--text)">≤ +1</strong><br>
+                Held ≥ <strong style="color:var(--text)">3 days</strong><br>
+                Loss not worse than <strong style="color:var(--text)">−3%</strong><br>
+                New stock score = <strong style="color:var(--green)">+3 only (Strong Buy)</strong>
+              </div>
+            </div>
+
+            <div style="background:var(--card2);border:1px solid rgba(109,186,127,.3);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px">📅 Standard (5+ days)</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.8">
+                Held stock score dropped to <strong style="color:var(--text)">≤ +1</strong><br>
+                Held ≥ <strong style="color:var(--text)">5 days</strong><br>
+                Loss not worse than <strong style="color:var(--text)">−3%</strong><br>
+                New stock score = <strong style="color:var(--accent)">+2 or +3</strong>
+              </div>
+            </div>
+
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px">🛡️ Anti-churn safeguards</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.8">
+                Max <strong style="color:var(--text)">1 rotation per scan</strong> (15 min)<br>
+                Max <strong style="color:var(--text)">2 rotations per day</strong><br>
+                Rotated-out stock locked out for <strong style="color:var(--text)">5 days</strong><br>
+                No rotation if another trade already fired
+              </div>
+            </div>
+
+          </div>
+
+          <div style="background:rgba(109,186,127,.07);border:1px solid rgba(109,186,127,.2);border-radius:8px;padding:12px;font-size:11px;color:var(--muted);line-height:1.7">
+            ℹ️ <strong style="color:var(--text)">What rotation does NOT do:</strong> will not sell a stock that is down &gt;3% (locks in loss), will not rotate out a stock still scoring +2/+3 (still strong), will not fire on the same scan as a regular buy or sell signal.
+          </div>
+        </div>
+      </div>
+
+      <!-- POSITION SIZING & COSTS -->
+      <div class="box">
+        <div class="box-head"><div class="box-title">💰 Position Sizing</div></div>
+        <div style="padding:16px;font-size:12px;line-height:1.8">
+          <div style="color:var(--muted);margin-bottom:4px">Capital: <strong style="color:var(--text)">฿300,000</strong></div>
+          <div style="color:var(--muted);margin-bottom:4px">Max positions: <strong style="color:var(--text)">10 stocks</strong></div>
+          <div style="color:var(--muted);margin-bottom:4px">Cash floor: <strong style="color:var(--text)">5%</strong> always kept in reserve</div>
+          <div style="color:var(--muted);margin-bottom:4px">Allocation per stock: equal split of available cash across remaining slots</div>
+          <div style="color:var(--muted);margin-bottom:4px">Lot size: <strong style="color:var(--text)">100 shares</strong> minimum per trade</div>
+          <div style="color:var(--muted)">Transaction cost: <strong style="color:var(--text)">0.25%</strong> each way (buy + sell)</div>
+        </div>
+      </div>
+
+      <!-- SCHEDULE -->
+      <div class="box">
+        <div class="box-head"><div class="box-title">🕐 Run Schedule</div></div>
+        <div style="padding:16px;font-size:12px;line-height:1.8">
+          <div style="color:var(--muted);margin-bottom:4px">Morning session: <strong style="color:var(--text)">10:00 – 12:30</strong> Bangkok</div>
+          <div style="color:var(--muted);margin-bottom:4px">Afternoon session: <strong style="color:var(--text)">14:30 – 16:30</strong> Bangkok</div>
+          <div style="color:var(--muted);margin-bottom:4px">Scan frequency: <strong style="color:var(--text)">every 15 minutes</strong></div>
+          <div style="color:var(--muted);margin-bottom:4px">EOD report: <strong style="color:var(--text)">16:35</strong> Bangkok (daily summary)</div>
+          <div style="color:var(--muted);margin-bottom:4px">Monthly report: <strong style="color:var(--text)">last trading day</strong> of each month</div>
+          <div style="color:var(--muted)">Trigger: <strong style="color:var(--text)">cron-job.org → GitHub Actions</strong></div>
+        </div>
+      </div>
+
+    </div><!-- /grid -->
+  </div><!-- /rules page -->
+
   <!-- ═══════════════════════════ TRADES PAGE ═══════════════════════════ -->
   <div class="page" id="page-trades">
     <div class="box">
@@ -333,6 +580,45 @@ const B = (n,d=0)=>'฿'+n.toLocaleString('th-TH',{minimumFractionDigits:d,maxim
 const P = n=>(n>=0?'+':'')+n.toFixed(2)+'%';
 const cc = n=>n>0?'up':n<0?'down':'flat';
 const holdTickers = new Set(Object.keys(PORT.holdings));
+
+// Weights (match set_config.json scoring_weights)
+const W_TECH = 0.6, W_FUND = 0.4;
+
+// Normalize technical score (-3..+3) to 0-10
+function techNorm(score){ return (score + 3) / 6 * 10; }
+
+// Composite score: blend tech (normalized) + fundamental
+// If fund_score is missing, use 5.0 (neutral) and mark as estimated
+function compositeScore(techScore, fundScore){
+  const fs = (fundScore != null && !isNaN(fundScore)) ? fundScore : 5.0;
+  return techNorm(techScore) * W_TECH + fs * W_FUND;
+}
+
+// Fundamental score from raw fund data (mirrors Python calc_fundamental_score)
+function calcFundScore(fund){
+  if(!fund) return null;
+  let s = 0;
+  const pe=fund.pe, pbv=fund.pbv, roe=fund.roe, hasDiv=fund.has_div, divYld=fund.div_yld||0;
+  // P/E (0-3)
+  if(pe==null)       s+=1;
+  else if(pe<=0)     s+=0;
+  else if(pe<=8)     s+=3;
+  else if(pe<=12)    s+=2;
+  else if(pe<=15)    s+=1;
+  // P/BV (0-2)
+  if(pbv==null)      s+=1;
+  else if(pbv<=1.5)  s+=2;
+  else if(pbv<=3)    s+=1;
+  // ROE (0-3)
+  if(roe==null)      s+=1;
+  else if(roe>=0.20) s+=3;
+  else if(roe>=0.12) s+=2;
+  else if(roe>=0.08) s+=1;
+  // Dividend (0-2)
+  if(hasDiv && divYld>=0.03) s+=2;
+  else if(hasDiv)    s+=1;
+  return Math.round(s*10)/10;
+}
 
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -539,13 +825,20 @@ function renderSignals(){
   document.getElementById('sigOverviewGrid').innerHTML=notable.map(([t,s])=>{
     const name=t.replace('.BK','');
     const held=holdTickers.has(t);
-    const cls=s.signal==='BUY'?'sbuy':'ssell';
-    const dot=s.score>0?'var(--green)':s.score<0?'var(--red)':'var(--muted)';
     const pchip=s.signal==='BUY'?'chip chip-buy':'chip chip-sell';
+    const rawFund=s.fund!=null?calcFundScore(s.fund):null;
+    const fs=s.fund_score!=null?s.fund_score:rawFund;
+    const cs=s.comp_score!=null?s.comp_score:compositeScore(s.score,fs);
+    const csEst=s.comp_score==null;
+    const csColor=cs>=7?'var(--green)':cs>=5?'var(--text)':'var(--red)';
     return`<div class="stat-block" style="${s.signal==='BUY'?'border-color:rgba(77,205,122,.4)':'border-color:rgba(240,100,100,.3)'}">
       <div class="stat-label">${name} ${held?'💼':''}</div>
-      <div class="stat-val ${cc(s.score)}">${s.score>0?'+':''}${s.score}</div>
-      <div class="stat-sub">฿${s.price?.toFixed(2)||'–'} · <span class="${pchip}">${s.signal}</span></div>
+      <div class="stat-val ${cc(s.score)}">${s.score>0?'+':''}${s.score}/3</div>
+      <div class="stat-sub" style="line-height:1.8">
+        ฿${s.price?.toFixed(2)||'–'} · <span class="${pchip}">${s.signal}</span><br>
+        Fund: ${fs!=null?fs.toFixed(1):'~5.0'}/10 &nbsp;
+        Comp: <span style="color:${csColor};font-weight:700">${cs.toFixed(1)}${csEst?'~':''}/10</span>
+      </div>
     </div>`;
   }).join('');
 
@@ -556,13 +849,53 @@ function renderSignals(){
     const cls=s.signal==='BUY'?'sbuy':s.signal==='SELL'?'ssell':'';
     const dot=s.score>0?'var(--green)':s.score<0?'var(--red)':'var(--muted)';
     const pill=s.signal==='BUY'?'pill pill-b':s.signal==='SELL'?'pill pill-s':'pill pill-h';
+
+    // fund_score: real if synced from GitHub, else compute from raw fund data, else null
+    const rawFund = s.fund != null ? calcFundScore(s.fund) : null;
+    const hasFund = s.fund_score!=null || rawFund!=null;
+    const fs = s.fund_score!=null ? s.fund_score : rawFund;
+    const fsLabel = fs!=null ? fs.toFixed(1)+'/10' : '~/10';
+    const fsEst   = fs==null;
+
+    // composite: real if synced, else compute (fund or neutral 5.0)
+    const cs = s.comp_score!=null ? s.comp_score : compositeScore(s.score, fs);
+    const csEst = s.comp_score==null;
+    const csColor = cs>=7?'var(--green)':cs>=5?'var(--text)':'var(--red)';
+
+    // tech score display: +2/3 format
+    const techLabel = (s.score>0?'+':'')+s.score+'/3';
+
+    // Only show composite when we have real fund data; otherwise show tech/10
+    const hasFundData = fs != null;
+    const techN = techNorm(s.score);
+    const csReal = hasFundData ? compositeScore(s.score, fs) : null;
+
     return`<div class="sig-card ${cls}">
       <div class="sc-name">${name} ${held?'💼':''}</div>
-      <div class="sc-px">฿${s.price?.toFixed(2)||'–'}</div>
-      <div class="sc-row">
+      <div class="sc-px">฿${s.price!=null?s.price.toFixed(2):'–'}</div>
+      <div class="sc-row" style="margin-bottom:6px">
         <div class="dot" style="background:${dot}"></div>
-        <span class="sc-score ${cc(s.score)}">${s.score>0?'+':''}${s.score}</span>
+        <span class="sc-score ${cc(s.score)}" style="font-size:12px;font-weight:700">${techLabel}</span>
         &nbsp;<span class="${pill}">${s.signal}</span>
+      </div>
+      <div style="font-size:10px;line-height:1.8;border-top:1px solid rgba(255,255,255,.06);padding-top:6px">
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--muted)">Tech/10</span>
+          <span style="color:var(--text);font-weight:600">${techN.toFixed(1)}</span>
+        </div>
+        ${hasFundData ? `
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--muted)">Fund/10</span>
+          <span style="color:var(--text);font-weight:600">${fs.toFixed(1)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--muted)">Comp/10</span>
+          <span style="color:${csReal>=7?'var(--green)':csReal>=5?'var(--text)':'var(--red)'};font-weight:700">${csReal.toFixed(1)}</span>
+        </div>` : `
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--dim)">Fund/10</span>
+          <span style="color:var(--dim)">sync for real</span>
+        </div>`}
       </div>
     </div>`;
   }).join('');

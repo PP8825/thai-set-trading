@@ -431,6 +431,11 @@
       "ticker": "PYLON.BK"
     }
   ],
+  "scoring_weights": {
+    "_note": "Must sum to 1.0. technical = RSI+SMA+MACD score. fundamental = P/E, P/BV, ROE, dividend quality.",
+    "technical":   0.6,
+    "fundamental": 0.4
+  },
   "rsi_period": 14,
   "rsi_overbought": 70,
   "rsi_oversold": 30,
