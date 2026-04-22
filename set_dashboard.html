@@ -828,16 +828,19 @@ function renderSignals(){
     const pchip=s.signal==='BUY'?'chip chip-buy':'chip chip-sell';
     const rawFund=s.fund!=null?calcFundScore(s.fund):null;
     const fs=s.fund_score!=null?s.fund_score:rawFund;
-    const cs=s.comp_score!=null?s.comp_score:compositeScore(s.score,fs);
-    const csEst=s.comp_score==null;
-    const csColor=cs>=7?'var(--green)':cs>=5?'var(--text)':'var(--red)';
+    const hasFundData = fs != null;
+    const techN = techNorm(s.score);
+    const csReal = hasFundData ? compositeScore(s.score, fs) : null;
+    const csColor = csReal!=null ? (csReal>=7?'var(--green)':csReal>=5?'var(--text)':'var(--red)') : 'var(--muted)';
     return`<div class="stat-block" style="${s.signal==='BUY'?'border-color:rgba(77,205,122,.4)':'border-color:rgba(240,100,100,.3)'}">
       <div class="stat-label">${name} ${held?'💼':''}</div>
       <div class="stat-val ${cc(s.score)}">${s.score>0?'+':''}${s.score}/3</div>
       <div class="stat-sub" style="line-height:1.8">
         ฿${s.price?.toFixed(2)||'–'} · <span class="${pchip}">${s.signal}</span><br>
-        Fund: ${fs!=null?fs.toFixed(1):'~5.0'}/10 &nbsp;
-        Comp: <span style="color:${csColor};font-weight:700">${cs.toFixed(1)}${csEst?'~':''}/10</span>
+        Tech: ${techN.toFixed(1)}/10 &nbsp;
+        ${hasFundData
+          ? `Fund: ${fs.toFixed(1)}/10 &nbsp; Comp: <span style="color:${csColor};font-weight:700">${csReal.toFixed(1)}/10</span>`
+          : `<span style="color:var(--dim)">Fund: run updater for real scores</span>`}
       </div>
     </div>`;
   }).join('');
