@@ -87,7 +87,8 @@ SELL_PREV_MIN  = 1     # only if previous score was >= +1
 
 # ─── Rotation parameters ──────────────────────────────────────────────────────
 ROTATION_ENABLED        = True
-ROTATION_MIN_HOLD_DAYS  = 5     # must hold >= 5 calendar days before eligible
+ROTATION_MIN_HOLD_DAYS  = 5     # standard: hold >= 5 days, incoming score >= +2
+ROTATION_MIN_HOLD_FAST  = 3     # fast-track: hold >= 3 days, but ONLY if incoming score = +3
 ROTATION_HELD_SCORE_MAX = 1     # held stock score must have dropped to <= +1
 ROTATION_MAX_LOSS_PCT   = 0.03  # don't rotate out if down > 3% (avoid locking in loss)
 ROTATION_MAX_PER_DAY    = 2     # max rotation swaps per trading day
@@ -286,8 +287,8 @@ def find_rotation_pair(port, buy_candidates, prices, state, today_str):
     for ticker, h in port["holdings"].items():
         entry_date = datetime.date.fromisoformat(h["entry_date"])
         days_held  = (today - entry_date).days
-        if days_held < ROTATION_MIN_HOLD_DAYS:
-            continue                               # too new — keep it
+        if days_held < ROTATION_MIN_HOLD_FAST:
+            continue                               # under 3 days — never rotate regardless
 
         px      = prices.get(ticker, h["avg_cost"])
         pnl_pct = (px - h["avg_cost"]) / h["avg_cost"]
@@ -332,10 +333,16 @@ def find_rotation_pair(port, buy_candidates, prices, state, today_str):
     allowed_buys.sort(key=lambda x: (-x["score"], x["rsi"]))
 
     # Match: find first (weak holding, strong buy) pair where the upgrade is real
+    # Two-tier hold rule:
+    #   days_held >= 5  →  incoming score +2 or +3 both allowed
+    #   days_held 3-4   →  ONLY incoming score +3 (Strong Buy) qualifies
     for held in weak_holdings:
         for buy_r in allowed_buys:
-            if buy_r["score"] > held["score"]:   # must be strictly better score
-                return held, buy_r
+            if buy_r["score"] <= held["score"]:
+                continue                          # must be strictly better
+            if held["days_held"] < ROTATION_MIN_HOLD_DAYS and buy_r["score"] < 3:
+                continue                          # fast-track only for score +3
+            return held, buy_r
 
     return None, None
 
