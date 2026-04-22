@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SET Portfolio Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:     #1a2b1e;
+  --bg2:    #162219;
+  --card:   #223028;
+  --card2:  #263c2e;
+  --border: #334d3a;
+  --text:   #dff0e3;
+  --muted:  #7da88a;
+  --dim:    #4e7a5c;
+  --green:  #4dcd7a;
+  --red:    #f06464;
+  --yellow: #d4aa45;
+  --accent: #6dba7f;
+  --accent2:#4a9960;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+
+/* TOP BAR */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-size:16px;font-weight:700;color:var(--accent);letter-spacing:-.3px}
+.badge{background:rgba(77,205,122,.15);color:var(--green);border:1px solid rgba(77,205,122,.3);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;display:flex;align-items:center;gap:5px}
+.badge::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.ts{font-size:11px;color:var(--muted)}
+.btn{background:var(--accent2);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .2s;display:flex;align-items:center;gap:5px}
+.btn:hover{opacity:.85}
+.btn.loading{opacity:.5;pointer-events:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin .8s linear infinite}
+
+/* MAIN */
+.main{max-width:1440px;margin:0 auto;padding:20px 24px}
+
+/* NAV TABS */
+.nav{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0}
+.nav-tab{padding:9px 18px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-tab:hover:not(.active){color:var(--text)}
+.page{display:none}.page.active{display:block}
+
+/* CARDS */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
+.card-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.card-value{font-size:24px;font-weight:700;letter-spacing:-.5px}
+.card-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.up{color:var(--green)}.down{color:var(--red)}.flat{color:var(--text)}
+
+/* SECTION BOX */
+.box{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:18px;overflow:hidden}
+.box-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.box-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
+.chip{background:rgba(109,186,127,.15);color:var(--accent);border-radius:6px;font-size:11px;font-weight:600;padding:2px 8px}
+.chip-sell{background:rgba(240,100,100,.12);color:var(--red)}
+.chip-buy{background:rgba(77,205,122,.12);color:var(--green)}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{padding:9px 14px;text-align:left;color:var(--dim);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;background:rgba(0,0,0,.15);border-bottom:1px solid var(--border)}
+td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(109,186,127,.04)}
+.ticker{font-weight:700;color:var(--accent);font-size:13px}
+.pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+.pill-b{background:rgba(77,205,122,.15);color:var(--green)}
+.pill-s{background:rgba(240,100,100,.15);color:var(--red)}
+.pill-h{background:rgba(148,163,184,.08);color:var(--muted)}
+
+/* MINI BAR */
+.bar-wrap{display:flex;align-items:center;gap:6px}
+.mini-bar{height:4px;border-radius:2px;min-width:3px}
+
+/* SIGNAL GRID */
+.sig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:9px;padding:14px}
+.sig-card{background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:11px;transition:border-color .15s}
+.sig-card:hover{border-color:var(--accent)}
+.sig-card.sbuy{border-color:rgba(77,205,122,.5);background:rgba(77,205,122,.06)}
+.sig-card.ssell{border-color:rgba(240,100,100,.4);background:rgba(240,100,100,.06)}
+.sc-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.sc-px{font-size:11px;color:var(--muted);margin-bottom:7px}
+.sc-row{display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sc-score{font-size:11px;font-weight:600}
+
+/* HISTORY CHART */
+.chart-area{padding:18px;height:240px;position:relative}
+
+/* 2 COL LAYOUT */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+
+/* DAY HISTORY TABLE */
+.day-badge{display:inline-block;background:rgba(109,186,127,.12);color:var(--accent);border-radius:5px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px}
+
+/* NO DATA */
+.empty{color:var(--muted);font-size:12px;padding:20px 18px}
+.preset-btn{background:rgba(109,186,127,.1);color:#a8d5b0;border:1px solid #3a5a42;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;transition:background .15s}
+.preset-btn:hover{background:rgba(109,186,127,.22)}
+
+/* SECTION GRID 3-COL */
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;padding:14px}
+.stat-block{background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:12px}
+.stat-label{font-size:10px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.stat-val{font-size:18px;font-weight:700}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:2px}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">
+    <h1>🇹🇭 SET Portfolio</h1>
+    <div class="badge">LIVE DATA</div>
+  </div>
+  <div class="topbar-right">
+    <span class="ts" id="tsLabel">Embedded · Apr 22 2026</span>
+    <button class="btn" id="lineBtn" onclick="openLineModal()" style="background:#06c755">📲 Send LINE</button>
+  <button class="btn" id="ghBtn" onclick="refreshFromGitHub()">⟳ Sync GitHub</button>
+  </div>
+</div>
+
+<!-- LINE MODAL -->
+<div id="lineOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)closeLineModal()">
+  <div style="background:#1e3028;border:1px solid #3a5a42;border-radius:16px;padding:28px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;position:relative">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:20px">📲</span>
+        <span style="font-size:15px;font-weight:700;color:#dff0e3">Send LINE Notification</span>
+      </div>
+      <button onclick="closeLineModal()" style="background:none;border:none;color:#7da88a;font-size:20px;cursor:pointer;line-height:1">✕</button>
+    </div>
+
+    <!-- Quick presets -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;color:#7da88a;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Quick message</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px">
+        <button class="preset-btn" onclick="setPreset('portfolio')">📊 Portfolio Summary</button>
+        <button class="preset-btn" onclick="setPreset('alive')">✅ System Alive Check</button>
+        <button class="preset-btn" onclick="setPreset('signals')">🔍 Signal Update</button>
+        <button class="preset-btn" onclick="setPreset('custom')">✏️ Custom</button>
+      </div>
+    </div>
+
+    <!-- Message area -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;color:#7da88a;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Message</div>
+      <textarea id="lineMsg" rows="10" style="width:100%;background:#162219;border:1px solid #3a5a42;border-radius:8px;color:#dff0e3;font-size:12px;font-family:monospace;padding:10px;resize:vertical;outline:none;line-height:1.5"></textarea>
+    </div>
+
+    <!-- GitHub PAT input -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;color:#7da88a;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">
+        GitHub Token <span style="color:#4e7a5c;font-weight:400;text-transform:none">(one-time, stays for this session)</span>
+      </div>
+      <div style="display:flex;gap:7px;align-items:center">
+        <input id="ghPat" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="flex:1;background:#162219;border:1px solid #3a5a42;border-radius:7px;color:#dff0e3;font-size:12px;font-family:monospace;padding:8px 10px;outline:none" />
+        <button onclick="savePat()" style="background:#334d3a;color:#a8d5b0;border:1px solid #4a6a50;border-radius:7px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Save ✓</button>
+      </div>
+      <div style="font-size:10px;color:#4e7a5c;margin-top:4px">
+        Need a token? GitHub → Settings → Developer settings → Personal access tokens → Fine-grained → <strong style="color:#7da88a">Actions: write</strong>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button id="sendDirectBtn" onclick="sendLineDirect()" style="background:#06c755;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;flex:1">📤 Send via GitHub</button>
+      <button onclick="copyTerminalCmd()" style="background:#334d3a;color:#dff0e3;border:1px solid #4a6a50;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer">📋 Copy Terminal</button>
+    </div>
+    <div id="lineStatus" style="margin-top:12px;font-size:12px;min-height:18px;text-align:center"></div>
+
+    <!-- Terminal fallback (hidden by default) -->
+    <div id="terminalBox" style="display:none;margin-top:14px">
+      <div style="font-size:11px;color:#7da88a;margin-bottom:5px">Paste this in Terminal and press Enter:</div>
+      <div style="background:#0f1a11;border:1px solid #2d4432;border-radius:7px;padding:10px;font-size:11px;font-family:monospace;color:#a8d5b0;word-break:break-all;line-height:1.5" id="curlCmd"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-tab active" onclick="showPage('overview')">📊 Overview</div>
+    <div class="nav-tab" onclick="showPage('holdings')">💼 Holdings</div>
+    <div class="nav-tab" onclick="showPage('history')">📈 History</div>
+    <div class="nav-tab" onclick="showPage('signals')">🔍 Signals</div>
+    <div class="nav-tab" onclick="showPage('trades')">📋 Trades</div>
+  </div>
+
+  <!-- ═══════════════════════════ OVERVIEW PAGE ═══════════════════════════ -->
+  <div class="page active" id="page-overview">
+
+    <!-- summary cards -->
+    <div class="cards" id="summaryCards"></div>
+
+    <div class="grid2">
+      <!-- current holdings mini -->
+      <div class="box">
+        <div class="box-head">
+          <div class="box-title">💼 Current Holdings <span class="chip" id="holdChip">10/10</span></div>
+        </div>
+        <div class="tbl-wrap">
+          <table id="holdMiniTable">
+            <thead><tr><th>Stock</th><th>Shares</th><th>Cost</th><th>P&L %</th></tr></thead>
+            <tbody id="holdMiniBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- daily performance chart -->
+      <div class="box">
+        <div class="box-head">
+          <div class="box-title">📈 Portfolio Value History</div>
+          <span style="font-size:11px;color:var(--muted)">Daily close</span>
+        </div>
+        <div class="chart-area"><canvas id="histChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- signals summary -->
+    <div class="box">
+      <div class="box-head">
+        <div class="box-title">🔍 Market Signals Summary</div>
+        <span id="sigSummaryLine" style="font-size:11px;color:var(--muted)"></span>
+      </div>
+      <div class="grid3" id="sigOverviewGrid"></div>
+    </div>
+
+  </div><!-- /overview -->
+
+  <!-- ═══════════════════════════ HOLDINGS PAGE ═══════════════════════════ -->
+  <div class="page" id="page-holdings">
+    <div class="box">
+      <div class="box-head">
+        <div class="box-title">💼 Full Holdings Detail <span class="chip" id="holdChip2">10/10</span></div>
+        <span style="font-size:11px;color:var(--muted)">Prices from last scan · Stop loss -8%</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Stock</th><th>Entry Date</th><th>Shares</th><th>Avg Cost</th><th>Last Price</th><th>Market Value</th><th>Cost Basis</th><th>Unrealised P&L</th><th>P&L %</th><th>Stop Loss</th></tr>
+          </thead>
+          <tbody id="holdFullBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- holdings bar chart -->
+    <div class="box">
+      <div class="box-head"><div class="box-title">📊 P&L by Position</div></div>
+      <div class="chart-area" style="height:260px"><canvas id="pnlBarChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ HISTORY PAGE ═══════════════════════════ -->
+  <div class="page" id="page-history">
+    <div class="box">
+      <div class="box-head">
+        <div class="box-title">📈 Daily Performance History</div>
+        <span style="font-size:11px;color:var(--muted)">Accumulated · all days</span>
+      </div>
+      <div class="chart-area" style="height:280px"><canvas id="histChartBig"></canvas></div>
+    </div>
+    <div class="box">
+      <div class="box-head"><div class="box-title">📋 Daily Log</div></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Day</th><th>Date</th><th>Portfolio Value</th><th>Cash</th><th>P&L (฿)</th><th>P&L (%)</th><th>Drawdown</th><th>Trades</th></tr></thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ SIGNALS PAGE ═══════════════════════════ -->
+  <div class="page" id="page-signals">
+    <div class="box">
+      <div class="box-head">
+        <div class="box-title">🔍 All Watchlist Signals</div>
+        <span style="font-size:11px;color:var(--muted)">BUY ≥ +2 &nbsp;·&nbsp; SELL ≤ -1 &nbsp;·&nbsp; 💼 = in portfolio</span>
+      </div>
+      <div class="sig-grid" id="sigGridFull"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ TRADES PAGE ═══════════════════════════ -->
+  <div class="page" id="page-trades">
+    <div class="box">
+      <div class="box-head">
+        <div class="box-title">📋 All Trades</div>
+        <span id="tradeCount" style="font-size:11px;color:var(--muted)"></span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Time</th><th>Action</th><th>Stock</th><th>Shares</th><th>Price (฿)</th><th>Value (฿)</th><th>P&L (฿)</th><th>Reason</th></tr></thead>
+          <tbody id="tradesBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ─── EMBEDDED DATA ───────────────────────────────────────────────────────────
+// Updated: 2026-04-22 · regenerate from set_dashboard_update.py when portfolio changes
+
+const PORT = {"capital":300000.0,"cash":29448.30848187208,"holdings":{"TISCO.BK":{"name":"TISCO","shares":200,"avg_cost":113.5,"entry_date":"2026-04-20","entry_score":2},"SIRI.BK":{"name":"SIRI","shares":20200,"avg_cost":1.41,"entry_date":"2026-04-20","entry_score":2},"TU.BK":{"name":"TU","shares":2500,"avg_cost":11.4,"entry_date":"2026-04-20","entry_score":2},"BAY.BK":{"name":"BAY","shares":1000,"avg_cost":26.0,"entry_date":"2026-04-20","entry_score":2},"KTC.BK":{"name":"KTC","shares":900,"avg_cost":29.25,"entry_date":"2026-04-20","entry_score":2},"TQM.BK":{"name":"TQM","shares":2000,"avg_cost":13.7,"entry_date":"2026-04-20","entry_score":2},"WHA.BK":{"name":"WHA","shares":6400,"avg_cost":4.4,"entry_date":"2026-04-20","entry_score":2},"JASIF.BK":{"name":"JASIF","shares":4200,"avg_cost":6.7,"entry_date":"2026-04-20","entry_score":2},"CK.BK":{"name":"CK","shares":1600,"avg_cost":17.2,"entry_date":"2026-04-20","entry_score":2},"AMATA.BK":{"name":"AMATA","shares":1300,"avg_cost":20.5,"entry_date":"2026-04-20","entry_score":2}},"trades":[{"date":"2026-04-20","action":"BUY","ticker":"TISCO.BK","name":"TISCO","shares":200,"price":113.5,"value":22700.0,"avg_cost":113.5,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"SIRI.BK","name":"SIRI","shares":20200,"price":1.41,"value":28482.0,"avg_cost":1.41,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"TU.BK","name":"TU","shares":2500,"price":11.4,"value":28500.0,"avg_cost":11.4,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"BAY.BK","name":"BAY","shares":1000,"price":26.0,"value":26000.0,"avg_cost":26.0,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"KTC.BK","name":"KTC","shares":900,"price":29.25,"value":26325.0,"avg_cost":29.25,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"TQM.BK","name":"TQM","shares":2000,"price":13.7,"value":27400.0,"avg_cost":13.7,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"WHA.BK","name":"WHA","shares":6400,"price":4.4,"value":28160.0,"avg_cost":4.4,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"JASIF.BK","name":"JASIF","shares":4200,"price":6.7,"value":28140.0,"avg_cost":6.7,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"CK.BK","name":"CK","shares":1600,"price":17.2,"value":27520.0,"avg_cost":17.2,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"AMATA.BK","name":"AMATA","shares":1300,"price":20.5,"value":26650.0,"avg_cost":20.5,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"}],"start_date":"2026-04-20","day_count":2,"peak_value":299325.30750244856};
+
+const SIGNALS = {"SCB.BK":{"score":0,"signal":"HOLD","price":135.72},"TRUE.BK":{"score":0,"signal":"HOLD","price":14.1},"CPALL.BK":{"score":0,"signal":"HOLD","price":47.5},"ADVANC.BK":{"score":-2,"signal":"SELL","price":353.0},"KBANK.BK":{"score":0,"signal":"HOLD","price":189.0},"PTT.BK":{"score":0,"signal":"HOLD","price":34.75},"GULF.BK":{"score":0,"signal":"HOLD","price":57.75},"IVL.BK":{"score":0,"signal":"HOLD","price":25.0},"MINT.BK":{"score":0,"signal":"HOLD","price":22.5},"BBL.BK":{"score":-2,"signal":"SELL","price":164.5},"PTTGC.BK":{"score":0,"signal":"HOLD","price":36.75},"PTTEP.BK":{"score":0,"signal":"HOLD","price":145.0},"SCC.BK":{"score":1,"signal":"BUY","price":230.0},"TOP.BK":{"score":-2,"signal":"SELL","price":46.0},"IRPC.BK":{"score":0,"signal":"HOLD","price":1.63},"BANPU.BK":{"score":-2,"signal":"SELL","price":5.4},"RATCH.BK":{"score":0,"signal":"HOLD","price":29.25},"GPSC.BK":{"score":0,"signal":"HOLD","price":35.25},"EGCO.BK":{"score":0,"signal":"HOLD","price":110.0},"BGRIM.BK":{"score":0,"signal":"HOLD","price":12.2},"BPP.BK":{"score":-2,"signal":"SELL","price":11.5},"GLOBAL.BK":{"score":0,"signal":"HOLD","price":6.15},"HMPRO.BK":{"score":0,"signal":"HOLD","price":6.3},"COM7.BK":{"score":-2,"signal":"SELL","price":21.6},"BH.BK":{"score":2,"signal":"BUY","price":178.0},"AOT.BK":{"score":2,"signal":"BUY","price":54.75},"OSP.BK":{"score":0,"signal":"HOLD","price":15.1},"DELTA.BK":{"score":2,"signal":"BUY","price":301.0},"GFPT.BK":{"score":0,"signal":"HOLD","price":9.3},"CBG.BK":{"score":0,"signal":"HOLD","price":37.5},"TIDLOR.BK":{"score":0,"signal":"HOLD","price":14.9},"MTC.BK":{"score":0,"signal":"HOLD","price":30.0},"CPF.BK":{"score":0,"signal":"HOLD","price":20.1},"BAM.BK":{"score":0,"signal":"HOLD","price":7.3},"SAWAD.BK":{"score":0,"signal":"HOLD","price":23.3},"KTB.BK":{"score":0,"signal":"HOLD","price":31.25},"CRC.BK":{"score":2,"signal":"BUY","price":19.9},"TTB.BK":{"score":0,"signal":"HOLD","price":2.22},"TU.BK":{"score":2,"signal":"BUY","price":11.4},"KTC.BK":{"score":2,"signal":"BUY","price":29.25},"BJC.BK":{"score":2,"signal":"BUY","price":15.0},"THAI.BK":{"score":0,"signal":"HOLD","price":6.35},"TQM.BK":{"score":2,"signal":"BUY","price":13.7},"BAY.BK":{"score":2,"signal":"BUY","price":26.0},"BTS.BK":{"score":0,"signal":"HOLD","price":2.08},"TISCO.BK":{"score":2,"signal":"BUY","price":113.5},"WHA.BK":{"score":2,"signal":"BUY","price":4.4},"AMATA.BK":{"score":2,"signal":"BUY","price":20.5},"ITD.BK":{"score":2,"signal":"BUY","price":0.25},"JMART.BK":{"score":0,"signal":"HOLD","price":6.65},"JMT.BK":{"score":0,"signal":"HOLD","price":8.6},"CK.BK":{"score":2,"signal":"BUY","price":17.2},"AP.BK":{"score":0,"signal":"HOLD","price":8.55},"LH.BK":{"score":0,"signal":"HOLD","price":3.76},"ORI.BK":{"score":0,"signal":"HOLD","price":1.76},"SPALI.BK":{"score":0,"signal":"HOLD","price":16.5},"JASIF.BK":{"score":2,"signal":"BUY","price":6.7},"TPIPP.BK":{"score":2,"signal":"BUY","price":1.94},"BEM.BK":{"score":2,"signal":"BUY","price":5.4},"CENTEL.BK":{"score":0,"signal":"HOLD","price":34.25},"BDMS.BK":{"score":0,"signal":"HOLD","price":18.7},"NTV.BK":{"score":-2,"signal":"SELL","price":22.0},"SIRI.BK":{"score":2,"signal":"BUY","price":1.41},"CPN.BK":{"score":2,"signal":"BUY","price":64.75},"LALIN.BK":{"score":-2,"signal":"SELL","price":4.48},"GLAND.BK":{"score":-1,"signal":"SELL","price":0.74},"SPRC.BK":{"score":-2,"signal":"SELL","price":6.5},"SHR.BK":{"score":2,"signal":"BUY","price":1.68},"THG.BK":{"score":2,"signal":"BUY","price":8.75}};
+
+// Daily history — appended automatically by set_eod_report.py
+const HISTORY = [
+  {day:1, date:"2026-04-20", value:299325.31, cash:29448.31, pnl:-674.69, pnlPct:-0.22, drawdown:-0.22, trades:10},
+  {day:2, date:"2026-04-21", value:299325.31, cash:29448.31, pnl:-674.69, pnlPct:-0.22, drawdown:-0.22, trades:0},
+];
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+const B = (n,d=0)=>'฿'+n.toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
+const P = n=>(n>=0?'+':'')+n.toFixed(2)+'%';
+const cc = n=>n>0?'up':n<0?'down':'flat';
+const holdTickers = new Set(Object.keys(PORT.holdings));
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  event.target.classList.add('active');
+  if(name==='holdings') renderPnlBar();
+  if(name==='history') renderHistBig();
+}
+
+// ─── PORTFOLIO CALCULATION ────────────────────────────────────────────────────
+function calcPortfolio(){
+  let investedVal=0, costBasis=0;
+  const rows=[];
+  for(const [ticker,h] of Object.entries(PORT.holdings)){
+    const px=(SIGNALS[ticker]?.price)||h.avg_cost;
+    const val=px*h.shares;
+    const cost=h.avg_cost*h.shares;
+    investedVal+=val; costBasis+=cost;
+    rows.push({ticker,h,px,val,cost,pnl:val-cost,pnlPct:(val-cost)/cost*100,stop:h.avg_cost*0.92});
+  }
+  const totalVal=investedVal+PORT.cash;
+  const totalPnl=totalVal-PORT.capital;
+  const totalPct=totalPnl/PORT.capital*100;
+  return{totalVal,totalPnl,totalPct,rows,costBasis};
+}
+
+// ─── RENDER SUMMARY CARDS ─────────────────────────────────────────────────────
+function renderSummary(){
+  const{totalVal,totalPnl,totalPct,rows}=calcPortfolio();
+  const peak=PORT.peak_value||PORT.capital;
+  const dd=(totalVal-peak)/peak*100;
+  const hc=rows.length;
+  const wins=PORT.trades.filter(t=>t.action==='SELL'&&t.pnl>0).length;
+  const sells=PORT.trades.filter(t=>t.action==='SELL').length;
+
+  document.getElementById('summaryCards').innerHTML=`
+    <div class="card">
+      <div class="card-label">Portfolio Value</div>
+      <div class="card-value ${cc(totalPnl)}">${B(totalVal)}</div>
+      <div class="card-sub">Capital: ${B(PORT.capital)}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Total P&L</div>
+      <div class="card-value ${cc(totalPnl)}">${totalPnl>=0?'+':''}${B(totalPnl)}</div>
+      <div class="card-sub ${cc(totalPnl)}">${P(totalPct)}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Cash</div>
+      <div class="card-value flat">${B(PORT.cash)}</div>
+      <div class="card-sub">${((PORT.cash/PORT.capital)*100).toFixed(1)}% of capital</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Holdings</div>
+      <div class="card-value flat">${hc}/10</div>
+      <div class="card-sub">${hc<10?10-hc+' slots open':'Portfolio full'}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Day Count</div>
+      <div class="card-value flat">Day ${PORT.day_count}</div>
+      <div class="card-sub">Since ${PORT.start_date}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Max Drawdown</div>
+      <div class="card-value ${dd<0?'down':'flat'}">${dd.toFixed(2)}%</div>
+      <div class="card-sub">Peak: ${B(peak)}</div>
+    </div>
+  `;
+}
+
+// ─── HOLDINGS MINI (OVERVIEW) ─────────────────────────────────────────────────
+function renderHoldMini(){
+  const{rows}=calcPortfolio();
+  rows.sort((a,b)=>b.pnlPct-a.pnlPct);
+  document.getElementById('holdChip').textContent=rows.length+'/10';
+  document.getElementById('holdMiniBody').innerHTML=rows.map(r=>`
+    <tr>
+      <td><span class="ticker">${r.h.name}</span></td>
+      <td style="color:var(--muted)">${r.h.shares.toLocaleString()}</td>
+      <td style="color:var(--muted)">${B(r.h.avg_cost,2)}</td>
+      <td class="${cc(r.pnl)}">
+        <div class="bar-wrap">
+          <div class="mini-bar" style="width:${Math.min(Math.abs(r.pnlPct)*5,60)}px;background:${r.pnl>=0?'var(--green)':'var(--red)'}"></div>
+          ${P(r.pnlPct)}
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ─── HOLDINGS FULL ────────────────────────────────────────────────────────────
+function renderHoldFull(){
+  const{rows}=calcPortfolio();
+  rows.sort((a,b)=>b.pnlPct-a.pnlPct);
+  document.getElementById('holdChip2').textContent=rows.length+'/10';
+  document.getElementById('holdFullBody').innerHTML=rows.map(r=>{
+    const stopHit=r.px<=r.stop;
+    return`<tr>
+      <td><span class="ticker">${r.h.name}</span><br><span style="font-size:10px;color:var(--muted)">${r.ticker}</span></td>
+      <td style="color:var(--muted)">${r.h.entry_date}</td>
+      <td>${r.h.shares.toLocaleString()}</td>
+      <td>${B(r.h.avg_cost,2)}</td>
+      <td>${B(r.px,2)}</td>
+      <td style="font-weight:600">${B(r.val)}</td>
+      <td style="color:var(--muted)">${B(r.cost)}</td>
+      <td class="${cc(r.pnl)}">${r.pnl>=0?'+':''}${B(r.pnl)}</td>
+      <td class="${cc(r.pnl)}">
+        <div class="bar-wrap">
+          <div class="mini-bar" style="width:${Math.min(Math.abs(r.pnlPct)*5,70)}px;background:${r.pnl>=0?'var(--green)':'var(--red)'}"></div>
+          ${P(r.pnlPct)}
+        </div>
+      </td>
+      <td style="color:var(--red);font-size:11px">${B(r.stop,2)} ${stopHit?'⚠️ HIT':''}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── HISTORY TABLE + MINI CHART ───────────────────────────────────────────────
+let histChartInst=null,histChartBigInst=null;
+
+function renderHistMini(){
+  const labels=HISTORY.map(r=>r.date.slice(5));
+  const vals=HISTORY.map(r=>r.value);
+  const ctx=document.getElementById('histChart').getContext('2d');
+  if(histChartInst)histChartInst.destroy();
+  histChartInst=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[{
+      data:vals,
+      borderColor:'#6dba7f',
+      backgroundColor:'rgba(109,186,127,.1)',
+      fill:true,
+      tension:.35,
+      pointRadius:5,
+      pointBackgroundColor:'#6dba7f',
+      pointBorderColor:'#1a2b1e',
+      pointBorderWidth:2
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${B(ctx.raw)}`}}},scales:{x:{ticks:{color:'#7da88a',font:{size:11}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#7da88a',font:{size:11},callback:v=>B(v)},grid:{color:'rgba(255,255,255,.06)'}}}}
+  });
+}
+
+function renderHistBig(){
+  const labels=HISTORY.map(r=>'Day '+r.day+' ('+r.date.slice(5)+')');
+  const vals=HISTORY.map(r=>r.value);
+  const ctx=document.getElementById('histChartBig').getContext('2d');
+  if(histChartBigInst)histChartBigInst.destroy();
+  histChartBigInst=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[{
+      label:'Portfolio Value',
+      data:vals,
+      borderColor:'#6dba7f',
+      backgroundColor:'rgba(109,186,127,.12)',
+      fill:true,
+      tension:.35,
+      pointRadius:7,
+      pointBackgroundColor:'#6dba7f',
+      pointBorderColor:'#1a2b1e',
+      pointBorderWidth:2
+    },{
+      label:'Capital',
+      data:HISTORY.map(()=>PORT.capital),
+      borderColor:'rgba(255,255,255,.2)',
+      borderDash:[5,5],
+      fill:false,
+      pointRadius:0,
+      tension:0
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7da88a',font:{size:11}}},tooltip:{callbacks:{label:ctx=>` ${B(ctx.raw)}`}}},scales:{x:{ticks:{color:'#7da88a',font:{size:11}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#7da88a',font:{size:11},callback:v=>B(v)},grid:{color:'rgba(255,255,255,.06)'}}}}
+  });
+}
+
+function renderHistTable(){
+  document.getElementById('histBody').innerHTML=HISTORY.slice().reverse().map(r=>{
+    const p=cc(r.pnl);
+    return`<tr>
+      <td><span class="day-badge">Day ${r.day}</span></td>
+      <td style="color:var(--muted)">${r.date}</td>
+      <td style="font-weight:700">${B(r.value)}</td>
+      <td style="color:var(--muted)">${B(r.cash)}</td>
+      <td class="${p}">${r.pnl>=0?'+':''}${B(r.pnl)}</td>
+      <td class="${p}">${P(r.pnlPct)}</td>
+      <td class="${r.drawdown<0?'down':'flat'}">${r.drawdown.toFixed(2)}%</td>
+      <td style="color:var(--muted)">${r.trades}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── SIGNALS ──────────────────────────────────────────────────────────────────
+function renderSignals(){
+  const entries=Object.entries(SIGNALS)
+    .filter(([k])=>!k.startsWith('_'))
+    .sort((a,b)=>b[1].score-a[1].score);
+
+  const buys=entries.filter(e=>e[1].signal==='BUY').length;
+  const sells=entries.filter(e=>e[1].signal==='SELL').length;
+  const holds=entries.filter(e=>e[1].signal==='HOLD').length;
+
+  document.getElementById('sigSummaryLine').textContent=`BUY: ${buys}  ·  SELL: ${sells}  ·  HOLD: ${holds}`;
+
+  // overview grid — show buy/sell only
+  const notable=entries.filter(e=>e[1].signal!=='HOLD');
+  document.getElementById('sigOverviewGrid').innerHTML=notable.map(([t,s])=>{
+    const name=t.replace('.BK','');
+    const held=holdTickers.has(t);
+    const cls=s.signal==='BUY'?'sbuy':'ssell';
+    const dot=s.score>0?'var(--green)':s.score<0?'var(--red)':'var(--muted)';
+    const pchip=s.signal==='BUY'?'chip chip-buy':'chip chip-sell';
+    return`<div class="stat-block" style="${s.signal==='BUY'?'border-color:rgba(77,205,122,.4)':'border-color:rgba(240,100,100,.3)'}">
+      <div class="stat-label">${name} ${held?'💼':''}</div>
+      <div class="stat-val ${cc(s.score)}">${s.score>0?'+':''}${s.score}</div>
+      <div class="stat-sub">฿${s.price?.toFixed(2)||'–'} · <span class="${pchip}">${s.signal}</span></div>
+    </div>`;
+  }).join('');
+
+  // full grid
+  document.getElementById('sigGridFull').innerHTML=entries.map(([t,s])=>{
+    const name=t.replace('.BK','');
+    const held=holdTickers.has(t);
+    const cls=s.signal==='BUY'?'sbuy':s.signal==='SELL'?'ssell':'';
+    const dot=s.score>0?'var(--green)':s.score<0?'var(--red)':'var(--muted)';
+    const pill=s.signal==='BUY'?'pill pill-b':s.signal==='SELL'?'pill pill-s':'pill pill-h';
+    return`<div class="sig-card ${cls}">
+      <div class="sc-name">${name} ${held?'💼':''}</div>
+      <div class="sc-px">฿${s.price?.toFixed(2)||'–'}</div>
+      <div class="sc-row">
+        <div class="dot" style="background:${dot}"></div>
+        <span class="sc-score ${cc(s.score)}">${s.score>0?'+':''}${s.score}</span>
+        &nbsp;<span class="${pill}">${s.signal}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── TRADES ───────────────────────────────────────────────────────────────────
+function renderTrades(){
+  const trades=[...PORT.trades].reverse();
+  document.getElementById('tradeCount').textContent=trades.length+' total';
+  document.getElementById('tradesBody').innerHTML=trades.map(t=>{
+    const b=t.action==='BUY';
+    return`<tr>
+      <td style="color:var(--muted)">${t.date}</td>
+      <td style="color:var(--muted)">${t.time||'–'}</td>
+      <td><span class="pill ${b?'pill-b':'pill-s'}">${t.action}</span></td>
+      <td class="ticker">${t.name}</td>
+      <td>${t.shares.toLocaleString()}</td>
+      <td>${B(t.price,2)}</td>
+      <td>${B(t.value)}</td>
+      <td class="${cc(t.pnl||0)}">${!b?(t.pnl>=0?'+':'')+B(t.pnl||0):'–'}</td>
+      <td style="font-size:11px;color:var(--muted)">${t.reason||'–'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── P&L BAR CHART ────────────────────────────────────────────────────────────
+let pnlBarInst=null;
+function renderPnlBar(){
+  const{rows}=calcPortfolio();
+  rows.sort((a,b)=>b.pnlPct-a.pnlPct);
+  const labels=rows.map(r=>r.h.name);
+  const data=rows.map(r=>parseFloat(r.pnlPct.toFixed(2)));
+  const colors=data.map(v=>v>=0?'rgba(77,205,122,.7)':'rgba(240,100,100,.7)');
+  const borders=data.map(v=>v>=0?'#4dcd7a':'#f06464');
+  const ctx=document.getElementById('pnlBarChart').getContext('2d');
+  if(pnlBarInst)pnlBarInst.destroy();
+  pnlBarInst=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderColor:borders,borderWidth:1,borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+(ctx.raw>=0?'+':'')+ctx.raw+'%'}}},scales:{x:{ticks:{color:'#7da88a',font:{size:11}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#7da88a',font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.06)'},border:{dash:[4,4]}}}}
+  });
+}
+
+// ─── GITHUB REFRESH ───────────────────────────────────────────────────────────
+async function refreshFromGitHub(){
+  const btn=document.getElementById('ghBtn');
+  btn.innerHTML='<span class="spin">↻</span> Syncing…';
+  btn.classList.add('loading');
+  try{
+    const[p,s]=await Promise.all([
+      fetch('https://raw.githubusercontent.com/PP8825/thai-set-trading/main/set_portfolio.json?_='+Date.now()).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}),
+      fetch('https://raw.githubusercontent.com/PP8825/thai-set-trading/main/set_signal_state.json?_='+Date.now()).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+    ]);
+    // merge into live objects
+    Object.assign(PORT,p);
+    Object.assign(SIGNALS,s);
+    renderAll();
+    document.getElementById('tsLabel').textContent='GitHub · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    btn.innerHTML='✓ Synced';
+    setTimeout(()=>{btn.innerHTML='⟳ Sync GitHub';},3000);
+  }catch(e){
+    btn.innerHTML='⚠ '+e.message;
+    setTimeout(()=>{btn.innerHTML='⟳ Sync GitHub';},4000);
+  }finally{
+    btn.classList.remove('loading');
+  }
+}
+
+// ─── RENDER ALL ───────────────────────────────────────────────────────────────
+function renderAll(){
+  renderSummary();
+  renderHoldMini();
+  renderHoldFull();
+  renderHistMini();
+  renderHistTable();
+  renderSignals();
+  renderTrades();
+}
+
+renderAll();
+
+// ─── LINE NOTIFICATION ─────────────────────────────────────────────────────────
+const LINE_TOKEN = 'q18X9xzjxXxC6jnVtisgyCUXB1cLLEMQuogRNQayijyiNkc7ibpAu7mbraHDShswpWJjmDLEzLB6cambJrMyUVklTJ6V2ZeYIOhF735UrPJ/hKAbMpO22ysh8ge04ZZpLNWIoxPJZ/l47Kids14odwdB04t89/1O/w1cDnyilFU=';
+const LINE_USER  = 'U8da70dff0f01f21d459d0db0e89349e4';
+
+function buildPortfolioMsg(){
+  const{totalVal,totalPnl,totalPct,rows}=calcPortfolio();
+  const now=new Date();
+  const bkk=new Date(now.getTime()+7*3600000);
+  const ts=bkk.toISOString().replace('T',' ').slice(0,16)+' BKK';
+  const buys=Object.values(SIGNALS).filter(s=>s.signal==='BUY'&&!Object.keys(PORT.holdings).includes).length;
+  let lines=[
+    `📊 MANUAL PORTFOLIO UPDATE`,
+    `${'─'.repeat(32)}`,
+    `📅 Day ${PORT.day_count}  ·  ${ts}`,
+    ``,
+    `💼 PORTFOLIO STATUS`,
+    `   Value  : ฿${totalVal.toLocaleString('th-TH',{maximumFractionDigits:0})}`,
+    `   P&L    : ${totalPnl>=0?'+':''}฿${Math.abs(totalPnl).toLocaleString('th-TH',{maximumFractionDigits:0})} (${totalPnl>=0?'+':''}${totalPct.toFixed(2)}%)`,
+    `   Cash   : ฿${PORT.cash.toLocaleString('th-TH',{maximumFractionDigits:0})}`,
+    `   Holds  : ${rows.length}/10`,
+    ``,
+    `📈 HOLDINGS`,
+  ];
+  rows.sort((a,b)=>b.pnlPct-a.pnlPct).forEach(r=>{
+    const icon=r.pnlPct>=0?'▲':'▼';
+    lines.push(`   ${icon} ${r.h.name.padEnd(7)} ${(r.pnlPct>=0?'+':'')+r.pnlPct.toFixed(1)}%`);
+  });
+  lines.push(``, `⚠️ Educational only. Not financial advice.`);
+  return lines.join('\n');
+}
+
+function buildAliveMsg(){
+  const now=new Date();
+  const bkk=new Date(now.getTime()+7*3600000);
+  const ts=bkk.toISOString().replace('T',' ').slice(0,16);
+  return `✅ SYSTEM CHECK — ${ts} BKK\n${'─'.repeat(32)}\nDashboard is live.\nDay ${PORT.day_count} · ฿${PORT.cash.toLocaleString('th-TH',{maximumFractionDigits:0})} cash · ${Object.keys(PORT.holdings).length}/10 holdings\n\nAll systems operational.`;
+}
+
+function buildSignalMsg(){
+  const buys=Object.entries(SIGNALS).filter(([k,s])=>!k.startsWith('_')&&s.signal==='BUY');
+  const sells=Object.entries(SIGNALS).filter(([k,s])=>!k.startsWith('_')&&s.signal==='SELL');
+  let lines=[`🔍 SIGNAL UPDATE`,`${'─'.repeat(32)}`];
+  if(buys.length){lines.push(`🟢 BUY signals (${buys.length})`);buys.slice(0,8).forEach(([t,s])=>lines.push(`   ${t.replace('.BK','')} ฿${s.price?.toFixed(2)} score +${s.score}`));}
+  if(sells.length){lines.push(`🔴 SELL signals (${sells.length})`);sells.slice(0,5).forEach(([t,s])=>lines.push(`   ${t.replace('.BK','')} ฿${s.price?.toFixed(2)} score ${s.score}`));}
+  lines.push(`\n⚠️ Educational only.`);
+  return lines.join('\n');
+}
+
+function setPreset(type){
+  const ta=document.getElementById('lineMsg');
+  if(type==='portfolio') ta.value=buildPortfolioMsg();
+  else if(type==='alive')    ta.value=buildAliveMsg();
+  else if(type==='signals')  ta.value=buildSignalMsg();
+  else ta.value='';
+  if(type!=='custom') ta.readOnly=false;
+  document.getElementById('terminalBox').style.display='none';
+  document.getElementById('lineStatus').textContent='';
+}
+
+function openLineModal(){
+  document.getElementById('lineOverlay').style.display='flex';
+  setPreset('portfolio');
+}
+function closeLineModal(){
+  document.getElementById('lineOverlay').style.display='none';
+}
+
+let GH_PAT = '';
+const GH_REPO = 'PP8825/thai-set-trading';
+const GH_WORKFLOW = 'manual-line.yml';
+
+function savePat(){
+  const v=document.getElementById('ghPat').value.trim();
+  if(!v){document.getElementById('lineStatus').innerHTML='<span style="color:#f06464">Paste your GitHub token first.</span>';return;}
+  GH_PAT=v;
+  document.getElementById('ghPat').value='●'.repeat(12);
+  document.getElementById('lineStatus').innerHTML='<span style="color:#4dcd7a">✅ Token saved for this session.</span>';
+}
+
+async function sendLineDirect(){
+  const msg=document.getElementById('lineMsg').value.trim();
+  const status=document.getElementById('lineStatus');
+  const btn=document.getElementById('sendDirectBtn');
+  if(!msg){status.innerHTML='<span style="color:#f06464">Message is empty.</span>';return;}
+
+  // Check PAT — try reading input field if not yet saved
+  if(!GH_PAT){
+    const v=document.getElementById('ghPat').value.trim();
+    if(v&&!v.startsWith('●'))GH_PAT=v;
+  }
+  if(!GH_PAT){
+    status.innerHTML='<span style="color:#d4aa45">⚠️ Paste your GitHub token above and click Save first.</span>';
+    return;
+  }
+
+  btn.textContent='Sending…'; btn.disabled=true;
+  status.innerHTML='<span style="color:#7da88a">Dispatching via GitHub Actions…</span>';
+
+  try{
+    const r=await fetch(
+      `https://api.github.com/repos/${GH_REPO}/actions/workflows/${GH_WORKFLOW}/dispatches`,
+      {
+        method:'POST',
+        headers:{
+          'Authorization':'token '+GH_PAT,
+          'Accept':'application/vnd.github.v3+json',
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({ref:'main',inputs:{message:msg}})
+      }
+    );
+    if(r.status===204||r.ok){
+      status.innerHTML='<span style="color:#4dcd7a">✅ Dispatched! GitHub is sending the LINE message now (takes ~15 sec).</span>';
+    } else {
+      const err=await r.json().catch(()=>({message:'Unknown error'}));
+      if(r.status===401||r.status===403){
+        status.innerHTML='<span style="color:#f06464">❌ Token rejected ('+r.status+'). Make sure it has <strong>Actions: write</strong> permission.</span>';
+      } else {
+        throw new Error(err.message||'HTTP '+r.status);
+      }
+    }
+  } catch(e){
+    status.innerHTML='<span style="color:#d4aa45">⚠️ GitHub failed: '+e.message+'. Showing Terminal fallback.</span>';
+    showTerminalCmd(msg);
+  } finally{
+    btn.textContent='📤 Send via GitHub'; btn.disabled=false;
+  }
+}
+
+function showTerminalCmd(msg){
+  const escaped=msg.replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,'\\n');
+  const cmd=`curl -s -X POST https://api.line.me/v2/bot/message/push -H "Authorization: Bearer ${LINE_TOKEN}" -H "Content-Type: application/json" -d '{"to":"${LINE_USER}","messages":[{"type":"text","text":"${escaped}"}]}'`;
+  document.getElementById('curlCmd').textContent=cmd;
+  document.getElementById('terminalBox').style.display='block';
+}
+
+function copyTerminalCmd(){
+  const msg=document.getElementById('lineMsg').value.trim();
+  if(!msg){document.getElementById('lineStatus').innerHTML='<span style="color:#f06464">Write a message first.</span>';return;}
+  showTerminalCmd(msg);
+  const cmd=document.getElementById('curlCmd').textContent;
+  navigator.clipboard.writeText(cmd).then(()=>{
+    document.getElementById('lineStatus').innerHTML='<span style="color:#4dcd7a">✅ Copied! Paste in Terminal and press Enter.</span>';
+  }).catch(()=>{
+    document.getElementById('lineStatus').innerHTML='<span style="color:#7da88a">Terminal command shown below — select all and copy manually.</span>';
+  });
+}
+
+// close modal on Escape
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLineModal();});
+</script>
+
+<div style="text-align:center;color:#4e7a5c;font-size:11px;padding:20px 24px;border-top:1px solid #223028">
+  SET Portfolio Dashboard &nbsp;·&nbsp; Test by PP &nbsp;·&nbsp; ⚠️ Educational use only · Not financial advice
+</div>
+</body>
+</html>
