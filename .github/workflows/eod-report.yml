@@ -2,9 +2,9 @@ name: SET EOD Portfolio Report
 
 on:
   schedule:
-    # 4:35 PM Bangkok = 09:35 UTC, Monday–Friday
-    - cron: '35 9 * * 1-5'
-  workflow_dispatch:   # Allow manual trigger from GitHub UI
+    # 4:40 PM Bangkok = 09:40 UTC — backup in case session runner misses EOD
+    - cron: '40 9 * * 1-5'
+  workflow_dispatch:
 
 jobs:
   report:
@@ -34,13 +34,6 @@ jobs:
         run: |
           git config user.name "SET Trading Bot"
           git config user.email "bot@set-trading.local"
-          git add set_portfolio.json Portfolio_Reports/
+          git add set_portfolio.json Portfolio_Reports/Portfolio_Master.xlsx
           git diff --staged --quiet || git commit -m "EOD report $(date +%Y%m%d) [skip ci]"
           git push
-
-      - name: Upload Excel report as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: portfolio-report-${{ github.run_id }}
-          path: Portfolio_Reports/Portfolio_*.xlsx
-          retention-days: 30

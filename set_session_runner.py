@@ -186,6 +186,20 @@ def run_afternoon():
             print(f"\n[{now.strftime('%H:%M')}] Running EOD report...")
             run_script("set_eod_report.py")
             git_save("EOD report")
+
+            # Monthly report — runs automatically on last trading day of month
+            import calendar
+            today = now_bkk().date()
+            if today.month == 12:
+                last_day = datetime.date(today.year + 1, 1, 1) - datetime.timedelta(days=1)
+            else:
+                last_day = datetime.date(today.year, today.month + 1, 1) - datetime.timedelta(days=1)
+            while last_day.weekday() >= 5:
+                last_day -= datetime.timedelta(days=1)
+            if today == last_day:
+                print(f"\n[{now.strftime('%H:%M')}] Last trading day of month — running monthly report...")
+                run_script("set_monthly_report.py")
+
             print(f"\nAfternoon session complete. Exiting.")
             break
 

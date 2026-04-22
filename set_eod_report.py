@@ -141,8 +141,16 @@ def today_trades(port: dict) -> list:
 
 # ─── Excel builder ─────────────────────────────────────────────────────────────
 def build_excel(port: dict, prices: dict, report_date: datetime.date) -> str:
-    wb = Workbook()
-    wb.remove(wb.active)
+    from openpyxl import load_workbook
+
+    MASTER_PATH = os.path.join(REPORTS_DIR, "Portfolio_Master.xlsx")
+
+    # Load existing master file or create new one
+    if os.path.exists(MASTER_PATH):
+        wb = load_workbook(MASTER_PATH)
+    else:
+        wb = Workbook()
+        wb.remove(wb.active)
 
     total_val  = portfolio_value(port, prices)
     start_cap  = port["capital"]
@@ -160,90 +168,76 @@ def build_excel(port: dict, prices: dict, report_date: datetime.date) -> str:
     pnl_today    = sum(t.get("pnl", 0) for t in sell_today)
 
     # ═══════════════════════════════════════════════════════════════════════
-    # SHEET 1: DAILY SUMMARY
+    # SHEET 1: DAILY PERFORMANCE (cumulative — one row per day)
     # ═══════════════════════════════════════════════════════════════════════
-    ws1 = wb.create_sheet("Daily Summary")
+    if "Daily Performance" in wb.sheetnames:
+        ws1 = wb["Daily Performance"]
+    else:
+        ws1 = wb.create_sheet("Daily Performance")
     ws1.sheet_view.showGridLines = False
-    _set_col_widths(ws1, [2, 30, 22, 22, 2])
+    _set_col_widths(ws1, [12, 6, 16, 14, 16, 14, 12, 10, 10, 10, 8, 8])
 
-    # Title
-    ws1.merge_cells("B1:D1")
-    t = ws1["B1"]
-    t.value     = f"🇹🇭  SET Portfolio — End-of-Day Report"
-    t.font      = Font(name="Arial", bold=True, size=16, color="C9A84C")
-    t.fill      = _fill(NAVY)
-    t.alignment = _al()
-    ws1.row_dimensions[1].height = 40
+    # Header row (only if sheet is new)
+    if ws1.max_row <= 1 and ws1["A1"].value is None:
+        hdrs = ["Date", "Day", "Portfolio Value (฿)", "Cash (฿)",
+                "Invested (฿)", "Total P&L (฿)", "Total Return %",
+                "Realised P&L Today (฿)", "Drawdown %",
+                "Positions", "Buys", "Sells"]
+        for c, h in enumerate(hdrs, 1):
+            _hdr(ws1, 1, c, h, bg=NAVY, sz=10)
+        ws1.row_dimensions[1].height = 22
 
-    ws1.merge_cells("B2:D2")
-    sub = ws1["B2"]
-    sub.value = (f"Date: {report_date.strftime('%A, %d %B %Y')}  |  "
-                 f"Day {day_no} (since {start_date})  |  "
-                 f"Capital: ฿{start_cap:,.0f}")
-    sub.font      = Font(name="Arial", size=10, color=WHITE)
-    sub.fill      = _fill("2E4C8C")
-    sub.alignment = _al()
-    ws1.row_dimensions[2].height = 20
+    # Check if today already has a row — update it if so
+    today_str = report_date.isoformat()
+    existing_row = None
+    for row in ws1.iter_rows(min_row=2, max_col=1, values_only=False):
+        if row[0].value == today_str:
+            existing_row = row[0].row
+            break
 
-    # KPI cards
-    kpis = [
-        ("Portfolio Value",  total_val,   "฿#,##0;(฿#,##0);-",   GRN if total_val > start_cap else RED),
-        ("Cash Available",   port["cash"],"฿#,##0;(฿#,##0);-",   MID),
-        ("Amount Invested",  total_val-port["cash"], "฿#,##0;(฿#,##0);-", "595959"),
-        ("Total P&L",        pnl_total,   "฿#,##0;(฿#,##0);-",   GRN if pnl_total >= 0 else RED),
-        ("Total Return",     pnl_pct/100, "0.00%;(0.00%);-",      GRN if pnl_pct >= 0 else RED),
-        ("Drawdown",         drawdown/100,"0.00%;(0.00%);-",       RED if drawdown < -3 else "595959"),
-        ("Today's Realised P&L", pnl_today, "฿#,##0;(฿#,##0);-", GRN if pnl_today >= 0 else RED),
-        ("Positions",        len(port["holdings"]), "#,##0",       MID),
-        ("Trades Today",     len(traded_today),     "#,##0",       MID),
-        ("BUY / SELL today", f"{len(buy_today)} BUY  /  {len(sell_today)} SELL",
-                             None, "595959"),
+    new_row_data = [
+        today_str,
+        day_no,
+        total_val,
+        port["cash"],
+        total_val - port["cash"],
+        pnl_total,
+        pnl_pct / 100,
+        pnl_today,
+        drawdown / 100,
+        len(port["holdings"]),
+        len(buy_today),
+        len(sell_today),
+    ]
+    fmts = [
+        "YYYY-MM-DD", "#,##0", "฿#,##0", "฿#,##0", "฿#,##0",
+        "฿#,##0;(฿#,##0);-", "0.00%", "฿#,##0;(฿#,##0);-",
+        "0.00%", "#,##0", "#,##0", "#,##0"
+    ]
+    colors = [
+        "000000", "595959",
+        GRN if total_val > start_cap else RED,
+        MID, "595959",
+        GRN if pnl_total >= 0 else RED,
+        GRN if pnl_pct >= 0 else RED,
+        GRN if pnl_today >= 0 else RED,
+        RED if drawdown < -3 else "595959",
+        MID, GRN, RED
     ]
 
-
-    _hdr(ws1, 4, 2, "Metric",       bg=MID, sz=10)
-    _hdr(ws1, 4, 3, "Value",        bg=MID, sz=10)
-    _hdr(ws1, 4, 4, "Notes",        bg=MID, sz=10)
-    ws1.row_dimensions[4].height = 22
-
-    notes_map = {
-        "Portfolio Value":   f"Cash + market value of {len(port['holdings'])} positions",
-        "Cash Available":    "Ready to deploy (incl. 5% buffer)",
-        "Amount Invested":   "Current market value of open positions",
-        "Total P&L":         f"vs starting capital ฿{start_cap:,.0f}",
-        "Total Return":      "Cumulative % from start date",
-        "Drawdown":          "From peak portfolio value",
-        "Today's Realised P&L": "Closed trades only",
-        "Positions":         f"Max allowed: 10",
-        "Trades Today":      "BUY + SELL orders",
-        "BUY / SELL today":  "Executed this session",
-    }
-
-    for i, (label, val, fmt, col) in enumerate(kpis):
-        r = 5 + i
-        bg_row = LIGHT if i % 2 == 0 else WHITE
-        _data(ws1, r, 2, label, bold=True, h="left", bg=bg_row)
-        c = ws1.cell(r, 3, val)
-        _apply(c, bold=True, sz=11, color=col, bg=bg_row,
-               fmt=fmt if fmt else "@")
-        _data(ws1, r, 4, notes_map.get(label, ""), color="595959",
-              h="left", bg=bg_row)
-        ws1.row_dimensions[r].height = 22
-
-    # Disclaimer
-    row_disc = 5 + len(kpis) + 2
-    ws1.merge_cells(f"B{row_disc}:D{row_disc}")
-    d = ws1[f"B{row_disc}"]
-    d.value = ("⚠  For educational purposes only. Not financial advice. "
-               "Report generated automatically at market close.")
-    d.font      = Font(name="Arial", italic=True, size=9, color=RED)
-    d.fill      = _fill("FCE4D6")
-    d.alignment = _al(h="left", wrap=True)
-    ws1.row_dimensions[row_disc].height = 28
+    target_row = existing_row if existing_row else ws1.max_row + 1
+    bg = LGRN if pnl_total >= 0 else LRED
+    for c, (val, fmt, col) in enumerate(zip(new_row_data, fmts, colors), 1):
+        cell = ws1.cell(target_row, c, val)
+        _apply(cell, color=col, bg=bg if c > 1 else WHITE, fmt=fmt,
+               bold=(c in [3, 6, 7]), h="center" if c != 1 else "left")
+    ws1.row_dimensions[target_row].height = 20
 
     # ═══════════════════════════════════════════════════════════════════════
-    # SHEET 2: HOLDINGS
+    # SHEET 2: HOLDINGS (replaced each day with current state)
     # ═══════════════════════════════════════════════════════════════════════
+    if "Holdings" in wb.sheetnames:
+        del wb["Holdings"]
     ws2 = wb.create_sheet("Holdings")
     ws2.sheet_view.showGridLines = False
     _set_col_widths(ws2, [12, 14, 8, 13, 13, 14, 18, 16, 14])
@@ -316,8 +310,10 @@ def build_excel(port: dict, prices: dict, report_date: datetime.date) -> str:
     _apply(pp_tot, bold=True, color=up_col, fmt='0.00%;(0.00%);"-"')
 
     # ═══════════════════════════════════════════════════════════════════════
-    # SHEET 3: TODAY'S TRADES
+    # SHEET 3: TODAY'S TRADES (replaced each day)
     # ═══════════════════════════════════════════════════════════════════════
+    if "Today's Trades" in wb.sheetnames:
+        del wb["Today's Trades"]
     ws3 = wb.create_sheet("Today's Trades")
     ws3.sheet_view.showGridLines = False
     _set_col_widths(ws3, [13, 14, 8, 8, 13, 8, 14, 13, 18])
@@ -380,8 +376,10 @@ def build_excel(port: dict, prices: dict, report_date: datetime.date) -> str:
         ws3.row_dimensions[3].height = 30
 
     # ═══════════════════════════════════════════════════════════════════════
-    # SHEET 4: TRADE HISTORY
+    # SHEET 4: TRADE HISTORY (cumulative — all trades ever)
     # ═══════════════════════════════════════════════════════════════════════
+    if "Trade History" in wb.sheetnames:
+        del wb["Trade History"]
     ws4 = wb.create_sheet("Trade History")
     ws4.sheet_view.showGridLines = False
     _set_col_widths(ws4, [13, 12, 14, 8, 8, 13, 10, 14, 14, 18])
@@ -451,16 +449,15 @@ def build_excel(port: dict, prices: dict, report_date: datetime.date) -> str:
         ws4["A3"].font      = Font(name="Arial", size=11, italic=True, color="595959")
         ws4["A3"].alignment = _al()
 
-    # ── Tab colours ───────────────────────────────────────────────────────────
-    wb["Daily Summary"].sheet_properties.tabColor  = NAVY
-    wb["Holdings"].sheet_properties.tabColor       = GRN
-    wb["Today's Trades"].sheet_properties.tabColor = "ED7D31"
-    wb["Trade History"].sheet_properties.tabColor  = MID
+    # ── Tab colours & order ───────────────────────────────────────────────────
+    wb["Daily Performance"].sheet_properties.tabColor = NAVY
+    wb["Holdings"].sheet_properties.tabColor          = GRN
+    wb["Today's Trades"].sheet_properties.tabColor    = "ED7D31"
+    wb["Trade History"].sheet_properties.tabColor     = MID
 
-    fname  = f"Portfolio_{report_date.strftime('%Y%m%d')}.xlsx"
-    fpath  = os.path.join(REPORTS_DIR, fname)
-    wb.save(fpath)
-    return fpath
+    # Always save as master file
+    wb.save(MASTER_PATH)
+    return MASTER_PATH
 
 # ─── LINE message ─────────────────────────────────────────────────────────────
 def build_eod_message(port: dict, prices: dict,
@@ -544,8 +541,8 @@ def build_eod_message(port: dict, prices: dict,
 
     lines += [
         "",
-        f"📁 Excel report saved:",
-        f"   Portfolio_Reports/{os.path.basename(excel_path)}",
+        f"📁 Master file updated: Portfolio_Master.xlsx",
+        f"   (All daily history in one file)",
         "",
         "─" * 34,
         "⚠️ Educational only. Not financial advice.",
