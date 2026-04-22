@@ -365,6 +365,98 @@ def calc_composite_score(tech_score, fund_score):
     return round(composite, 2)
 
 
+# ─── Dividend income tracking ─────────────────────────────────────────────────
+def check_and_credit_dividends(port, prices):
+    """
+    For each holding, check if any dividend was paid since last check.
+    Credits cash, logs a DIVIDEND trade, and returns list of credited trades.
+    Only runs once per day per holding (tracked via 'last_div_check' in holding).
+    """
+    today     = datetime.date.today()
+    today_str = today.isoformat()
+    credited  = []
+
+    for ticker, h in list(port["holdings"].items()):
+        last_check = h.get("last_div_check")
+        # Skip if already checked today
+        if last_check == today_str:
+            continue
+        # Use entry_date as starting cutoff on first check
+        cutoff_str = last_check or h.get("entry_date", today_str)
+        try:
+            cutoff_ts = pd.Timestamp(cutoff_str, tz="UTC")
+            today_ts  = pd.Timestamp(today_str,  tz="UTC") + pd.DateOffset(days=1)
+
+            divs = yf.Ticker(ticker).dividends
+            if divs.empty:
+                h["last_div_check"] = today_str
+                continue
+
+            recent = divs[(divs.index > cutoff_ts) & (divs.index <= today_ts)]
+            for div_date, div_per_share in recent.items():
+                div_per_share = float(div_per_share)
+                amount        = round(h["shares"] * div_per_share, 2)
+                port["cash"] += amount
+
+                trade = {
+                    "date":     div_date.date().isoformat(),
+                    "action":   "DIVIDEND",
+                    "ticker":   ticker,
+                    "name":     h["name"],
+                    "shares":   h["shares"],
+                    "price":    round(div_per_share, 4),   # dividend per share
+                    "value":    amount,
+                    "avg_cost": h["avg_cost"],
+                    "pnl":      amount,                    # full amount is income
+                    "reason":   "Dividend ฿{0:.4f}/share".format(div_per_share),
+                    "time":     time_str(),
+                }
+                port["trades"].append(trade)
+                credited.append(trade)
+                print("  💰 DIVIDEND {0:12s}  ฿{1:.4f}/sh × {2:,d}sh = ฿{3:,.2f}".format(
+                    h["name"], div_per_share, h["shares"], amount))
+
+            h["last_div_check"] = today_str
+
+        except Exception as e:
+            print("  ⚠  Dividend check failed for {0}: {1}".format(ticker, e))
+            h["last_div_check"] = today_str
+
+    return credited
+
+
+def build_dividend_alert(credited_trades, port, prices):
+    """LINE alert summarising dividends received today."""
+    total_div  = sum(t["value"] for t in credited_trades)
+    total_port = portfolio_value(port, prices)
+    start      = port["capital"]
+    pnl_t      = total_port - start
+    ps         = "+" if pnl_t >= 0 else ""
+
+    lines = [
+        "💰 DIVIDEND INCOME  —  {0}  {1}".format(
+            time_str(), datetime.date.today().strftime("%d %b %Y")),
+        "─" * 34,
+        "",
+    ]
+    for t in credited_trades:
+        lines.append("  {0:10s}  ฿{1:.4f}/sh × {2:,d}sh  = ฿{3:,.2f}".format(
+            t["name"], t["price"], t["shares"], t["value"]))
+    lines += [
+        "",
+        "   Total dividend income : ฿{0:,.2f}".format(total_div),
+        "",
+        "💼 Portfolio after dividend",
+        "   Total : ฿{0:,.0f}  ({1}{2:.2f}%)".format(
+            total_port, ps, pnl_t / start * 100),
+        "   Cash  : ฿{0:,.0f}".format(port["cash"]),
+        "",
+        "─" * 34,
+        "⚠️ Educational only. Not financial advice.",
+    ]
+    return "\n".join(lines)
+
+
 # ─── Dividend timing guard ────────────────────────────────────────────────────
 def days_to_ex_div(fund):
     """
@@ -1030,6 +1122,16 @@ def main():
     new_state   = dict(prev_state)
     new_state["_check_count"] = check_count
     alerted     = set()
+
+    # Dividend income check (once per day)
+    print("\nChecking dividend payments for {0} holdings...".format(
+        len(port["holdings"])))
+    div_trades = check_and_credit_dividends(port, prices)
+    if div_trades:
+        save_portfolio(port)
+        div_msg = build_dividend_alert(div_trades, port, prices)
+        ok_div  = send_line(div_msg)
+        print("  LINE dividend alert: {0}".format("✅ sent" if ok_div else "❌ failed"))
 
     # Stop-loss check on holdings
     print("\nChecking stop-losses on {0} holdings...".format(

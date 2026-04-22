@@ -627,6 +627,8 @@ function renderSummary(){
   const hc=rows.length;
   const wins=PORT.trades.filter(t=>t.action==='SELL'&&t.pnl>0).length;
   const sells=PORT.trades.filter(t=>t.action==='SELL').length;
+  const totalDiv=PORT.trades.filter(t=>t.action==='DIVIDEND').reduce((s,t)=>s+(t.value||0),0);
+  const capitalGainPnl=totalPnl-totalDiv;
 
   document.getElementById('summaryCards').innerHTML=`
     <div class="card">
@@ -637,7 +639,12 @@ function renderSummary(){
     <div class="card">
       <div class="card-label">Total P&L</div>
       <div class="card-value ${cc(totalPnl)}">${totalPnl>=0?'+':''}${B(totalPnl)}</div>
-      <div class="card-sub ${cc(totalPnl)}">${P(totalPct)}</div>
+      <div class="card-sub ${cc(totalPnl)}">${P(totalPct)}${totalDiv>0?` (cap. gain ${capitalGainPnl>=0?'+':''}${B(capitalGainPnl)})`:''}</div>
+    </div>
+    <div class="card" style="${totalDiv>0?'border-color:rgba(212,170,69,.3)':''}">
+      <div class="card-label">💰 Dividends Earned</div>
+      <div class="card-value up">${totalDiv>0?'+'+B(totalDiv):'฿0'}</div>
+      <div class="card-sub">${totalDiv>0?((totalDiv/PORT.capital)*100).toFixed(2)+'% of capital':'No dividends yet'}</div>
     </div>
     <div class="card">
       <div class="card-label">Cash</div>
@@ -884,18 +891,23 @@ function renderSignals(){
 // ─── TRADES ───────────────────────────────────────────────────────────────────
 function renderTrades(){
   const trades=[...PORT.trades].reverse();
-  document.getElementById('tradeCount').textContent=trades.length+' total';
+  const divTrades=PORT.trades.filter(t=>t.action==='DIVIDEND');
+  const totalDiv=divTrades.reduce((s,t)=>s+(t.value||0),0);
+  document.getElementById('tradeCount').textContent=trades.length+' total'+(totalDiv>0?`  ·  💰 Dividends: ฿${totalDiv.toLocaleString('th-TH',{maximumFractionDigits:0})}`:'');
   document.getElementById('tradesBody').innerHTML=trades.map(t=>{
     const b=t.action==='BUY';
-    return`<tr>
+    const isDiv=t.action==='DIVIDEND';
+    const pillClass=isDiv?'pill':'pill '+(b?'pill-b':'pill-s');
+    const pillStyle=isDiv?'background:rgba(212,170,69,.18);color:var(--yellow)':'';
+    return`<tr style="${isDiv?'background:rgba(212,170,69,.04)':''}">
       <td style="color:var(--muted)">${t.date}</td>
       <td style="color:var(--muted)">${t.time||'–'}</td>
-      <td><span class="pill ${b?'pill-b':'pill-s'}">${t.action}</span></td>
+      <td><span class="${pillClass}" style="${pillStyle}">${isDiv?'💰 DIV':t.action}</span></td>
       <td class="ticker">${t.name}</td>
-      <td>${t.shares.toLocaleString()}</td>
-      <td>${B(t.price,2)}</td>
+      <td>${isDiv?'–':t.shares.toLocaleString()}</td>
+      <td>${isDiv?B(t.price,4)+'/sh':B(t.price,2)}</td>
       <td>${B(t.value)}</td>
-      <td class="${cc(t.pnl||0)}">${!b?(t.pnl>=0?'+':'')+B(t.pnl||0):'–'}</td>
+      <td class="${isDiv?'up':cc(t.pnl||0)}">${isDiv?'+'+B(t.value):(!b?(t.pnl>=0?'+':'')+B(t.pnl||0):'–')}</td>
       <td style="font-size:11px;color:var(--muted)">${t.reason||'–'}</td>
     </tr>`;
   }).join('');
