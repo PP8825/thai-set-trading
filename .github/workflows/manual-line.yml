@@ -1,0 +1,37 @@
+name: Send LINE Message (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Message to send to LINE'
+        required: true
+        type: string
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send LINE notification
+        env:
+          LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          MSG: ${{ github.event.inputs.message }}
+        run: |
+          python3 -c "
+          import requests, os
+          token   = os.environ['LINE_TOKEN']
+          user_id = os.environ['LINE_USER_ID']
+          msg     = os.environ['MSG']
+          r = requests.post(
+              'https://api.line.me/v2/bot/message/push',
+              headers={'Authorization': 'Bearer ' + token,
+                       'Content-Type': 'application/json'},
+              json={'to': user_id, 'messages': [{'type': 'text', 'text': msg}]},
+              timeout=10
+          )
+          print('Status:', r.status_code)
+          print('Response:', r.text)
+          if r.status_code != 200:
+              exit(1)
+          "
