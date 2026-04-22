@@ -85,6 +85,14 @@ SELL_SCORE_MAX = -1    # score <= -1 triggers SELL
 BUY_PREV_MAX   = 0     # only if previous score was <= 0
 SELL_PREV_MIN  = 1     # only if previous score was >= +1
 
+# ─── Rotation parameters ──────────────────────────────────────────────────────
+ROTATION_ENABLED        = True
+ROTATION_MIN_HOLD_DAYS  = 5     # must hold >= 5 calendar days before eligible
+ROTATION_HELD_SCORE_MAX = 1     # held stock score must have dropped to <= +1
+ROTATION_MAX_LOSS_PCT   = 0.03  # don't rotate out if down > 3% (avoid locking in loss)
+ROTATION_MAX_PER_DAY    = 2     # max rotation swaps per trading day
+ROTATION_COOLDOWN_DAYS  = 5     # days before a rotated-out stock can re-enter
+
 # ─── Fundamental filter thresholds ────────────────────────────────────────────
 _ff            = cfg.get("fundamental_filter", {})
 FUND_ENABLED   = _ff.get("enabled", True)
@@ -250,6 +258,151 @@ def check_fundamentals(fund):
     passes  = len(fails) == 0
     summary = " | ".join(checks + ["❌ " + f for f in fails])
     return passes, fails, summary
+
+# ─── Rotation logic ───────────────────────────────────────────────────────────
+def find_rotation_pair(port, buy_candidates, prices, state, today_str):
+    """
+    When portfolio is full, check whether any holding should be swapped for a
+    better opportunity.
+
+    A holding is eligible to be rotated OUT if ALL of:
+      1. Held >= ROTATION_MIN_HOLD_DAYS calendar days
+      2. Current score <= ROTATION_HELD_SCORE_MAX (+1) — momentum has faded
+      3. Unrealised loss is <= ROTATION_MAX_LOSS_PCT (3%) — don't sell deep losers
+
+    A new stock is eligible to rotate IN if ALL of:
+      1. Score >= BUY_SCORE_MIN (+2) — full buy signal
+      2. Passes fundamental filter
+      3. Not in rotation cooldown (wasn't rotated out in last ROTATION_COOLDOWN_DAYS)
+      4. Score strictly > held stock score (genuine upgrade)
+
+    Returns (held_info dict, buy_result dict) or (None, None).
+    Only one pair is returned per call (max 1 rotation per scan enforced by caller).
+    """
+    today = datetime.date.today()
+
+    # Collect rotation-out candidates (weakest holdings first)
+    weak_holdings = []
+    for ticker, h in port["holdings"].items():
+        entry_date = datetime.date.fromisoformat(h["entry_date"])
+        days_held  = (today - entry_date).days
+        if days_held < ROTATION_MIN_HOLD_DAYS:
+            continue                               # too new — keep it
+
+        px      = prices.get(ticker, h["avg_cost"])
+        pnl_pct = (px - h["avg_cost"]) / h["avg_cost"]
+        if pnl_pct < -ROTATION_MAX_LOSS_PCT:
+            continue                               # too deep in red — protect capital
+
+        curr_score = state.get(ticker, {})
+        curr_score = curr_score.get("score", 2) if isinstance(curr_score, dict) else 2
+        if curr_score > ROTATION_HELD_SCORE_MAX:
+            continue                               # still a strong hold — keep it
+
+        weak_holdings.append({
+            "ticker":    ticker,
+            "h":         h,
+            "px":        px,
+            "pnl_pct":   pnl_pct,
+            "days_held": days_held,
+            "score":     curr_score,
+        })
+
+    if not weak_holdings:
+        return None, None
+
+    # Sort: lowest score first, then worst P&L — rotate out the weakest first
+    weak_holdings.sort(key=lambda x: (x["score"], x["pnl_pct"]))
+
+    # Rotation cooldown: tickers that were recently rotated out
+    rotated_out = state.get("_rotated_out", {})
+    allowed_buys = []
+    for r in buy_candidates:
+        if r["ticker"] not in rotated_out:
+            allowed_buys.append(r)
+            continue
+        out_date = datetime.date.fromisoformat(rotated_out[r["ticker"]])
+        if (today - out_date).days >= ROTATION_COOLDOWN_DAYS:
+            allowed_buys.append(r)               # cooldown expired — eligible again
+
+    if not allowed_buys:
+        return None, None
+
+    # Sort buy candidates: highest score first, then lowest RSI (more oversold)
+    allowed_buys.sort(key=lambda x: (-x["score"], x["rsi"]))
+
+    # Match: find first (weak holding, strong buy) pair where the upgrade is real
+    for held in weak_holdings:
+        for buy_r in allowed_buys:
+            if buy_r["score"] > held["score"]:   # must be strictly better score
+                return held, buy_r
+
+    return None, None
+
+
+def build_rotation_alert(sell_trade, buy_trade, buy_result, port, prices):
+    """LINE alert specifically for a rotation swap."""
+    total  = portfolio_value(port, prices)
+    start  = port["capital"]
+    pnl_t  = total - start
+    ps     = "+" if pnl_t >= 0 else ""
+
+    pnl_sell = sell_trade.get("pnl", 0)
+    ps2      = "+" if pnl_sell >= 0 else ""
+
+    lines = [
+        "🔄 ROTATION EXECUTED  —  {0}  {1}".format(
+            time_str(), datetime.date.today().strftime("%d %b %Y")),
+        "─" * 34,
+        "",
+        "🔴 SOLD   {0}".format(sell_trade["name"]),
+        "   Reason : Score faded — {0}".format(sell_trade["reason"]),
+        "   Price  : ฿{0:,.2f}".format(sell_trade["price"]),
+        "   P&L    : {0}฿{1:,.0f}".format(ps2, pnl_sell),
+        "",
+        "🟢 BOUGHT {0}".format(buy_trade["name"]),
+        "   Price  : ฿{0:,.2f}".format(buy_trade["price"]),
+        "   Shares : {0:,d}  ({1:,d} lots)".format(
+            buy_trade["shares"], buy_trade["shares"] // 100),
+        "   Value  : ฿{0:,.0f}".format(buy_trade["value"]),
+    ]
+
+    if buy_result:
+        lines += [
+            "",
+            "📊 New position signals",
+            "   RSI {0:.0f}  {1}RSI  {2}MA  {3}MACD  Score: {4:+d}/3".format(
+                buy_result["rsi"],
+                "▲" if buy_result["rsi_sig"] > 0 else "▼",
+                "▲" if buy_result["ma_sig"]  > 0 else "▼",
+                "▲" if buy_result["macd_sig"]> 0 else "▼",
+                buy_result["score"],
+            ),
+        ]
+        fund = buy_result.get("fund", {})
+        if fund:
+            lines += [
+                "   P/E {0}  PBV {1}  ROE {2}  Div {3}".format(
+                    "{:.1f}".format(fund["pe"])   if fund.get("pe")  else "N/A",
+                    "{:.2f}".format(fund["pbv"])  if fund.get("pbv") else "N/A",
+                    "{:.0%}".format(fund["roe"])  if fund.get("roe") else "N/A",
+                    "✅" if fund.get("has_div") else "⚠️",
+                ),
+            ]
+
+    lines += [
+        "",
+        "💼 Portfolio after rotation",
+        "   Total : ฿{0:,.0f}  ({1}{2:.2f}%)".format(
+            total, ps, pnl_t / start * 100),
+        "   Cash  : ฿{0:,.0f}".format(port["cash"]),
+        "   Held  : {0}/{1} stocks".format(len(port["holdings"]), MAX_POSITIONS),
+        "",
+        "─" * 34,
+        "⚠️ Educational only. Not financial advice.",
+    ]
+    return "\n".join(lines)
+
 
 # ─── Parallel stock analysis ──────────────────────────────────────────────────
 def analyze(name, ticker):
@@ -785,6 +938,64 @@ def main():
                     new_state[ticker]["sell_alerted"] = True
                     new_state[ticker]["buy_alerted"]  = False
 
+    # ── Portfolio rotation ────────────────────────────────────────────────────
+    if (ROTATION_ENABLED
+            and len(port["holdings"]) >= MAX_POSITIONS
+            and len(trades_executed) == 0):      # don't rotate on the same scan as a regular trade
+
+        rot_date  = new_state.get("_rotation_date", "")
+        rot_today = new_state.get("_rotation_count_today", 0)
+        if rot_date != today_str:
+            rot_today = 0                        # new day — reset counter
+
+        if rot_today < ROTATION_MAX_PER_DAY:
+            # Build buy candidate list: BUY signal, not held, fund OK, not in state alerted
+            rotation_buys = [
+                r for r in ok
+                if r["score"] >= BUY_SCORE_MIN
+                and r["ticker"] not in port["holdings"]
+                and r.get("fund_ok", True)
+            ]
+
+            if rotation_buys:
+                held_info, buy_r = find_rotation_pair(
+                    port, rotation_buys, prices, new_state, today_str)
+
+                if held_info and buy_r:
+                    print("\n  ROTATION: {0} (score {1}) → {2} (score {3})".format(
+                        held_info["h"]["name"], held_info["score"],
+                        buy_r["name"], buy_r["score"]))
+
+                    sell_reason = "Rotation → {0} | held {1}d score {2:+d}→{3:+d}".format(
+                        buy_r["name"], held_info["days_held"],
+                        held_info["score"], buy_r["score"])
+
+                    sell_trade = execute_sell(
+                        port, held_info["ticker"], held_info["px"], sell_reason)
+
+                    if sell_trade:
+                        buy_trade = execute_buy(port, buy_r)
+
+                        if buy_trade:
+                            # Track rotation state
+                            rotated_out = dict(new_state.get("_rotated_out", {}))
+                            rotated_out[held_info["ticker"]] = today_str
+                            new_state["_rotated_out"]           = rotated_out
+                            new_state["_rotation_date"]         = today_str
+                            new_state["_rotation_count_today"]  = rot_today + 1
+
+                            trades_executed.append((sell_trade, None))
+                            trades_executed.append((buy_trade,  buy_r))
+
+                            print("  ✅ Rotation complete: sold {0}, bought {1}".format(
+                                sell_trade["name"], buy_trade["name"]))
+                        else:
+                            # Buy failed — undo the sell by re-adding the holding
+                            print("  ⚠ Rotation buy failed — reversing sell")
+                            port["cash"] -= sell_trade["shares"] * sell_trade["price"] * (1 - TX_COST)
+                            port["holdings"][held_info["ticker"]] = held_info["h"]
+                            port["trades"].pop()
+
     # Save portfolio + state
     save_portfolio(port)
     save_signal_state(new_state)
@@ -802,13 +1013,29 @@ def main():
     # Send LINE messages
     msgs_sent = 0
     if trades_executed:
-        for trade, res in trades_executed:
-            msg    = build_trade_alert(trade, port, prices, res)
+        # Check if this is a rotation pair (sell + buy together)
+        is_rotation = (
+            len(trades_executed) == 2
+            and trades_executed[0][0]["action"] == "SELL"
+            and trades_executed[1][0]["action"] == "BUY"
+            and "Rotation" in trades_executed[0][0].get("reason", "")
+        )
+        if is_rotation:
+            sell_trade, _   = trades_executed[0]
+            buy_trade,  res = trades_executed[1]
+            msg    = build_rotation_alert(sell_trade, buy_trade, res, port, prices)
             ok_snd = send_line(msg)
-            print("  LINE {0}: {1} {2}".format(
-                "✅" if ok_snd else "❌", trade["action"], trade["name"]))
+            print("  LINE rotation alert: {0}".format("✅ sent" if ok_snd else "❌ failed"))
             if ok_snd:
                 msgs_sent += 1
+        else:
+            for trade, res in trades_executed:
+                msg    = build_trade_alert(trade, port, prices, res)
+                ok_snd = send_line(msg)
+                print("  LINE {0}: {1} {2}".format(
+                    "✅" if ok_snd else "❌", trade["action"], trade["name"]))
+                if ok_snd:
+                    msgs_sent += 1
     else:
         if check_count % 2 == 0:    # every 30 minutes
             msg    = build_status_update(ok, port, prices)
