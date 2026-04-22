@@ -3,7 +3,8 @@
 Thai SET — Session Runner
 ─────────────────────────────────────────────────────────────────
 Triggered ONCE at session start, then loops every 15 min internally.
-This is far more reliable than depending on GitHub to fire 16+ cron jobs/day.
+Sends a LINE message at the start of each session so you know the
+system is alive, then alerts only when trades execute.
 
 Usage:
   python set_session_runner.py           # auto-detect session from Bangkok time
@@ -16,7 +17,7 @@ Sessions (Bangkok time UTC+7):
   EOD Report: 16:35           (run at end of afternoon session)
 """
 
-import subprocess, time, datetime, sys, os
+import subprocess, time, datetime, sys, os, json
 
 BKK        = datetime.timezone(datetime.timedelta(hours=7))
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -46,17 +47,75 @@ def run_script(script_name):
     return result.returncode == 0
 
 
+def send_line(msg):
+    """Send a LINE message using config credentials."""
+    try:
+        import requests
+        cfg_path = os.path.join(SCRIPT_DIR, "set_config.json")
+        with open(cfg_path) as f:
+            cfg = json.load(f)
+        token   = os.environ.get("LINE_TOKEN", cfg.get("line_channel_access_token", ""))
+        user_id = os.environ.get("LINE_USER_ID", cfg.get("line_user_id", ""))
+        if not token or not user_id:
+            print("[LINE] No credentials — skipping")
+            return
+        r = requests.post(
+            "https://api.line.me/v2/bot/message/push",
+            headers={"Authorization": "Bearer " + token,
+                     "Content-Type": "application/json"},
+            json={"to": user_id, "messages": [{"type": "text", "text": msg}]},
+            timeout=10)
+        print("[LINE] " + ("✅ Sent" if r.status_code == 200 else f"❌ Error {r.status_code}"))
+    except Exception as e:
+        print(f"[LINE] ❌ {e}")
+
+
+def send_session_open(session):
+    """Send LINE alert when session opens."""
+    try:
+        port_path = os.path.join(SCRIPT_DIR, "set_portfolio.json")
+        with open(port_path) as f:
+            port = json.load(f)
+        holdings  = len(port.get("holdings", {}))
+        cash      = port.get("cash", 0)
+        capital   = port.get("capital", 300000)
+        day_count = port.get("day_count", 0)
+
+        if session == "morning":
+            icon  = "🌅"
+            label = "MORNING SESSION OPEN"
+            hours = "10:00 – 12:30"
+        else:
+            icon  = "☀️"
+            label = "AFTERNOON SESSION OPEN"
+            hours = "14:30 – 16:30"
+
+        lines = [
+            f"{icon} {label} — {now_bkk().strftime('%d %b %Y %H:%M')}",
+            f"{'─' * 32}",
+            f"📅 Day {day_count}  |  Market hours: {hours}",
+            f"💼 Holdings : {holdings}/10",
+            f"💵 Cash     : ฿{cash:,.0f}",
+            f"🔍 Scanning every 15 min — will alert on trades only",
+        ]
+        send_line("\n".join(lines))
+    except Exception as e:
+        print(f"Session open message error: {e}")
+
+
 def git_save(label):
     """Commit and push portfolio + signal state after each scan."""
     try:
-        subprocess.run(["git", "config", "user.name",  "SET Trading Bot"],   check=False, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "bot@set-trading.local"], check=False, capture_output=True)
+        subprocess.run(["git", "config", "user.name",  "SET Trading Bot"],
+                       check=False, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "bot@set-trading.local"],
+                       check=False, capture_output=True)
         subprocess.run(["git", "add",
                         "set_portfolio.json",
                         "set_signal_state.json"],
                        check=False, capture_output=True)
         diff = subprocess.run(["git", "diff", "--staged", "--quiet"])
-        if diff.returncode != 0:   # there are staged changes
+        if diff.returncode != 0:
             subprocess.run(["git", "commit", "-m", f"{label} [skip ci]"],
                            check=False, capture_output=True)
             subprocess.run(["git", "push"], check=False, capture_output=True)
@@ -68,12 +127,8 @@ def git_save(label):
 
 
 def detect_session():
-    """Detect which session to run based on current Bangkok time."""
     now = hm()
-    if now < AFTERNOON_START:
-        return "morning"
-    else:
-        return "afternoon"
+    return "morning" if now < AFTERNOON_START else "afternoon"
 
 
 def run_morning():
@@ -86,6 +141,9 @@ def run_morning():
     while hm() < MORNING_START:
         print(f"  Waiting for market open... {now_bkk().strftime('%H:%M')} Bangkok")
         time.sleep(WAIT_INTERVAL)
+
+    # Send session open LINE message
+    send_session_open("morning")
 
     # Scan loop
     while True:
@@ -114,6 +172,9 @@ def run_afternoon():
     while hm() < AFTERNOON_START:
         print(f"  Waiting for afternoon session... {now_bkk().strftime('%H:%M')} Bangkok")
         time.sleep(WAIT_INTERVAL)
+
+    # Send session open LINE message
+    send_session_open("afternoon")
 
     # Scan loop
     while True:

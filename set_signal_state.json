@@ -171,14 +171,14 @@
     "score": 2,
     "signal": "BUY",
     "price": 178.0,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "AOT.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 54.75,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "OSP.BK": {
@@ -192,14 +192,14 @@
     "score": 2,
     "signal": "BUY",
     "price": 1482.449951171875,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "DELTA.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 301.0,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "GFPT.BK": {
@@ -262,7 +262,7 @@
     "score": 2,
     "signal": "BUY",
     "price": 19.899999618530273,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "TTB.BK": {
@@ -290,21 +290,21 @@
     "score": 2,
     "signal": "BUY",
     "price": 11.399999618530273,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "KTC.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 29.25,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "BJC.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 15.0,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "THAI.BK": {
@@ -325,14 +325,14 @@
     "score": 2,
     "signal": "BUY",
     "price": 13.699999809265137,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "BAY.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 26.0,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "BA.BK": {
@@ -353,28 +353,28 @@
     "score": 2,
     "signal": "BUY",
     "price": 113.5,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "WHA.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 4.400000095367432,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "AMATA.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 20.5,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "ITD.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 0.25,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "JMART.BK": {
@@ -395,7 +395,7 @@
     "score": 2,
     "signal": "BUY",
     "price": 17.200000762939453,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "SINGER.BK": {
@@ -451,21 +451,21 @@
     "score": 2,
     "signal": "BUY",
     "price": 6.699999809265137,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "TPIPP.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 1.940000057220459,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "BEM.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 5.400000095367432,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "CENTEL.BK": {
@@ -591,30 +591,30 @@
     "score": 2,
     "signal": "BUY",
     "price": 1.6799999475479126,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "SIRI.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 1.409999966621399,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "THG.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 8.75,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
   "CPN.BK": {
     "score": 2,
     "signal": "BUY",
     "price": 64.75,
-    "buy_alerted": true,
+    "buy_alerted": false,
     "sell_alerted": false
   },
-  "_last_reset_date": "2026-04-20",
-  "_check_count": 1
+  "_last_reset_date": "2026-04-22",
+  "_check_count": 4
 }

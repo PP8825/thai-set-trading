@@ -2,16 +2,23 @@ name: SET Realtime Monitor
 
 on:
   schedule:
-    # Trigger at 09:55 Bangkok (02:55 UTC) — script waits internally until 10:00 market open
-    - cron: '55 2 * * 1-5'
-    # Trigger at 14:25 Bangkok (07:25 UTC) — script waits internally until 14:30 market open
-    - cron: '25 7 * * 1-5'
+    # Morning session — 2 triggers (backup at 11:00 if 09:55 is skipped by GitHub)
+    - cron: '55 2 * * 1-5'   # 09:55 Bangkok (primary)
+    - cron: '0  4 * * 1-5'   # 11:00 Bangkok (backup)
+    # Afternoon session — 2 triggers (backup at 15:30 if 14:25 is skipped by GitHub)
+    - cron: '25 7 * * 1-5'   # 14:25 Bangkok (primary)
+    - cron: '30 8 * * 1-5'   # 15:30 Bangkok (backup)
   workflow_dispatch:
     inputs:
       session:
         description: 'Session to run: morning or afternoon (leave blank to auto-detect)'
         required: false
         default: ''
+
+# Prevent two sessions running at the same time
+concurrency:
+  group: set-trading-session
+  cancel-in-progress: false
 
 jobs:
   session:

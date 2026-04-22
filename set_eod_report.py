@@ -110,11 +110,8 @@ def _set_col_widths(ws, widths):
 # ─── Price fetch ──────────────────────────────────────────────────────────────
 def fetch_price(ticker):
     try:
-        df = yf.download(ticker, period="5d", auto_adjust=True,
-                         progress=False, timeout=20)
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
-        if df is not None and not df.empty and "Close" in df.columns:
+        df = yf.Ticker(ticker).history(period="5d", auto_adjust=True)
+        if not df.empty and "Close" in df.columns:
             return float(df["Close"].dropna().iloc[-1])
     except Exception:
         pass
@@ -202,6 +199,7 @@ def build_excel(port: dict, prices: dict, report_date: datetime.date) -> str:
         ("BUY / SELL today", f"{len(buy_today)} BUY  /  {len(sell_today)} SELL",
                              None, "595959"),
     ]
+
 
     _hdr(ws1, 4, 2, "Metric",       bg=MID, sz=10)
     _hdr(ws1, 4, 3, "Value",        bg=MID, sz=10)
@@ -609,6 +607,22 @@ def main():
         if ticker not in prices:
             prices[ticker] = h["avg_cost"]
             print(f"  ⚠️  Using avg cost for {ticker} (no live price)")
+
+    # Increment day count
+    port["day_count"] = port.get("day_count", 0) + 1
+    print(f"  Day count updated to: {port['day_count']}")
+
+    # Update peak value
+    total_val_now = port["cash"] + sum(
+        h["shares"] * prices.get(t, h["avg_cost"])
+        for t, h in port["holdings"].items()
+    )
+    if total_val_now > port.get("peak_value", port["capital"]):
+        port["peak_value"] = total_val_now
+
+    # Save updated portfolio
+    with open(PORTFOLIO_PATH, "w", encoding="utf-8") as f:
+        json.dump(port, f, indent=2, ensure_ascii=False)
 
     # Build Excel
     print("\nGenerating Excel report...")
