@@ -127,7 +127,8 @@ tr:hover td{background:rgba(109,186,127,.04)}
   </div>
   <div class="topbar-right">
     <span class="ts" id="tsLabel">Embedded · Apr 22 2026</span>
-  <button class="btn" id="ghBtn" onclick="refreshFromGitHub()">⟳ Sync GitHub</button>
+    <span class="ts" id="autoSyncLabel" style="color:var(--dim)">· auto-sync in 15:00</span>
+  <button class="btn" id="ghBtn" onclick="refreshFromGitHub()">⟳ Sync Now</button>
   </div>
 </div>
 
@@ -947,10 +948,12 @@ async function refreshFromGitHub(){
     renderAll();
     document.getElementById('tsLabel').textContent='GitHub · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     btn.innerHTML='✓ Synced';
-    setTimeout(()=>{btn.innerHTML='⟳ Sync GitHub';},3000);
+    countdownSecs = AUTO_SYNC_MS / 1000;
+    scheduleNextSync();
+    setTimeout(()=>{btn.innerHTML='⟳ Sync Now';},3000);
   }catch(e){
     btn.innerHTML='⚠ '+e.message;
-    setTimeout(()=>{btn.innerHTML='⟳ Sync GitHub';},4000);
+    setTimeout(()=>{btn.innerHTML='⟳ Sync Now';},4000);
   }finally{
     btn.classList.remove('loading');
   }
@@ -968,6 +971,53 @@ function renderAll(){
 }
 
 renderAll();
+
+// ─── AUTO-SYNC ────────────────────────────────────────────────────────────────
+// Silently refresh data from GitHub every 15 minutes (matches monitor interval)
+const AUTO_SYNC_MS = 15 * 60 * 1000;
+let autoSyncTimer = null;
+
+async function silentSync(){
+  try{
+    const[p,s]=await Promise.all([
+      fetch('https://raw.githubusercontent.com/PP8825/thai-set-trading/main/set_portfolio.json?_='+Date.now()).then(r=>r.ok?r.json():null),
+      fetch('https://raw.githubusercontent.com/PP8825/thai-set-trading/main/set_signal_state.json?_='+Date.now()).then(r=>r.ok?r.json():null)
+    ]);
+    if(p) Object.assign(PORT, p);
+    if(s) Object.assign(SIGNALS, s);
+    if(p||s){
+      renderAll();
+      document.getElementById('tsLabel').textContent='Auto · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    }
+  }catch(e){
+    // Silent fail — don't disturb the user
+  }
+  scheduleNextSync();
+}
+
+function scheduleNextSync(){
+  clearTimeout(autoSyncTimer);
+  autoSyncTimer = setTimeout(silentSync, AUTO_SYNC_MS);
+}
+
+// Start the auto-sync cycle
+scheduleNextSync();
+
+// Countdown ticker
+let countdownSecs = AUTO_SYNC_MS / 1000;
+setInterval(()=>{
+  countdownSecs = Math.max(0, countdownSecs - 1);
+  if(countdownSecs === 0) countdownSecs = AUTO_SYNC_MS / 1000;
+  const m = String(Math.floor(countdownSecs/60)).padStart(2,'0');
+  const s = String(countdownSecs%60).padStart(2,'0');
+  const el = document.getElementById('autoSyncLabel');
+  if(el) el.textContent = `· auto-sync in ${m}:${s}`;
+}, 1000);
+
+// Also sync immediately when tab becomes visible again (user switches back)
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible') silentSync();
+});
 
 </script>
 
