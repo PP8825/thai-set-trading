@@ -114,6 +114,7 @@ def git_save(label):
                         "set_portfolio.json",
                         "set_signal_state.json",
                         "set_history.json",
+                        "set_dashboard.html",
                         "Portfolio_Reports/Portfolio_Master.xlsx"],
                        check=False, capture_output=True)
         diff = subprocess.run(["git", "diff", "--staged", "--quiet"])
@@ -187,7 +188,10 @@ def run_afternoon():
         if current >= EOD_TIME:
             print(f"\n[{now.strftime('%H:%M')}] Running EOD report...")
             run_script("set_eod_report.py")
-            git_save("EOD report")
+
+            print(f"\n[{now.strftime('%H:%M')}] Regenerating dashboard with fresh data...")
+            run_script("set_update_dashboard.py")
+            git_save("EOD report + dashboard update")
 
             # Monthly report — runs automatically on last trading day of month
             import calendar
