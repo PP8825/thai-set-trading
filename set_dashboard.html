@@ -613,13 +613,14 @@ function getHistory(){
   }
   return buildLiveHistory();
 }
-const HISTORY = getHistory();
+// HISTORY is computed on demand inside each render function via getHistory()
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 const B = (n,d=0)=>'฿'+n.toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
 const P = n=>(n>=0?'+':'')+n.toFixed(2)+'%';
 const cc = n=>n>0?'up':n<0?'down':'flat';
 const holdTickers = new Set(Object.keys(PORT.holdings));
+let REMOTE_HISTORY = null; // populated from set_history.json after sync
 
 // Weights (match set_config.json scoring_weights)
 const W_TECH = 0.6, W_FUND = 0.4;
@@ -1066,8 +1067,6 @@ renderAll();
 // Silently refresh data from GitHub every 15 minutes (matches monitor interval)
 const AUTO_SYNC_MS = 15 * 60 * 1000;
 let autoSyncTimer = null;
-
-let REMOTE_HISTORY = null; // populated from set_history.json
 
 async function silentSync(){
   try{
