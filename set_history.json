@@ -2,41 +2,41 @@
   {
     "day": 1,
     "date": "2026-04-21",
-    "value": 299325.31,
-    "cash": 29448.308482,
-    "pnl": -674.69,
-    "pnlPct": -0.2249,
-    "drawdown": -1.456138,
-    "trades": 10
+    "value": 300000.0,
+    "cash": 300000.0,
+    "pnl": 0.0,
+    "pnlPct": 0.0,
+    "drawdown": 0.0,
+    "trades": 0
   },
   {
     "day": 2,
     "date": "2026-04-22",
-    "value": 303748.31,
-    "cash": 29448.308482,
-    "pnl": 3748.31,
-    "pnlPct": 1.2494,
+    "value": 300000.0,
+    "cash": 300000.0,
+    "pnl": 0.0,
+    "pnlPct": 0.0,
     "drawdown": 0.0,
     "trades": 0
   },
   {
     "day": 3,
     "date": "2026-04-23",
-    "value": 299325.31,
-    "cash": 29448.308482,
-    "pnl": -674.69,
-    "pnlPct": -0.2249,
-    "drawdown": -1.456138,
+    "value": 300000.0,
+    "cash": 300000.0,
+    "pnl": 0.0,
+    "pnlPct": 0.0,
+    "drawdown": 0.0,
     "trades": 0
   },
   {
     "day": 4,
     "date": "2026-04-24",
-    "value": 299325.31,
-    "cash": 29448.308482,
-    "pnl": -674.69,
-    "pnlPct": -0.2249,
-    "drawdown": -1.456138,
+    "value": 300000.0,
+    "cash": 300000.0,
+    "pnl": 0.0,
+    "pnlPct": 0.0,
+    "drawdown": 0.0,
     "trades": 0
   }
 ]
