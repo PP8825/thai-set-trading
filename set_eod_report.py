@@ -673,6 +673,11 @@ def main():
     if total_val_now > port.get("peak_value", port["capital"]):
         port["peak_value"] = total_val_now
 
+    # Stamp last_price on each holding so dashboard P&L% uses real prices
+    for ticker, h in port.get("holdings", {}).items():
+        if ticker in prices:
+            h["last_price"] = prices[ticker]
+
     # Save updated portfolio
     with open(PORTFOLIO_PATH, "w", encoding="utf-8") as f:
         json.dump(port, f, indent=2, ensure_ascii=False)

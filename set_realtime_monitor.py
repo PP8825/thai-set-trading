@@ -153,7 +153,12 @@ def load_portfolio():
         "day_count":  0,  "peak_value": INITIAL_CAPITAL,
     }
 
-def save_portfolio(port):
+def save_portfolio(port, prices=None):
+    """Save portfolio. If prices provided, stamp last_price on each holding."""
+    if prices:
+        for ticker, h in port.get("holdings", {}).items():
+            if ticker in prices:
+                h["last_price"] = prices[ticker]
     with open(PORTFOLIO_PATH, "w", encoding="utf-8") as f:
         json.dump(port, f, indent=2, default=str, ensure_ascii=False)
 
@@ -1325,7 +1330,7 @@ def main():
                             port["trades"].pop()
 
     # Save portfolio + state + daily snapshot
-    save_portfolio(port)
+    save_portfolio(port, prices)
     save_signal_state(new_state)
     save_daily_snapshot(port, prices)
 

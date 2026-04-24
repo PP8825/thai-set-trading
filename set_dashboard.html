@@ -572,7 +572,7 @@ function buildLiveHistory(){
     // Today: use live prices from SIGNALS; past days: use avg_cost
     let holdVal = 0;
     for(const [tk, h] of Object.entries(holdings)){
-      const px = (dateStr===todayStr && SIGNALS[tk]?.price) ? SIGNALS[tk].price : h.avg_cost;
+      const px = (dateStr===todayStr) ? (h.last_price||SIGNALS[tk]?.price||h.avg_cost) : h.avg_cost;
       holdVal += h.shares * px;
     }
 
@@ -693,7 +693,7 @@ function calcPortfolio(){
   let investedVal=0, costBasis=0;
   const rows=[];
   for(const [ticker,h] of Object.entries(PORT.holdings)){
-    const px=(SIGNALS[ticker]?.price)||h.avg_cost;
+    const px=h.last_price||(SIGNALS[ticker]?.price)||h.avg_cost;
     const val=px*h.shares;
     const cost=h.avg_cost*h.shares;
     investedVal+=val; costBasis+=cost;

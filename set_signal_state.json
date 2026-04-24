@@ -289,7 +289,7 @@
   "TU.BK": {
     "score": 2,
     "signal": "BUY",
-    "price": 11.399999618530273,
+    "price": 11.199999809265137,
     "buy_alerted": false,
     "sell_alerted": false
   },
@@ -324,14 +324,14 @@
   "TQM.BK": {
     "score": 2,
     "signal": "BUY",
-    "price": 13.699999809265137,
+    "price": 13.800000190734863,
     "buy_alerted": false,
     "sell_alerted": false
   },
   "BAY.BK": {
     "score": 2,
     "signal": "BUY",
-    "price": 26.0,
+    "price": 27.5,
     "buy_alerted": false,
     "sell_alerted": false
   },
@@ -359,14 +359,14 @@
   "WHA.BK": {
     "score": 2,
     "signal": "BUY",
-    "price": 4.400000095367432,
+    "price": 4.380000114440918,
     "buy_alerted": false,
     "sell_alerted": false
   },
   "AMATA.BK": {
     "score": 2,
     "signal": "BUY",
-    "price": 20.5,
+    "price": 20.299999237060547,
     "buy_alerted": false,
     "sell_alerted": false
   },
@@ -394,7 +394,7 @@
   "CK.BK": {
     "score": 2,
     "signal": "BUY",
-    "price": 17.200000762939453,
+    "price": 16.5,
     "buy_alerted": false,
     "sell_alerted": false
   },
