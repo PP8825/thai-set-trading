@@ -646,6 +646,21 @@ def main():
             prices[ticker] = h["avg_cost"]
             print(f"  ⚠️  Using avg cost for {ticker} (no live price)")
 
+    # Patch signal state with real EOD prices so dashboard P&L% shows correctly
+    SIGNAL_PATH = os.path.join(SCRIPT_DIR, "set_signal_state.json")
+    if os.path.exists(SIGNAL_PATH):
+        try:
+            with open(SIGNAL_PATH) as f:
+                sig = json.load(f)
+            for ticker, px in prices.items():
+                if ticker in sig and isinstance(sig[ticker], dict):
+                    sig[ticker]["price"] = px
+            with open(SIGNAL_PATH, "w", encoding="utf-8") as f:
+                json.dump(sig, f, indent=2, ensure_ascii=False)
+            print(f"  ✅ Signal state updated with EOD prices for {len(prices)} tickers")
+        except Exception as e:
+            print(f"  ⚠️  Could not update signal state: {e}")
+
     # Increment day count
     port["day_count"] = port.get("day_count", 0) + 1
     print(f"  Day count updated to: {port['day_count']}")
