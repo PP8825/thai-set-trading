@@ -112,7 +112,8 @@ def git_save(label):
                        check=False, capture_output=True)
         subprocess.run(["git", "add",
                         "set_portfolio.json",
-                        "set_signal_state.json"],
+                        "set_signal_state.json",
+                        "set_history.json"],
                        check=False, capture_output=True)
         diff = subprocess.run(["git", "diff", "--staged", "--quiet"])
         if diff.returncode != 0:

@@ -7,70 +7,80 @@
       "shares": 200,
       "avg_cost": 113.5,
       "entry_date": "2026-04-20",
-      "entry_score": 2
+      "entry_score": 2,
+      "last_div_check": "2026-04-23"
     },
     "SIRI.BK": {
       "name": "SIRI",
       "shares": 20200,
       "avg_cost": 1.41,
       "entry_date": "2026-04-20",
-      "entry_score": 2
+      "entry_score": 2,
+      "last_div_check": "2026-04-23"
     },
     "TU.BK": {
       "name": "TU",
       "shares": 2500,
       "avg_cost": 11.4,
       "entry_date": "2026-04-20",
-      "entry_score": 2
+      "entry_score": 2,
+      "last_div_check": "2026-04-23"
     },
     "BAY.BK": {
       "name": "BAY",
       "shares": 1000,
       "avg_cost": 26.0,
       "entry_date": "2026-04-20",
-      "entry_score": 2
+      "entry_score": 2,
+      "last_div_check": "2026-04-23"
     },
     "KTC.BK": {
       "name": "KTC",
       "shares": 900,
       "avg_cost": 29.25,
       "entry_date": "2026-04-20",
-      "entry_score": 2
+      "entry_score": 2,
+      "last_div_check": "2026-04-23"
     },
     "TQM.BK": {
       "name": "TQM",
       "shares": 2000,
       "avg_cost": 13.7,
       "entry_date": "2026-04-20",
-      "entry_score": 2
+      "entry_score": 2,
+      "last_div_check": "2026-04-23"
     },
     "WHA.BK": {
       "name": "WHA",
       "shares": 6400,
       "avg_cost": 4.4,
       "entry_date": "2026-04-20",
-      "entry_score": 2
+      "entry_score": 2,
+      "last_div_check": "2026-04-23"
     },
     "JASIF.BK": {
       "name": "JASIF",
       "shares": 4200,
       "avg_cost": 6.7,
       "entry_date": "2026-04-20",
-      "entry_score": 2
+      "entry_score": 2,
+      "last_div_check": "2026-04-23"
     },
     "CK.BK": {
       "name": "CK",
       "shares": 1600,
       "avg_cost": 17.2,
       "entry_date": "2026-04-20",
-      "entry_score": 2
+      "entry_score": 2,
+      "last_div_check": "2026-04-23"
     },
     "AMATA.BK": {
       "name": "AMATA",
       "shares": 1300,
       "avg_cost": 20.5,
       "entry_date": "2026-04-20",
-      "entry_score": 2
+      "entry_score": 2,
+      "last_div_check": "2026-04-23"
     }
   },
   "trades": [
@@ -206,6 +216,6 @@
     }
   ],
   "start_date": "2026-04-21",
-  "day_count": 5,
+  "day_count": 7,
   "peak_value": 303748.3059307933
 }
