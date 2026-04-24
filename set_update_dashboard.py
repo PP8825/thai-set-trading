@@ -194,10 +194,10 @@ def main():
         signal     = st.get("signal", "HOLD") if isinstance(st, dict) else "HOLD"
         price_st   = st.get("price") if isinstance(st, dict) else None
 
-        # Fetch live price if not in state
-        price = price_st or fetch_price(ticker) or 0.0
+        # Always fetch fresh price
+        price = fetch_price(ticker) or price_st or 0.0
 
-        print(f"  [{i:3d}/{total}] {name:12s} score:{tech_score:+d}  ", end="", flush=True)
+        print(f"  [{i:3d}/{total}] {name:12s} ฿{price:.2f}  score:{tech_score:+d}  ", end="", flush=True)
 
         # Fetch fundamentals for this stock
         fund = fetch_fund(ticker)
@@ -219,14 +219,16 @@ def main():
 
     print(f"\n✅ Fetched {len(signals)} stocks")
 
-    # Also update signal_state.json with new fund scores
+    # Write fresh prices, scores back to signal_state.json
     for ticker, sig in signals.items():
         if ticker in state and isinstance(state[ticker], dict):
+            state[ticker]["price"]      = sig["price"]
             state[ticker]["fund_score"] = sig["fund_score"]
             state[ticker]["comp_score"] = sig["comp_score"]
+            state[ticker]["fund"]       = sig["fund"]
     with open(STATE_PATH, "w") as f:
         json.dump(state, f, indent=2, default=str)
-    print("✅ Updated set_signal_state.json")
+    print("✅ Updated set_signal_state.json with fresh prices + scores")
 
     # Embed into dashboard HTML
     if not os.path.exists(DASHBOARD_PATH):
