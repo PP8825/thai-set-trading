@@ -56,6 +56,7 @@ SCRIPT_DIR     = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH    = os.path.join(SCRIPT_DIR, "set_config.json")
 PORTFOLIO_PATH = os.path.join(SCRIPT_DIR, "set_portfolio.json")
 STATE_PATH     = os.path.join(SCRIPT_DIR, "set_signal_state.json")
+HISTORY_PATH   = os.path.join(SCRIPT_DIR, "set_history.json")
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -155,6 +156,45 @@ def load_portfolio():
 def save_portfolio(port):
     with open(PORTFOLIO_PATH, "w", encoding="utf-8") as f:
         json.dump(port, f, indent=2, default=str, ensure_ascii=False)
+
+def save_daily_snapshot(port, prices):
+    """Record today's portfolio value with live prices into set_history.json."""
+    today     = datetime.date.today().isoformat()
+    total     = portfolio_value(port, prices)
+    pnl       = total - port["capital"]
+    pnl_pct   = pnl / port["capital"] * 100
+    day_trades = sum(1 for t in port.get("trades", []) if t.get("date") == today)
+
+    history = []
+    if os.path.exists(HISTORY_PATH):
+        with open(HISTORY_PATH, "r", encoding="utf-8") as f:
+            history = json.load(f)
+
+    # Calculate peak for drawdown
+    peak = port.get("peak_value", port["capital"])
+    dd   = (total - peak) / peak * 100 if peak else 0
+
+    entry = {
+        "day":      len(history) + 1,
+        "date":     today,
+        "value":    round(total, 2),
+        "cash":     round(port["cash"], 2),
+        "pnl":      round(pnl, 2),
+        "pnlPct":   round(pnl_pct, 2),
+        "drawdown": round(dd, 2),
+        "trades":   day_trades,
+    }
+
+    # Update existing entry for today or append new one
+    existing = next((h for h in history if h.get("date") == today), None)
+    if existing:
+        existing.update(entry)
+        existing["day"] = history.index(existing) + 1
+    else:
+        history.append(entry)
+
+    with open(HISTORY_PATH, "w", encoding="utf-8") as f:
+        json.dump(history, f, indent=2, default=str)
 
 def portfolio_value(port, prices):
     return port["cash"] + sum(
@@ -1284,9 +1324,10 @@ def main():
                             port["holdings"][held_info["ticker"]] = held_info["h"]
                             port["trades"].pop()
 
-    # Save portfolio + state
+    # Save portfolio + state + daily snapshot
     save_portfolio(port)
     save_signal_state(new_state)
+    save_daily_snapshot(port, prices)
 
     total_val = portfolio_value(port, prices)
     print("\n── After check #{0} ──────────────────────────────".format(check_count))

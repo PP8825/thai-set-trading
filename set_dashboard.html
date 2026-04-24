@@ -592,7 +592,28 @@ function buildLiveHistory(){
   }
   return history;
 }
-const HISTORY = buildLiveHistory();
+
+function getHistory(){
+  // Prefer real daily snapshots from GitHub (set_history.json)
+  // Fall back to computed estimate from trades
+  if(REMOTE_HISTORY && REMOTE_HISTORY.length > 0){
+    // Always append/update today with live prices
+    const todayStr = new Date().toISOString().slice(0,10);
+    const hist = [...REMOTE_HISTORY];
+    const {totalVal:liveVal, totalPnl:livePnl, totalPct:livePct} = calcPortfolio();
+    const peak = Math.max(...hist.map(h=>h.value), liveVal);
+    const liveDD = Math.round((liveVal-peak)/peak*10000)/100;
+    const last = hist[hist.length-1];
+    if(last && last.date===todayStr){
+      Object.assign(last,{value:liveVal,cash:PORT.cash,pnl:livePnl,pnlPct:livePct,drawdown:liveDD});
+    } else {
+      hist.push({day:hist.length+1,date:todayStr,value:liveVal,cash:PORT.cash,pnl:livePnl,pnlPct:livePct,drawdown:liveDD,trades:0});
+    }
+    return hist;
+  }
+  return buildLiveHistory();
+}
+const HISTORY = getHistory();
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 const B = (n,d=0)=>'฿'+n.toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -784,7 +805,7 @@ function renderHoldFull(){
 let histChartInst=null,histChartBigInst=null;
 
 function renderHistMini(){
-  const HISTORY=buildLiveHistory();
+  const HISTORY=getHistory();
   const labels=HISTORY.map(r=>r.date.slice(5));
   const vals=HISTORY.map(r=>r.value);
   const ctx=document.getElementById('histChart').getContext('2d');
@@ -807,7 +828,7 @@ function renderHistMini(){
 }
 
 function renderHistBig(){
-  const HISTORY=buildLiveHistory();
+  const HISTORY=getHistory();
   const labels=HISTORY.map(r=>'Day '+r.day+' ('+r.date.slice(5)+')');
   const vals=HISTORY.map(r=>r.value);
   const ctx=document.getElementById('histChartBig').getContext('2d');
@@ -839,7 +860,7 @@ function renderHistBig(){
 }
 
 function renderHistTable(){
-  const HISTORY=buildLiveHistory();
+  const HISTORY=getHistory();
   document.getElementById('histBody').innerHTML=HISTORY.slice().reverse().map(r=>{
     const p=cc(r.pnl);
     return`<tr>
@@ -1004,13 +1025,16 @@ async function refreshFromGitHub(){
   btn.innerHTML='<span class="spin">↻</span> Syncing…';
   btn.classList.add('loading');
   try{
-    const[p,s]=await Promise.all([
-      fetch('https://raw.githubusercontent.com/PP8825/thai-set-trading/main/set_portfolio.json?_='+Date.now()).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}),
-      fetch('https://raw.githubusercontent.com/PP8825/thai-set-trading/main/set_signal_state.json?_='+Date.now()).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+    const base='https://raw.githubusercontent.com/PP8825/thai-set-trading/main/';
+    const ts='?_='+Date.now();
+    const[p,s,h]=await Promise.all([
+      fetch(base+'set_portfolio.json'+ts).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}),
+      fetch(base+'set_signal_state.json'+ts).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}),
+      fetch(base+'set_history.json'+ts).then(r=>r.ok?r.json():null),
     ]);
-    // merge into live objects
     Object.assign(PORT,p);
     Object.assign(SIGNALS,s);
+    if(h) REMOTE_HISTORY=h;
     renderAll();
     document.getElementById('tsLabel').textContent='GitHub · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     btn.innerHTML='✓ Synced';
@@ -1043,15 +1067,21 @@ renderAll();
 const AUTO_SYNC_MS = 15 * 60 * 1000;
 let autoSyncTimer = null;
 
+let REMOTE_HISTORY = null; // populated from set_history.json
+
 async function silentSync(){
   try{
-    const[p,s]=await Promise.all([
-      fetch('https://raw.githubusercontent.com/PP8825/thai-set-trading/main/set_portfolio.json?_='+Date.now()).then(r=>r.ok?r.json():null),
-      fetch('https://raw.githubusercontent.com/PP8825/thai-set-trading/main/set_signal_state.json?_='+Date.now()).then(r=>r.ok?r.json():null)
+    const base = 'https://raw.githubusercontent.com/PP8825/thai-set-trading/main/';
+    const ts   = '?_='+Date.now();
+    const[p,s,h]=await Promise.all([
+      fetch(base+'set_portfolio.json'+ts).then(r=>r.ok?r.json():null),
+      fetch(base+'set_signal_state.json'+ts).then(r=>r.ok?r.json():null),
+      fetch(base+'set_history.json'+ts).then(r=>r.ok?r.json():null),
     ]);
     if(p) Object.assign(PORT, p);
     if(s) Object.assign(SIGNALS, s);
-    if(p||s){
+    if(h) REMOTE_HISTORY = h;
+    if(p||s||h){
       renderAll();
       document.getElementById('tsLabel').textContent='Auto · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     }
