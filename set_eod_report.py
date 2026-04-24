@@ -52,6 +52,7 @@ from openpyxl.utils import get_column_letter
 SCRIPT_DIR     = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH    = os.path.join(SCRIPT_DIR, "set_config.json")
 PORTFOLIO_PATH = os.path.join(SCRIPT_DIR, "set_portfolio.json")
+HISTORY_PATH   = os.path.join(SCRIPT_DIR, "set_history.json")
 REPORTS_DIR    = os.path.join(SCRIPT_DIR, "Portfolio_Reports")
 os.makedirs(REPORTS_DIR, exist_ok=True)
 
@@ -106,6 +107,46 @@ def _data(ws, row, col, val, fmt=None, color="000000", bg=None, bold=False, h="r
 def _set_col_widths(ws, widths):
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
+
+# ─── History snapshot ─────────────────────────────────────────────────────────
+def save_history_snapshot(port: dict, prices: dict, today: datetime.date, day_trades_count: int):
+    """Write today's real EOD values into set_history.json."""
+    total   = portfolio_value(port, prices)
+    capital = port["capital"]
+    pnl     = total - capital
+    pnl_pct = pnl / capital * 100
+    peak    = port.get("peak_value", capital)
+    dd      = (total - peak) / peak * 100 if peak else 0
+    today_str = today.isoformat()
+
+    history = []
+    if os.path.exists(HISTORY_PATH):
+        try:
+            with open(HISTORY_PATH) as f:
+                history = json.load(f)
+        except Exception:
+            history = []
+
+    entry = {
+        "day":      port.get("day_count", len(history) + 1),
+        "date":     today_str,
+        "value":    round(total, 2),
+        "cash":     round(port["cash"], 2),
+        "pnl":      round(pnl, 2),
+        "pnlPct":   round(pnl_pct, 4),
+        "drawdown": round(dd, 4),
+        "trades":   day_trades_count,
+    }
+
+    existing = next((h for h in history if h.get("date") == today_str), None)
+    if existing:
+        existing.update(entry)
+    else:
+        history.append(entry)
+
+    with open(HISTORY_PATH, "w", encoding="utf-8") as f:
+        json.dump(history, f, indent=2, default=str)
+    print(f"  📊 History snapshot saved: {today_str}  ฿{total:,.0f}")
 
 # ─── Price fetch ──────────────────────────────────────────────────────────────
 def fetch_price(ticker):
@@ -620,6 +661,11 @@ def main():
     # Save updated portfolio
     with open(PORTFOLIO_PATH, "w", encoding="utf-8") as f:
         json.dump(port, f, indent=2, ensure_ascii=False)
+
+    # Save history snapshot with real EOD prices
+    day_trades_count = len(today_t)
+    print("\nSaving history snapshot...")
+    save_history_snapshot(port, prices, today, day_trades_count)
 
     # Build Excel
     print("\nGenerating Excel report...")
