@@ -201,7 +201,7 @@ tr:hover td{background:rgba(109,186,127,.04)}
     <div class="box">
       <div class="box-head">
         <div class="box-title">💼 Full Holdings Detail <span class="chip" id="holdChip2">10/10</span></div>
-        <span style="font-size:11px;color:var(--muted)">Prices from last scan · Stop loss -8%</span>
+        <span style="font-size:11px;color:var(--muted)">Prices from last scan · Stop loss: entry − 1.5×ATR(14), trailing</span>
       </div>
       <div class="tbl-wrap">
         <table>
@@ -270,8 +270,8 @@ tr:hover td{background:rgba(109,186,127,.04)}
           <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
             <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">Formula</div>
             <div style="font-size:12px;font-family:monospace;color:var(--accent);background:rgba(0,0,0,.2);padding:10px;border-radius:7px;margin-bottom:12px">
-              Tech Norm  = (Tech Score + 3) ÷ 6 × 10   → maps −3…+3 to 0–10<br>
-              Fund Score = Raw fundamental pts ÷ 13 × 10 → 0–10<br>
+              Tech Norm  = (Tech Score + 5) ÷ 10 × 10  → maps −5…+5 to 0–10<br>
+              Fund Score = Raw fundamental pts ÷ 19 × 10 → 0–10<br>
               <strong>Composite  = Tech Norm × 60% + Fund Score × 40%</strong>
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;font-size:11px;color:var(--muted)">
@@ -300,7 +300,7 @@ tr:hover td{background:rgba(109,186,127,.04)}
           <div style="background:rgba(212,170,69,.08);border:1px solid rgba(212,170,69,.25);border-radius:10px;padding:14px">
             <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:6px">📅 Ex-Dividend Date Guard</div>
             <div style="font-size:11px;color:var(--muted);line-height:1.7">
-              If a holding's ex-dividend date is within <strong style="color:var(--text)">14 days</strong>, the system delays any SELL or ROTATION until after the record date — protecting dividend income. Stop-loss (−8%) overrides this guard.
+              If a holding's ex-dividend date is within <strong style="color:var(--text)">14 days</strong>, the system delays any SELL or ROTATION until after the record date — protecting dividend income. ATR stop-loss and take-profit override this guard.
             </div>
           </div>
         </div>
@@ -358,7 +358,7 @@ tr:hover td{background:rgba(109,186,127,.04)}
               <tbody>
                 <tr><td style="font-weight:700;color:var(--green)">+5 / +4</td><td><span class="pill pill-b">STRONG BUY</span></td><td style="color:var(--muted)">4–5 of 5 bullish — very strong buy signal</td></tr>
                 <tr><td style="font-weight:700;color:var(--green)">+3</td><td><span class="pill pill-b">BUY</span></td><td style="color:var(--muted)">3 of 5 bullish — <strong style="color:var(--green)">buy gate open</strong></td></tr>
-                <tr><td style="font-weight:700;color:var(--green)">+2</td><td><span class="pill pill-b">BUY</span></td><td style="color:var(--muted)">2 bullish — displayed as BUY but below buy gate (WATCH only)</td></tr>
+                <tr><td style="font-weight:700;color:var(--green)">+2</td><td><span class="pill pill-b">BUY</span></td><td style="color:var(--muted)">2 of 5 bullish — <strong style="color:var(--green)">buy gate open</strong> (sweep-winner threshold)</td></tr>
                 <tr><td style="font-weight:700;color:var(--accent)">+1</td><td><span class="pill pill-h">WATCH</span></td><td style="color:var(--muted)">Weak positive — monitor only, no trade</td></tr>
                 <tr><td style="font-weight:700;color:var(--muted)">0 / −1</td><td><span class="pill pill-h">HOLD</span></td><td style="color:var(--muted)">Mixed or slightly negative — no action</td></tr>
                 <tr><td style="font-weight:700;color:var(--red)">−2</td><td><span class="pill pill-s">SELL</span></td><td style="color:var(--muted)">2 bearish — <strong style="color:var(--red)">sell gate open</strong> for held positions</td></tr>
@@ -424,13 +424,45 @@ tr:hover td{background:rgba(109,186,127,.04)}
         </div>
       </div>
 
+      <!-- MARKET REGIME FILTER -->
+      <div class="box">
+        <div class="box-head"><div class="box-title">🌐 Market Regime Filter</div><span class="chip">SET Index vs 200-day MA</span></div>
+        <div style="padding:16px;font-size:12px;line-height:1.8">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div style="background:rgba(77,205,122,.08);border:1px solid rgba(77,205,122,.25);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">🟢 BULL Regime</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.8">
+                SET Index <strong style="color:var(--text)">above</strong> its 200-day MA<br>
+                All buy signals and rotations execute normally<br>
+                Full portfolio activity permitted<br>
+                Regime banner shown in green at top of dashboard
+              </div>
+            </div>
+            <div style="background:rgba(240,100,100,.07);border:1px solid rgba(240,100,100,.25);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:8px">🔴 BEAR Regime</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.8">
+                SET Index <strong style="color:var(--text)">below</strong> its 200-day MA<br>
+                <strong style="color:var(--red)">All new buys and rotations suspended</strong><br>
+                Stops, signal sells, and take-profits still execute<br>
+                Regime banner shown in red at top of dashboard
+              </div>
+            </div>
+          </div>
+
+          <div style="background:rgba(212,170,69,.08);border:1px solid rgba(212,170,69,.25);border-radius:8px;padding:10px;font-size:11px;color:var(--muted)">
+            ℹ️ The 200-day MA is calculated from SET Index (^SET.BK) daily closes via yfinance. Regime is checked on every scan cycle. The dashboard banner at the top of the page always shows the current regime, SET level, and distance from MA.
+          </div>
+        </div>
+      </div>
+
       <!-- BUY RULES -->
       <div class="box">
         <div class="box-head"><div class="box-title" style="color:var(--green)">🟢 BUY Criteria</div></div>
         <div style="padding:16px;font-size:12px;line-height:1.8">
 
           <div style="font-weight:700;color:var(--text);margin-bottom:8px">Gate conditions (all must pass)</div>
-          <div style="color:var(--muted);margin-bottom:4px">✅ Tech score crosses to <strong style="color:var(--text)">≥ +3</strong> (was ≤ 0 last scan) — at least 3 of 5 indicators bullish</div>
+          <div style="color:var(--muted);margin-bottom:4px">✅ Tech score crosses to <strong style="color:var(--text)">≥ +2</strong> (was ≤ 0 last scan) — at least 2 of 5 indicators bullish</div>
           <div style="color:var(--muted);margin-bottom:4px">✅ Stock not already held</div>
           <div style="color:var(--muted);margin-bottom:4px">✅ Portfolio has &lt; 10 positions</div>
           <div style="color:var(--muted);margin-bottom:4px">✅ <strong style="color:var(--text)">Sector cap</strong>: max 2 stocks per sector (BANKING, FINANCE, ENERGY, PROPERTY, INDUSTRIAL, CONSUMER, FOOD, HEALTHCARE, TRANSPORT, TECH, HOTEL)</div>
@@ -450,7 +482,7 @@ tr:hover td{background:rgba(109,186,127,.04)}
           <div style="color:var(--muted);margin-bottom:16px">When multiple stocks qualify, highest composite score buys first. Same tech score → better fundamentals wins the slot.</div>
 
           <div style="background:rgba(77,205,122,.07);border:1px solid rgba(77,205,122,.2);border-radius:8px;padding:10px;font-size:11px;color:var(--muted)">
-            ℹ️ Only fires when score crosses from neutral (≤0) into buy territory (≥+3) — prevents re-buying the same position repeatedly within one session.
+            ℹ️ Only fires when score crosses from neutral (≤0) into buy territory (≥+2) — prevents re-buying the same position repeatedly within one session.
           </div>
         </div>
       </div>
@@ -464,15 +496,21 @@ tr:hover td{background:rgba(109,186,127,.04)}
           <div style="color:var(--muted);margin-bottom:4px">⚠️ Tech score drops to <strong style="color:var(--text)">≤ −2</strong> (was ≥ +1 last scan) — at least 2 of 5 indicators bearish</div>
           <div style="color:var(--muted);margin-bottom:16px">⚠️ Score −1 is a soft warning only — does not trigger a sell</div>
 
-          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Stop-loss — price-based, automatic</div>
-          <div style="color:var(--muted);margin-bottom:4px">🛑 Price falls <strong style="color:var(--text)">≥ 8%</strong> below average cost</div>
-          <div style="color:var(--muted);margin-bottom:16px">🛑 Fires immediately regardless of score or composite — overrides ex-div guard</div>
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">ATR stop-loss — volatility-adaptive, trailing ratchet</div>
+          <div style="color:var(--muted);margin-bottom:4px">🛑 Initial stop set at <strong style="color:var(--text)">entry price − 1.5 × ATR(14)</strong> at time of purchase</div>
+          <div style="color:var(--muted);margin-bottom:4px">🛑 Stop only <strong style="color:var(--text)">rises</strong> as price moves up — it never falls (trailing ratchet)</div>
+          <div style="color:var(--muted);margin-bottom:4px">🛑 Fires immediately regardless of score or composite — overrides ex-div guard</div>
+          <div style="color:var(--muted);margin-bottom:16px">🛑 Wider stop for volatile stocks, tighter for stable ones — scales automatically to each stock's volatility</div>
+
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Take-profit — lock in big winners</div>
+          <div style="color:var(--muted);margin-bottom:4px">💰 Price reaches <strong style="color:var(--text)">+50%</strong> above average cost → take-profit sell</div>
+          <div style="color:var(--muted);margin-bottom:16px">💰 Sweeps the gain regardless of tech score — applies to all held positions</div>
 
           <div style="font-weight:700;color:var(--text);margin-bottom:8px">Rotation — composite score weakness</div>
           <div style="color:var(--muted);margin-bottom:16px">🔄 Composite score below <strong style="color:var(--text)">6.5</strong> OR tech score ≤ +1, AND a better stock (composite gain ≥ <strong style="color:var(--text)">+0.8</strong>) is waiting — see Rotation section below</div>
 
           <div style="background:rgba(240,100,100,.07);border:1px solid rgba(240,100,100,.2);border-radius:8px;padding:10px;font-size:11px;color:var(--muted)">
-            ℹ️ Stop-loss example: bought at ฿100 → auto-sell at ฿92 regardless of any score.
+            ℹ️ ATR stop example: bought at ฿100, ATR(14) = ฿5 → initial stop at ฿92.50 (100 − 1.5×5). If price rises to ฿110, stop ratchets up to ฿102.50 — locking in profit. Stop never moves down.
           </div>
         </div>
       </div>
@@ -510,7 +548,7 @@ tr:hover td{background:rgba(109,186,127,.04)}
             <div style="background:var(--card2);border:1px solid rgba(77,205,122,.3);border-radius:10px;padding:14px">
               <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px">✅ Incoming Stock Must Clear</div>
               <div style="font-size:11px;color:var(--muted);line-height:1.8">
-                Tech score <strong style="color:var(--text)">≥ +2</strong> (rotation bar, lower than fresh buy ≥+3)<br>
+                Tech score <strong style="color:var(--text)">≥ +2</strong> (same threshold as fresh buy)<br>
                 Composite <strong style="color:var(--text)">≥ 7.0</strong> minimum floor<br>
                 Composite gain <strong style="color:var(--text)">≥ +0.8</strong> over held stock<br>
                 Not in 5-day rotation cooldown (separate from 5-day re-entry cooldown)<br>
