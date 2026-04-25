@@ -215,6 +215,58 @@ def fund_ok(fund):
     return True
 
 
+# ── Siamchart cache integration ───────────────────────────────────────────────
+def _load_siamchart(ticker, years):
+    """
+    Try to load price history from the local Siamchart cache.
+    Returns a DataFrame (Open/High/Low/Close/Volume) or None.
+    The cache is populated by:  python3 set_siamchart.py --download
+    """
+    try:
+        import importlib.util, pathlib
+        sc_path = pathlib.Path(SCRIPT_DIR) / "set_siamchart.py"
+        if not sc_path.exists():
+            return None
+        spec = importlib.util.spec_from_file_location("set_siamchart", sc_path)
+        sc   = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(sc)
+        df = sc.load_cache(ticker, years=years)
+        if df is not None and len(df) > 50:
+            return df
+    except Exception:
+        pass
+    return None
+
+_sc_module_cache = {}   # avoid re-importing on every call
+
+def _load_siamchart_fast(ticker, years):
+    """
+    Cached-import version of _load_siamchart for use inside ThreadPoolExecutor.
+    Module is imported once per process.
+    """
+    global _sc_module_cache
+    try:
+        import importlib.util, pathlib
+        if "sc" not in _sc_module_cache:
+            sc_path = pathlib.Path(SCRIPT_DIR) / "set_siamchart.py"
+            if not sc_path.exists():
+                _sc_module_cache["sc"] = None
+            else:
+                spec = importlib.util.spec_from_file_location("set_siamchart", sc_path)
+                sc   = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(sc)
+                _sc_module_cache["sc"] = sc
+        sc = _sc_module_cache.get("sc")
+        if sc is None:
+            return None
+        df = sc.load_cache(ticker, years=years)
+        if df is not None and len(df) > 50:
+            return df
+    except Exception:
+        pass
+    return None
+
+
 # ── Data fetching ─────────────────────────────────────────────────────────────
 def fetch_hist(ticker, years):
     try:
@@ -501,17 +553,37 @@ def _load_data(years, regime_enabled):
     print(f"Regime filter: {'ON' if regime_enabled else 'OFF'}")
     print("="*60)
 
-    print(f"\n[1/4] Fetching {len(INSTRUMENTS)} instruments...")
+    # Pre-load the Siamchart module once (avoids re-importing inside threads)
+    _load_siamchart_fast("__probe__", years)
+    sc_available = _sc_module_cache.get("sc") is not None
+
+    print(f"\n[1/4] Fetching {len(INSTRUMENTS)} instruments "
+          f"({'Siamchart+yfinance' if sc_available else 'yfinance only'})...")
+
+    def _fetch_one(nm, tk, years):
+        """Try Siamchart cache first, fall back to yfinance."""
+        df = _load_siamchart_fast(tk, years)
+        source = "SC"
+        if df is None:
+            df = fetch_hist(tk, years)
+            source = "YF"
+        return nm, tk, df, source
+
     all_data = {}
+    sc_count = 0
+    yf_count = 0
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
-        futs = {ex.submit(fetch_hist,tk,years):(nm,tk) for nm,tk in INSTRUMENTS}
+        futs = {ex.submit(_fetch_one,nm,tk,years):(nm,tk) for nm,tk in INSTRUMENTS}
         done=0
         for future in as_completed(futs):
-            nm,tk=futs[future]; df=future.result(); done+=1
+            nm, tk, df, source = future.result(); done+=1
             if df is not None and len(df)>SMA_LONG+10:
                 all_data[tk]=(nm,df)
+                if source=="SC": sc_count+=1
+                else:            yf_count+=1
             sys.stdout.write(f"\r  {done}/{len(INSTRUMENTS)} fetched..."); sys.stdout.flush()
-    print(f"\r  {len(all_data)}/{len(INSTRUMENTS)} instruments loaded.     ")
+    print(f"\r  {len(all_data)}/{len(INSTRUMENTS)} instruments loaded  "
+          f"(Siamchart: {sc_count}  yfinance: {yf_count})     ")
 
     print("[2/4] Fetching SET Index for regime...")
     set_df = fetch_hist(REGIME_TICKER, years)

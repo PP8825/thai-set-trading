@@ -161,6 +161,13 @@ CONCENTRATION_ALERT_PCT = 0.25   # alert when position > 25% of portfolio
 # Re-fetch SET Index vs MA200 at most once per hour (saves time, reduces noise).
 REGIME_CACHE_MINS = 60
 
+# ─── Re-entry cooldown ───────────────────────────────────────────────────────
+# After selling a stock (stop-loss, take-profit, or signal sell), prevent
+# re-buying it for this many calendar days.  Stops the model churning in and
+# out of the same ticker when the signal oscillates around the threshold.
+# Rotation already has its own cooldown (ROTATION_COOLDOWN_DAYS = 5).
+REENTRY_COOLDOWN_DAYS = 5
+
 # ─── Dividend timing guard ────────────────────────────────────────────────────
 EX_DIV_HOLD_DAYS = 14
 
@@ -1180,8 +1187,9 @@ def execute_buy(port, r):
         port["peak_value"] = pv
     return trade
 
-def execute_sell(port, ticker, price, reason):
-    """Sell holding. Returns trade dict or None."""
+def execute_sell(port, ticker, price, reason, state=None):
+    """Sell holding. Returns trade dict or None.
+    If state dict is passed, records sell date for re-entry cooldown tracking."""
     h = port["holdings"].get(ticker)
     if not h:
         return None
@@ -1202,6 +1210,13 @@ def execute_sell(port, ticker, price, reason):
         "reason":  reason,  "time":     time_str(),
     }
     port["trades"].append(trade)
+
+    # Record sell date for re-entry cooldown
+    if state is not None:
+        sold_map = state.get("_sold_dates", {})
+        sold_map[ticker] = today
+        state["_sold_dates"] = sold_map
+
     return trade
 
 # ─── Day-1 initialisation ─────────────────────────────────────────────────────
@@ -1600,6 +1615,39 @@ def build_max_hold_alert(stale_holdings, port, prices):
     return "\n".join(lines)
 
 
+def build_drawdown_alert(cur_val, peak_val, drawdown_pct, port, prices):
+    """
+    LINE alert when the portfolio drawdown brake activates.
+    Sent once per day — does NOT auto-sell, just freezes new buys.
+    """
+    pnl   = cur_val - port["capital"]
+    ps    = "+" if pnl >= 0 else ""
+    lines = [
+        "🛑 DRAWDOWN BRAKE ACTIVE — {0}".format(
+            datetime.date.today().strftime("%d %b %Y")),
+        "─" * 34,
+        "Portfolio has dropped {0:.1f}% from peak.".format(drawdown_pct * 100),
+        "All new buys and rotations are SUSPENDED.",
+        "Stops and sell signals still execute normally.",
+        "",
+        "📊 Portfolio snapshot",
+        "   Current : ฿{0:,.0f}".format(cur_val),
+        "   Peak    : ฿{0:,.0f}".format(peak_val),
+        "   Drop    : ฿{0:,.0f}  ({1:.1f}%)".format(
+            peak_val - cur_val, drawdown_pct * 100),
+        "   vs Start: {0}฿{1:,.0f}  ({0}{2:.1f}%)".format(
+            ps, abs(pnl), abs(pnl) / port["capital"] * 100),
+        "",
+        "Buys resume automatically when portfolio",
+        "recovers above {0:.0f}% drawdown threshold.".format(
+            DRAWDOWN_BRAKE_PCT * 100),
+        "",
+        "─" * 34,
+        "⚠️ Educational only. Not financial advice.",
+    ]
+    return "\n".join(lines)
+
+
 def build_concentration_alert(concentrated, port, prices):
     """
     LINE alert when any single holding exceeds CONCENTRATION_ALERT_PCT of
@@ -1915,7 +1963,8 @@ def main():
             trade = execute_sell(
                 port, ticker, px,
                 "Take-profit +{0:.1f}% (target {1:.0f}%)".format(
-                    gain_pct * 100, TAKE_PROFIT_PCT * 100))
+                    gain_pct * 100, TAKE_PROFIT_PCT * 100),
+                state=new_state)
             if trade:
                 trades_executed.append((trade, None))
                 alerted.add(ticker)
@@ -1928,7 +1977,8 @@ def main():
                 h["name"], px, atr_stop, drop))
             trade = execute_sell(
                 port, ticker, px,
-                "ATR stop ฿{0:.2f} (-{1:.1f}%)".format(atr_stop, drop))
+                "ATR stop ฿{0:.2f} (-{1:.1f}%)".format(atr_stop, drop),
+                state=new_state)
             if trade:
                 trades_executed.append((trade, None))
                 alerted.add(ticker)
@@ -1963,6 +2013,18 @@ def main():
                 and prev_score <= BUY_PREV_MAX
                 and ticker not in alerted
                 and not new_state[ticker].get("buy_alerted")):
+            # Re-entry cooldown: skip if sold recently
+            sold_dates = new_state.get("_sold_dates", {})
+            if ticker in sold_dates:
+                try:
+                    sold_dt  = datetime.date.fromisoformat(sold_dates[ticker])
+                    days_out = (datetime.date.today() - sold_dt).days
+                    if days_out < REENTRY_COOLDOWN_DAYS:
+                        print("  ⏳ SKIP {0:12s} — re-entry cooldown ({1}d / {2}d)".format(
+                            r["name"], days_out, REENTRY_COOLDOWN_DAYS))
+                        continue
+                except Exception:
+                    pass
             if fund_ok:
                 buy_pending.append(r)
             else:
@@ -1985,7 +2047,7 @@ def main():
 
     # Pass 2: execute sells first (free up slots / cash)
     for r in sell_pending:
-        trade = execute_sell(port, r["ticker"], r["price"], r["signal"])
+        trade = execute_sell(port, r["ticker"], r["price"], r["signal"], state=new_state)
         if trade:
             print("  SELL {0:12s} {1:,d}sh @ \u0e3f{2:.2f}  P&L: \u0e3f{3:,.0f}".format(
                 r["name"], trade["shares"], r["price"], trade["pnl"]))
@@ -2011,6 +2073,14 @@ def main():
                   "(฿{1:,.0f} vs ฿{2:,.0f}) — {3} buy(s) suppressed".format(
                 drawdown * 100, cur_val, peak_val, len(buy_pending)))
             buy_pending = []
+            # Send LINE alert once per day when brake activates
+            dd_alerted_date = new_state.get("_dd_alerted_date", "")
+            if dd_alerted_date != today_str:
+                dd_msg = build_drawdown_alert(cur_val, peak_val, drawdown, port, prices)
+                ok_dd  = send_line(dd_msg)
+                print("  📣 Drawdown alert: {0}".format("✅ sent" if ok_dd else "❌ failed"))
+                if ok_dd:
+                    new_state["_dd_alerted_date"] = today_str
 
     # Trading window gate: no buys in first/last 15 min (wide spreads, gap risk)
     if buy_pending and not is_trading_window():
@@ -2053,6 +2123,14 @@ def main():
             print("\n  🛑 DRAWDOWN BRAKE: rotation suppressed ({0:.1f}% below peak)".format(
                 drawdown * 100))
             _rotation_ok = False
+            # Send LINE alert once per day (shared flag with buy brake alert)
+            dd_alerted_date = new_state.get("_dd_alerted_date", "")
+            if dd_alerted_date != today_str:
+                dd_msg = build_drawdown_alert(cur_val, peak_val, drawdown, port, prices)
+                ok_dd  = send_line(dd_msg)
+                print("  📣 Drawdown alert: {0}".format("✅ sent" if ok_dd else "❌ failed"))
+                if ok_dd:
+                    new_state["_dd_alerted_date"] = today_str
 
     if _rotation_ok:
         rot_date  = new_state.get("_rotation_date", "")
@@ -2250,10 +2328,67 @@ def main():
 
     print("\nDone. {0} LINE message(s) sent.".format(msgs_sent))
 
+def send_failure_alert(error_msg: str):
+    """
+    Emergency LINE alert when the monitor crashes.
+    Uses a bare requests call so it works even if LINE_TOKEN is only in env.
+    """
+    token   = os.environ.get("LINE_TOKEN",   "")
+    user_id = os.environ.get("LINE_USER_ID", "")
+    if not token or not user_id:
+        # Try reading from config as fallback
+        try:
+            with open(CONFIG_PATH, "r", encoding="utf-8") as _f:
+                _cfg = json.load(_f)
+            token   = token   or _cfg.get("line_channel_access_token", "")
+            user_id = user_id or _cfg.get("line_user_id", "")
+        except Exception:
+            pass
+    if not token or not user_id:
+        print("  ❌ Cannot send failure alert — LINE credentials missing")
+        return
+
+    now_str = datetime.datetime.now(BKK_OFFSET).strftime("%d %b %Y %H:%M")
+    text = (
+        "❌ MONITOR CRASHED — {now}\n"
+        "─────────────────────────────\n"
+        "The SET monitor failed with an error.\n"
+        "Please check your Mac and restart.\n\n"
+        "Error:\n{err}\n\n"
+        "─────────────────────────────\n"
+        "To restart:\n"
+        "  cd .../Stock && source set_env.sh\n"
+        "  python3 set_realtime_monitor.py"
+    ).format(now=now_str, err=str(error_msg)[:300])
+
+    try:
+        requests.post(
+            "https://api.line.me/v2/bot/message/push",
+            headers={"Authorization": "Bearer {0}".format(token),
+                     "Content-Type": "application/json"},
+            data=json.dumps({"to": user_id,
+                             "messages": [{"type": "text", "text": text}]},
+                            ensure_ascii=False).encode("utf-8"),
+            timeout=15,
+        )
+        print("  📣 Failure alert sent to LINE.")
+    except Exception as e:
+        print("  ❌ Could not send failure alert: {0}".format(e))
+
+
 if __name__ == "__main__":
     import sys as _sys
     if "--force" in _sys.argv:
         # Bypass market hours check for testing
-        _orig = is_market_open
         is_market_open = lambda: True
-    main()
+
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nMonitor stopped by user.")
+    except Exception as _err:
+        import traceback
+        _tb = traceback.format_exc()
+        print("\n❌ MONITOR CRASHED:\n{0}".format(_tb))
+        send_failure_alert(_tb)
+        raise
