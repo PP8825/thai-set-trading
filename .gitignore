@@ -9,3 +9,6 @@ __pycache__/
 
 # Keep Portfolio_Reports folder but ignore lock files inside
 Portfolio_Reports/.~lock.*
+
+# Environment variables — contains LINE credentials, never commit this file
+set_env.sh

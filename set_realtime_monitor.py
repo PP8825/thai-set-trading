@@ -62,8 +62,19 @@ HISTORY_PATH   = os.path.join(SCRIPT_DIR, "set_history.json")
 with open(CONFIG_PATH, "r", encoding="utf-8") as f:
     cfg = json.load(f)
 
-LINE_TOKEN    = os.environ.get("LINE_TOKEN", cfg.get("line_channel_access_token", ""))
-LINE_USER_ID  = os.environ.get("LINE_USER_ID", cfg.get("line_user_id", ""))
+LINE_TOKEN   = os.environ.get("LINE_TOKEN",   cfg.get("line_channel_access_token", ""))
+LINE_USER_ID = os.environ.get("LINE_USER_ID", cfg.get("line_user_id", ""))
+
+# Security check: warn if credentials are coming from config file rather than env vars.
+# To fix: run `source set_env.sh` before starting the monitor, or add to your shell profile.
+_token_from_env   = bool(os.environ.get("LINE_TOKEN"))
+_user_from_env    = bool(os.environ.get("LINE_USER_ID"))
+if not _token_from_env or not _user_from_env:
+    print("⚠  LINE credentials loaded from set_config.json (plain text).")
+    print("   For better security, set environment variables instead:")
+    print("   export LINE_TOKEN='your_token'")
+    print("   export LINE_USER_ID='your_user_id'")
+    print("   Or run:  source set_env.sh")
 INSTRUMENTS   = [(i["name"], i["ticker"]) for i in cfg.get("instruments", [])]
 RSI_PERIOD    = cfg.get("rsi_period", 14)
 RSI_OB        = cfg.get("rsi_overbought", 70)
@@ -124,6 +135,11 @@ REGIME_MA_PERIOD = 200
 ATR_PERIOD      = 14
 ATR_MULTIPLIER  = 2.0    # 2 × ATR — standard Wilder / Van Tharp setting
 ATR_FALLBACK_PCT = 0.08  # 8% fallback for holdings that pre-date ATR tracking
+
+# ─── Maximum hold period ─────────────────────────────────────────────────────
+# If a position has been held longer than this without triggering any exit,
+# send a LINE alert prompting a manual review. Does NOT auto-sell.
+MAX_HOLD_DAYS = 60   # calendar days
 
 # ─── Take-profit ─────────────────────────────────────────────────────────────
 # Sell a position if it has gained more than this % from avg cost.
@@ -955,6 +971,44 @@ def build_rotation_alert(sell_trade, buy_trade, buy_result, port, prices):
     return "\n".join(lines)
 
 
+# ─── Intraday live price ──────────────────────────────────────────────────────
+def get_live_price(ticker):
+    """
+    Fetch the latest intraday price using 5-minute candles from yfinance.
+    Returns the most recent close from today's session, or None on failure.
+
+    Why this matters: yfinance .history(period="Nd") for Thai .BK tickers
+    returns end-of-day data — the "latest" price is yesterday's close, repeated
+    all day. This function fetches the actual current intraday price instead,
+    giving real-time stop-loss and take-profit accuracy during market hours.
+    """
+    try:
+        df = yf.Ticker(ticker).history(period="1d", interval="5m", auto_adjust=True)
+        if df is not None and not df.empty and "Close" in df.columns:
+            c = df["Close"].dropna()
+            if not c.empty:
+                return float(c.iloc[-1])
+    except Exception:
+        pass
+    return None
+
+
+def fetch_intraday_prices(tickers):
+    """
+    Fetch latest intraday prices for a list of tickers in parallel.
+    Returns dict {ticker: price}. Falls back to daily close if intraday fails.
+    """
+    results = {}
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
+        futures = {ex.submit(get_live_price, t): t for t in tickers}
+        for future in as_completed(futures):
+            ticker = futures[future]
+            price  = future.result()
+            if price is not None:
+                results[ticker] = price
+    return results
+
+
 # ─── Parallel stock analysis ──────────────────────────────────────────────────
 def analyze(name, ticker):
     try:
@@ -1498,6 +1552,49 @@ def build_heartbeat_alert(check_count, port, prices, today_trades, regime):
     return "\n".join(lines)
 
 
+def build_max_hold_alert(stale_holdings, port, prices):
+    """
+    LINE alert for positions held longer than MAX_HOLD_DAYS with no exit signal.
+    Lists each stale holding with P&L and current tech score for manual review.
+    """
+    total  = portfolio_value(port, prices)
+    start  = port["capital"]
+    pnl_t  = total - start
+    ps     = "+" if pnl_t >= 0 else ""
+
+    lines = [
+        "⏰ HOLD REVIEW — {0}".format(datetime.date.today().strftime("%d %b %Y")),
+        "─" * 34,
+        "The following positions have been held",
+        ">{0} days with no exit signal.".format(MAX_HOLD_DAYS),
+        "Please review manually.",
+        "",
+    ]
+    for info in stale_holdings:
+        h      = info["h"]
+        px     = info["px"]
+        days   = info["days"]
+        score  = info["score"]
+        upct   = (px - h["avg_cost"]) / h["avg_cost"] * 100
+        icon   = "▲" if upct >= 0 else "▼"
+        ps2    = "+" if upct >= 0 else ""
+        lines += [
+            "{0} {1}  ({2}d held)".format(icon, h["name"], days),
+            "   Entry : ฿{0:.2f}  Now: ฿{1:.2f}  {2}{3:.1f}%".format(
+                h["avg_cost"], px, ps2, upct),
+            "   Tech score : {0:+d}  ATR stop: ฿{1:.2f}".format(
+                score, h.get("atr_stop", 0)),
+            "",
+        ]
+    lines += [
+        "─" * 34,
+        "💼 Portfolio : ฿{0:,.0f}  ({1}{2:.2f}%)".format(
+            total, ps, pnl_t / start * 100),
+        "⚠️ Educational only. Not financial advice.",
+    ]
+    return "\n".join(lines)
+
+
 def send_line(message):
     try:
         resp = requests.post(
@@ -1626,8 +1723,29 @@ def main():
                     r["signal"], r["score"], r["price"], r["rsi"]))
             results.append(r)
 
-    ok      = [r for r in results if not r.get("error")]
-    prices  = {r["ticker"]: r["price"] for r in ok}
+    ok     = [r for r in results if not r.get("error")]
+    prices = {r["ticker"]: r["price"] for r in ok}
+
+    # ── Intraday price refresh for held positions ─────────────────────────────
+    # The daily history() call gives yesterday's EOD close — all scans during
+    # the day see the same stale price.  For holdings only, fetch 5-min candles
+    # so stop-loss and take-profit checks use the actual current price.
+    held_tickers = list(port.get("holdings", {}).keys())
+    if held_tickers:
+        print("\nFetching intraday prices for {0} held positions...".format(
+            len(held_tickers)))
+        intraday = fetch_intraday_prices(held_tickers)
+        updated  = 0
+        for ticker, live_px in intraday.items():
+            daily_px = prices.get(ticker, 0)
+            if daily_px and abs(live_px - daily_px) / daily_px > 0.001:  # >0.1% diff
+                print("  📡 {0}: ฿{1:.2f} (daily) → ฿{2:.2f} (intraday  {3:+.1f}%)".format(
+                    ticker, daily_px, live_px,
+                    (live_px - daily_px) / daily_px * 100))
+                updated += 1
+            prices[ticker] = live_px   # always use intraday for held positions
+        if updated == 0:
+            print("  Prices unchanged from daily close (market may not have opened yet)")
 
     trades_executed = []
 
@@ -2020,6 +2138,36 @@ def main():
             print("  Status update: {0}".format("✅ sent" if ok_snd else "❌ failed"))
             if ok_snd:
                 msgs_sent += 1
+
+    # ── Maximum hold period check (once per day, end of session) ─────────────
+    # Alert if any holding has been held > MAX_HOLD_DAYS with no exit signal.
+    max_hold_alerted_date = new_state.get("_max_hold_alerted_date", "")
+    if is_last_scan_of_day() and max_hold_alerted_date != today_str:
+        today_dt     = datetime.date.today()
+        sig_map_now  = {r["ticker"]: r for r in ok}
+        stale        = []
+        for ticker, h in port["holdings"].items():
+            entry_dt  = datetime.date.fromisoformat(h["entry_date"])
+            days_held = (today_dt - entry_dt).days
+            if days_held >= MAX_HOLD_DAYS:
+                sig_now   = sig_map_now.get(ticker, {})
+                stale.append({
+                    "ticker": ticker,
+                    "h":      h,
+                    "px":     prices.get(ticker, h["avg_cost"]),
+                    "days":   days_held,
+                    "score":  sig_now.get("score", 0),
+                })
+        if stale:
+            stale.sort(key=lambda x: -x["days"])   # longest held first
+            hm_msg  = build_max_hold_alert(stale, port, prices)
+            ok_hm   = send_line(hm_msg)
+            print("  ⏰ Max-hold alert ({0} stocks): {1}".format(
+                len(stale), "✅ sent" if ok_hm else "❌ failed"))
+            if ok_hm:
+                msgs_sent += 1
+        new_state["_max_hold_alerted_date"] = today_str
+        save_signal_state(new_state)
 
     # ── End-of-day heartbeat alert ────────────────────────────────────────────
     # Sends once per day on the last scan (≥ 16:15) confirming monitor is alive.
