@@ -89,14 +89,14 @@ CASH_FLOOR_PCT  = 0.05
 BUY_SCORE_MIN  = 3     # score >= +3 triggers BUY  (was +2 with 3 indicators)
 SELL_SCORE_MAX = -2    # score <= -2 triggers SELL  (was -1)
 BUY_PREV_MAX   = 0     # only buy if previous score was <= 0 (fresh cross)
-SELL_PREV_MIN  = 1     # only sell if previous score was >= +1
+SELL_PREV_MIN  = 0     # sell if previous score was >= 0 (catches crash from neutral → -2)
 
 # ─── Rotation parameters ──────────────────────────────────────────────────────
 ROTATION_ENABLED        = True
 ROTATION_MIN_HOLD_DAYS  = 5
 ROTATION_MIN_HOLD_FAST  = 3     # fast-track: comp >= 8.5 bypasses min-hold
 ROTATION_HELD_SCORE_MAX = 1     # held score <= +1 qualifies for rotation-out
-ROTATION_MAX_LOSS_PCT   = 0.03
+ROTATION_MAX_LOSS_PCT   = 0.05    # allow rotation if loss <= 5% (was 3% — too tight)
 ROTATION_MAX_PER_DAY    = 2
 ROTATION_COOLDOWN_DAYS  = 5
 
