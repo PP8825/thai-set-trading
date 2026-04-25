@@ -432,19 +432,22 @@
     }
   ],
   "scoring_weights": {
-    "_note": "Must sum to 1.0. technical = RSI+SMA+MACD score. fundamental = P/E, P/BV, ROE, dividend quality.",
+    "_note": "Must sum to 1.0. technical = 5-indicator score (-5..+5). fundamental = P/E, P/BV, ROE, dividend, D/E, growth, FCF.",
     "technical":   0.6,
     "fundamental": 0.4
   },
   "rsi_period": 14,
   "rsi_overbought": 70,
   "rsi_oversold": 30,
-  "sma_period": 50,
+  "sma_short_period": 20,
+  "sma_long_period":  50,
+  "adx_period":       14,
+  "volume_surge_ratio": 1.5,
   "lookback_days": 300,
   "top_n_results": 5,
   "download_threads": 10,
   "alert_strong_signals_only": false,
-  "_alert_note": "Set true to only send when STRONG BUY or STRONG SELL (all 3 indicators agree). Set false to always send the daily summary.",
+  "_alert_note": "Set true to only send when STRONG BUY or STRONG SELL. Set false to always send the daily summary.",
   "fundamental_filter": {
     "_note": "Stocks must pass ALL enabled checks before being bought",
     "enabled": true,
@@ -452,5 +455,62 @@
     "max_pbv": 3,
     "min_roe": 0.08,
     "require_dividend": true
+  },
+  "sector_concentration": {
+    "_note": "Max positions allowed per sector. Prevents over-concentration in one industry.",
+    "enabled": true,
+    "max_per_sector": 2
+  },
+  "liquidity_filter": {
+    "_note": "Position size must not exceed this fraction of the stock's average daily volume.",
+    "enabled": true,
+    "max_position_pct_of_avg_volume": 0.10
+  },
+  "position_sizing": {
+    "_note": "Volatility-tiered: high-vol stocks get smaller allocation, low-vol get larger.",
+    "method": "volatility_tiered",
+    "vol_lookback_days": 20,
+    "vol_high_threshold": 0.030,
+    "vol_low_threshold":  0.015,
+    "vol_high_multiplier": 0.75,
+    "vol_low_multiplier":  1.25
+  },
+  "sector_map": {
+    "^SET.BK":    "INDEX",
+    "PTT.BK":     "ENERGY",    "PTTGC.BK":  "ENERGY",   "PTTEP.BK": "ENERGY",
+    "TOP.BK":     "ENERGY",    "IRPC.BK":   "ENERGY",   "BANPU.BK": "ENERGY",
+    "RATCH.BK":   "ENERGY",    "EGCO.BK":   "ENERGY",   "GPSC.BK":  "ENERGY",
+    "BGRIM.BK":   "ENERGY",    "BPP.BK":    "ENERGY",   "GULF.BK":  "ENERGY",
+    "SPRC.BK":    "ENERGY",    "ESSO.BK":   "ENERGY",   "TPIPP.BK": "ENERGY",
+    "KBANK.BK":   "BANKING",   "SCB.BK":    "BANKING",  "KTB.BK":   "BANKING",
+    "BBL.BK":     "BANKING",   "BAY.BK":    "BANKING",  "TISCO.BK": "BANKING",
+    "TTB.BK":     "BANKING",
+    "KTC.BK":     "FINANCE",   "MTC.BK":    "FINANCE",  "TIDLOR.BK":"FINANCE",
+    "SAWAD.BK":   "FINANCE",   "BAM.BK":    "FINANCE",  "JMT.BK":   "FINANCE",
+    "SINGER.BK":  "FINANCE",   "TQM.BK":    "FINANCE",  "MTL.BK":   "FINANCE",
+    "BLA.BK":     "FINANCE",   "THRE.BK":   "FINANCE",  "JMART.BK": "FINANCE",
+    "LH.BK":      "PROPERTY",  "AP.BK":     "PROPERTY", "SIRI.BK":  "PROPERTY",
+    "SC.BK":      "PROPERTY",  "ORI.BK":    "PROPERTY", "SPALI.BK": "PROPERTY",
+    "NOBLE.BK":   "PROPERTY",  "PSH.BK":    "PROPERTY", "LALIN.BK": "PROPERTY",
+    "ANAN.BK":    "PROPERTY",  "GLAND.BK":  "PROPERTY", "CPN.BK":   "PROPERTY",
+    "SF.BK":      "PROPERTY",  "JASIF.BK":  "PROPERTY",
+    "WHA.BK":     "INDUSTRIAL","AMATA.BK":  "INDUSTRIAL","CK.BK":   "INDUSTRIAL",
+    "STEC.BK":    "INDUSTRIAL","ITD.BK":    "INDUSTRIAL","SCC.BK":  "INDUSTRIAL",
+    "PYLON.BK":   "INDUSTRIAL",
+    "CPALL.BK":   "CONSUMER",  "MAKRO.BK":  "CONSUMER", "ROBINS.BK":"CONSUMER",
+    "CRC.BK":     "CONSUMER",  "COM7.BK":   "CONSUMER", "BJC.BK":   "CONSUMER",
+    "OSP.BK":     "CONSUMER",  "HMPRO.BK":  "CONSUMER", "GLOBAL.BK":"CONSUMER",
+    "TU.BK":      "FOOD",      "GFPT.BK":   "FOOD",     "CPF.BK":   "FOOD",
+    "CBG.BK":     "FOOD",
+    "BH.BK":      "HEALTHCARE","BDMS.BK":   "HEALTHCARE","BCH.BK":  "HEALTHCARE",
+    "PR9.BK":     "HEALTHCARE","MEGA.BK":   "HEALTHCARE",
+    "AOT.BK":     "TRANSPORT", "BTS.BK":    "TRANSPORT","BEM.BK":   "TRANSPORT",
+    "AAV.BK":     "TRANSPORT", "BA.BK":     "TRANSPORT","NOK.BK":   "TRANSPORT",
+    "THAI.BK":    "TRANSPORT", "SHR.BK":    "TRANSPORT",
+    "ADVANC.BK":  "TECH",      "TRUE.BK":   "TECH",     "INTUCH.BK":"TECH",
+    "DTAC.BK":    "TECH",      "DELTA.BK":  "TECH",     "NTV.BK":   "TECH",
+    "VGI.BK":     "TECH",      "WORK.BK":   "TECH",     "PLANB.BK": "TECH",
+    "MINT.BK":    "HOTEL",     "ERW.BK":    "HOTEL",    "DUSIT.BK": "HOTEL",
+    "CENTEL.BK":  "HOTEL",     "THG.BK":    "HOTEL",    "IVL.BK":   "ENERGY"
   }
 }

@@ -64,7 +64,8 @@ BKK = datetime.timezone(datetime.timedelta(hours=7))
 
 
 # ─── Scoring functions (mirrors set_realtime_monitor.py) ─────────────────────
-_FUND_MAX_RAW = 13.0   # 3 + 3 + 3 + 4
+_FUND_MAX_RAW = 19.0   # 3(P/E)+3(P/BV)+3(ROE)+4(Div)+2(D/E)+2(EPS Gw)+2(FCF)
+TECH_MAX      = 5      # tech score now -5 to +5
 
 def _to_float(v):
     """Safely convert a value to float, returning None if not numeric."""
@@ -80,11 +81,14 @@ def calc_fundamental_score(fund):
     if not fund:
         return 5.0
     s = 0.0
-    pe  = _to_float(fund.get("pe"))
-    pbv = _to_float(fund.get("pbv"))
-    roe = _to_float(fund.get("roe"))
+    pe      = _to_float(fund.get("pe"))
+    pbv     = _to_float(fund.get("pbv"))
+    roe     = _to_float(fund.get("roe"))
     has_div = fund.get("has_div", False)
     div_yld = _to_float(fund.get("div_yld")) or 0.0
+    de      = _to_float(fund.get("de_ratio"))
+    eg      = _to_float(fund.get("eps_growth"))
+    fcf_y   = _to_float(fund.get("fcf_yield"))
 
     # P/E — max 3 pts
     if pe is None:      s += 1
@@ -93,7 +97,7 @@ def calc_fundamental_score(fund):
     elif pe <= 12:      s += 2
     elif pe <= 15:      s += 1
 
-    # P/BV — max 3 pts (new: <1 earns extra tier)
+    # P/BV — max 3 pts (<1 earns extra tier)
     if pbv is None:     s += 1
     elif pbv < 1.0:     s += 3
     elif pbv <= 1.5:    s += 2
@@ -114,11 +118,27 @@ def calc_fundamental_score(fund):
         elif div_yld >= 0.03:  s += 2.0
         else:                  s += 1.0
 
+    # D/E ratio — max 2 pts (low leverage = resilience)
+    if de is None:      s += 1
+    elif de < 0.5:      s += 2
+    elif de < 1.0:      s += 1
+
+    # Earnings growth — max 2 pts
+    if eg is None:      s += 1
+    elif eg >= 0.15:    s += 2
+    elif eg > 0.0:      s += 1
+
+    # FCF yield — max 2 pts (quality of earnings)
+    if fcf_y is None:   s += 1
+    elif fcf_y >= 0.06: s += 2
+    elif fcf_y >= 0.03: s += 1
+
     return round(min(10.0, s / _FUND_MAX_RAW * 10.0), 1)
 
 
 def calc_composite_score(tech_score, fund_score):
-    tech_norm = (tech_score + 3) / 6.0 * 10.0
+    # Tech score is now -5 to +5, normalise to 0-10
+    tech_norm = (tech_score + TECH_MAX) / (2.0 * TECH_MAX) * 10.0
     return round(tech_norm * W_TECH + fund_score * W_FUND, 2)
 
 
@@ -132,8 +152,8 @@ def fetch_fund(ticker):
         div_yld = _to_float(info.get("dividendYield")) or 0.0
         try:
             import pandas as pd
-            divs   = tk.dividends
-            cutoff = pd.Timestamp.now(tz="UTC") - pd.DateOffset(years=3)
+            divs    = tk.dividends
+            cutoff  = pd.Timestamp.now(tz="UTC") - pd.DateOffset(years=3)
             has_div = len(divs[divs.index >= cutoff]) > 0
         except Exception:
             has_div = div_yld > 0
@@ -145,9 +165,30 @@ def fetch_fund(ticker):
                 ex_div_date = datetime.date.fromtimestamp(ex_ts).isoformat()
             except Exception:
                 pass
-        return {"pe": pe, "pbv": pbv, "roe": roe,
-                "div_yld": div_yld, "has_div": has_div,
-                "ex_div_date": ex_div_date}
+        # NEW: D/E ratio (yfinance reports as %, divide by 100 to get ratio)
+        de_raw   = info.get("debtToEquity")
+        de_ratio = _to_float(de_raw) / 100.0 if de_raw is not None else None
+        # NEW: Earnings growth
+        eps_growth = _to_float(info.get("earningsGrowth"))
+        # NEW: FCF yield = FCF / Market Cap
+        fcf      = _to_float(info.get("freeCashflow"))
+        mkt_cap  = _to_float(info.get("marketCap"))
+        fcf_yield = (fcf / mkt_cap if fcf is not None and mkt_cap and mkt_cap > 0 else None)
+        # Avg daily volume (for liquidity display)
+        avg_volume = info.get("averageVolume") or info.get("averageDailyVolume10Day")
+
+        return {
+            "pe":          pe,
+            "pbv":         pbv,
+            "roe":         roe,
+            "div_yld":     div_yld,
+            "has_div":     has_div,
+            "ex_div_date": ex_div_date,
+            "de_ratio":    de_ratio,
+            "eps_growth":  eps_growth,
+            "fcf_yield":   fcf_yield,
+            "avg_volume":  avg_volume,
+        }
     except Exception as e:
         print(f"  ⚠  {ticker}: {e}")
         return {}
@@ -282,9 +323,16 @@ def main():
     ranked = sorted(embed.items(), key=lambda x: -x[1]["comp_score"])
     print("\n🏆 Top 10 by Composite Score:")
     for ticker, s in ranked[:10]:
-        name = ticker.replace(".BK", "")
+        name  = ticker.replace(".BK", "")
+        fund  = s.get("fund", {})
+        de    = fund.get("de_ratio")
+        eg    = fund.get("eps_growth")
+        fcf_y = fund.get("fcf_yield")
         print(f"   {name:10s}  Tech:{s['score']:+d}  Fund:{s['fund_score']:.1f}/10  "
-              f"Comp:{s['comp_score']:.1f}/10  [{s['signal']}]")
+              f"Comp:{s['comp_score']:.1f}/10  [{s['signal']}]  "
+              f"D/E:{'{:.2f}'.format(de) if de is not None else 'N/A'}  "
+              f"EPS:{'{:+.0%}'.format(eg) if eg is not None else 'N/A'}  "
+              f"FCF:{'{:.1%}'.format(fcf_y) if fcf_y is not None else 'N/A'}")
 
 
 if __name__ == "__main__":

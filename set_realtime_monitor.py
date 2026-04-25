@@ -68,7 +68,11 @@ INSTRUMENTS   = [(i["name"], i["ticker"]) for i in cfg.get("instruments", [])]
 RSI_PERIOD    = cfg.get("rsi_period", 14)
 RSI_OB        = cfg.get("rsi_overbought", 70)
 RSI_OS        = cfg.get("rsi_oversold", 30)
-SMA_PERIOD    = cfg.get("sma_period", 50)
+SMA_SHORT     = cfg.get("sma_short_period", 20)   # fast EMA for trend
+SMA_LONG      = cfg.get("sma_long_period",  50)   # slow EMA for trend
+SMA_PERIOD    = SMA_LONG                           # backward compat alias
+ADX_PERIOD    = cfg.get("adx_period", 14)
+VOL_SURGE_R   = cfg.get("volume_surge_ratio", 1.5)
 LOOKBACK      = cfg.get("lookback_days", 300)
 MAX_WORKERS   = cfg.get("download_threads", 10)
 
@@ -80,40 +84,61 @@ STOP_LOSS_PCT   = 0.08
 MAX_POSITIONS   = 10
 CASH_FLOOR_PCT  = 0.05
 
-# ─── Signal-change thresholds (avoid noise) ───────────────────────────────────
-BUY_SCORE_MIN  = 2     # score >= +2 triggers BUY
-SELL_SCORE_MAX = -1    # score <= -1 triggers SELL
-BUY_PREV_MAX   = 0     # only if previous score was <= 0
-SELL_PREV_MIN  = 1     # only if previous score was >= +1
+# ─── Signal-change thresholds ─────────────────────────────────────────────────
+# Tech score now ranges -5 to +5 (5 indicators).  Buy needs 3+ bullish (≥+3).
+BUY_SCORE_MIN  = 3     # score >= +3 triggers BUY  (was +2 with 3 indicators)
+SELL_SCORE_MAX = -2    # score <= -2 triggers SELL  (was -1)
+BUY_PREV_MAX   = 0     # only buy if previous score was <= 0 (fresh cross)
+SELL_PREV_MIN  = 1     # only sell if previous score was >= +1
 
 # ─── Rotation parameters ──────────────────────────────────────────────────────
 ROTATION_ENABLED        = True
-ROTATION_MIN_HOLD_DAYS  = 5     # standard: hold >= 5 days, incoming score >= +2
-ROTATION_MIN_HOLD_FAST  = 3     # fast-track: hold >= 3 days, but ONLY if incoming score = +3
-ROTATION_HELD_SCORE_MAX = 1     # held stock score must have dropped to <= +1
-ROTATION_MAX_LOSS_PCT   = 0.03  # don't rotate out if down > 3% (avoid locking in loss)
-ROTATION_MAX_PER_DAY    = 2     # max rotation swaps per trading day
-ROTATION_COOLDOWN_DAYS  = 5     # days before a rotated-out stock can re-enter
+ROTATION_MIN_HOLD_DAYS  = 5
+ROTATION_MIN_HOLD_FAST  = 3     # fast-track: need score +5 (all agree)
+ROTATION_HELD_SCORE_MAX = 1     # held score <= +1 qualifies for rotation-out
+ROTATION_MAX_LOSS_PCT   = 0.03
+ROTATION_MAX_PER_DAY    = 2
+ROTATION_COOLDOWN_DAYS  = 5
 
-# ─── Composite-score rotation (fires even when tech score is still +2) ────────
-ROTATION_COMP_FLOOR     = 7.2   # held comp_score below this qualifies for rotation-out
-ROTATION_COMP_MIN_GAIN  = 0.8   # incoming comp_score must exceed held by at least this much
+# ─── Composite-score rotation ────────────────────────────────────────────────
+ROTATION_COMP_FLOOR    = 7.2
+ROTATION_COMP_MIN_GAIN = 0.8
 
 # ─── Dividend timing guard ────────────────────────────────────────────────────
-EX_DIV_HOLD_DAYS = 14           # don't sell/rotate within this many days before ex-div
+EX_DIV_HOLD_DAYS = 14
 
-# ─── Fundamental filter thresholds ────────────────────────────────────────────
+# ─── Fundamental filter ────────────────────────────────────────────────────────
 _ff            = cfg.get("fundamental_filter", {})
 FUND_ENABLED   = _ff.get("enabled", True)
 MAX_PE         = _ff.get("max_pe", 15)
 MAX_PBV        = _ff.get("max_pbv", 3)
-MIN_ROE        = _ff.get("min_roe", 0.08)     # 8% minimum ROE
+MIN_ROE        = _ff.get("min_roe", 0.08)
 REQ_DIVIDEND   = _ff.get("require_dividend", True)
 
-# ─── Composite scoring weights ─────────────────────────────────────────────────
+# ─── Composite scoring weights ────────────────────────────────────────────────
 _sw          = cfg.get("scoring_weights", {})
-WEIGHT_TECH  = _sw.get("technical",   0.6)   # technical contributes 60%
-WEIGHT_FUND  = _sw.get("fundamental", 0.4)   # fundamental contributes 40%
+WEIGHT_TECH  = _sw.get("technical",   0.6)
+WEIGHT_FUND  = _sw.get("fundamental", 0.4)
+TECH_MAX     = 5        # tech score range is now -5 to +5
+
+# ─── Sector concentration ────────────────────────────────────────────────────
+_sc           = cfg.get("sector_concentration", {})
+SECTOR_ENABLED= _sc.get("enabled", True)
+SECTOR_MAX    = _sc.get("max_per_sector", 2)
+SECTOR_MAP    = cfg.get("sector_map", {})
+
+# ─── Liquidity filter ────────────────────────────────────────────────────────
+_lq                = cfg.get("liquidity_filter", {})
+LIQUIDITY_ENABLED  = _lq.get("enabled", True)
+MAX_POS_PCT_VOL    = _lq.get("max_position_pct_of_avg_volume", 0.10)
+
+# ─── Position sizing (volatility-tiered) ─────────────────────────────────────
+_ps              = cfg.get("position_sizing", {})
+VOL_LB_DAYS      = _ps.get("vol_lookback_days",  20)
+VOL_HIGH_THRESH  = _ps.get("vol_high_threshold", 0.030)   # >3% daily std → high vol
+VOL_LOW_THRESH   = _ps.get("vol_low_threshold",  0.015)   # <1.5% daily std → low vol
+VOL_HIGH_MULT    = _ps.get("vol_high_multiplier", 0.75)   # smaller position
+VOL_LOW_MULT     = _ps.get("vol_low_multiplier",  1.25)   # larger position
 
 # ─── Bangkok time (UTC+7, no pytz needed) ─────────────────────────────────────
 BKK_OFFSET = datetime.timezone(datetime.timedelta(hours=7))
@@ -226,36 +251,100 @@ def calc_macd(s, fast=12, slow=26, sig=9):
     sl = ml.ewm(span=sig, adjust=False).mean()
     return float(ml.iloc[-1]), float(sl.iloc[-1])
 
-def score_signals(rsi, close, sma, macd, msig):
+def calc_adx(df, n=14):
+    """
+    Average Directional Index + directional indicators.
+    Returns (adx, di_plus, di_minus) — all floats.
+    ADX > 20 = trending; +DI > -DI = uptrend; -DI > +DI = downtrend.
+    """
+    high  = df["High"]
+    low   = df["Low"]
+    close = df["Close"]
+    tr = pd.concat([
+        high - low,
+        (high - close.shift()).abs(),
+        (low  - close.shift()).abs(),
+    ], axis=1).max(axis=1)
+    up   = high.diff().clip(lower=0)
+    down = (-low.diff()).clip(lower=0)
+    dm_p = up.where(up > down, 0.0)
+    dm_m = down.where(down > up, 0.0)
+    atr_s = tr.ewm(alpha=1/n, min_periods=n, adjust=False).mean()
+    dmp_s = dm_p.ewm(alpha=1/n, min_periods=n, adjust=False).mean()
+    dmm_s = dm_m.ewm(alpha=1/n, min_periods=n, adjust=False).mean()
+    safe  = atr_s.replace(0, 1e-10)
+    di_p  = 100 * dmp_s / safe
+    di_m  = 100 * dmm_s / safe
+    dx    = 100 * (di_p - di_m).abs() / (di_p + di_m).replace(0, 1e-10)
+    adx   = dx.ewm(alpha=1/n, min_periods=n, adjust=False).mean()
+    return float(adx.iloc[-1]), float(di_p.iloc[-1]), float(di_m.iloc[-1])
+
+def calc_vol_20d(close):
+    """20-day realised daily volatility (std of daily returns)."""
+    ret = close.pct_change().dropna()
+    return float(ret.tail(20).std()) if len(ret) >= 20 else 0.02
+
+def score_signals(rsi, close, ema_short, ema_long, macd, msig,
+                  adx=0, di_plus=0, di_minus=0, vol_score=0):
+    """
+    5-indicator technical score: range -5 to +5.
+
+    1. RSI          : +1 oversold / -1 overbought / 0 neutral
+    2. EMA trend    : +1 if fast EMA > slow EMA (bullish) / -1 if below
+    3. MACD         : +1 if MACD line > signal / -1 if below
+    4. ADX + DI     : +1 trending up (ADX>20, +DI>-DI) / -1 trending down / 0 choppy
+    5. Volume surge : +1 if volume >1.5× avg AND price rose / -1 fell / 0 neutral
+
+    Buy  threshold: >= +3  (≥3 of 5 bullish)
+    Sell threshold: <= -2  (2+ bearish)
+    """
     rs = 1 if rsi < RSI_OS else (-1 if rsi > RSI_OB else 0)
-    ms = 1 if close > sma  else -1
-    mc = 1 if macd  > msig else -1
-    sc = max(-3, min(3, rs + ms + mc))
+    ms = 1 if close > ema_long else -1          # long-term trend
+    et = 1 if ema_short > ema_long else -1       # EMA crossover (short vs long)
+    mc = 1 if macd > msig else -1
+    # Blend ms and et into one EMA indicator to keep 5 clean components:
+    # if both agree → full signal; if split → neutral
+    trend = (1 if ms > 0 and et > 0 else (-1 if ms < 0 and et < 0 else 0))
+    # ADX: only count if trending (ADX > 20)
+    if adx > 20:
+        ad = 1 if di_plus > di_minus else -1
+    else:
+        ad = 0   # choppy — no directional conviction
+    vs = vol_score   # pre-computed: +1 / 0 / -1
+    sc = max(-5, min(5, rs + trend + mc + ad + vs))
     label = {
-        3: "STRONG BUY", 2: "BUY",  1: "BUY",
-        0: "HOLD",
-       -1: "SELL",      -2: "SELL", -3: "STRONG SELL"
+         5: "STRONG BUY",  4: "STRONG BUY", 3: "BUY",
+         2: "BUY",         1: "WATCH",       0: "HOLD",
+        -1: "WATCH",      -2: "SELL",       -3: "SELL",
+        -4: "STRONG SELL",-5: "STRONG SELL",
     }[sc]
-    return sc, label, rs, ms, mc
+    return sc, label, rs, trend, mc, ad, vs
 
 # ─── Fundamental filter ───────────────────────────────────────────────────────
 def fetch_fundamentals(ticker):
-    """Fetch P/E, P/BV, ROE, dividend, and ex-dividend date from yfinance .info"""
+    """
+    Fetch fundamentals from yfinance .info.
+    Original fields: P/E, P/BV, ROE, dividend yield, ex-div date.
+    New fields:      Debt/Equity, Earnings Growth, FCF Yield.
+    """
     try:
-        tk      = yf.Ticker(ticker)
-        info    = tk.info
+        tk   = yf.Ticker(ticker)
+        info = tk.info
+
         pe      = info.get("trailingPE") or info.get("forwardPE")
         pbv     = info.get("priceToBook")
         roe     = info.get("returnOnEquity")
         div_yld = info.get("dividendYield") or 0.0
-        # Check dividend history: any payout in last 3 years?
+
+        # Dividend history check
         try:
-            divs = tk.dividends
-            cutoff = pd.Timestamp.now(tz="UTC") - pd.DateOffset(years=3)
+            divs    = tk.dividends
+            cutoff  = pd.Timestamp.now(tz="UTC") - pd.DateOffset(years=3)
             has_div = len(divs[divs.index >= cutoff]) > 0
         except Exception:
             has_div = div_yld > 0
-        # Ex-dividend date (Unix timestamp → ISO date string)
+
+        # Ex-dividend date
         ex_div_date = None
         ex_ts = info.get("exDividendDate")
         if ex_ts:
@@ -263,6 +352,24 @@ def fetch_fundamentals(ticker):
                 ex_div_date = datetime.date.fromtimestamp(ex_ts).isoformat()
             except Exception:
                 pass
+
+        # ── NEW: Debt/Equity ratio ────────────────────────────────────────────
+        # debtToEquity from yfinance is expressed as a percentage (e.g. 45.3 = 0.453x)
+        de_raw = info.get("debtToEquity")
+        de_ratio = float(de_raw) / 100.0 if de_raw is not None else None
+
+        # ── NEW: Earnings growth (trailing 12m EPS growth) ───────────────────
+        eps_growth = info.get("earningsGrowth")   # float, e.g. 0.15 = 15% growth
+
+        # ── NEW: Free Cash Flow Yield = FCF / Market Cap ─────────────────────
+        fcf     = info.get("freeCashflow")
+        mkt_cap = info.get("marketCap")
+        fcf_yield = (float(fcf) / float(mkt_cap)
+                     if fcf is not None and mkt_cap and mkt_cap > 0 else None)
+
+        # ── NEW: Average daily volume (for liquidity check) ───────────────────
+        avg_volume = info.get("averageVolume") or info.get("averageDailyVolume10Day")
+
         return {
             "pe":          pe,
             "pbv":         pbv,
@@ -270,6 +377,10 @@ def fetch_fundamentals(ticker):
             "div_yld":     div_yld,
             "has_div":     has_div,
             "ex_div_date": ex_div_date,
+            "de_ratio":    de_ratio,
+            "eps_growth":  eps_growth,
+            "fcf_yield":   fcf_yield,
+            "avg_volume":  avg_volume,
         }
     except Exception:
         return {}
@@ -328,88 +439,91 @@ def check_fundamentals(fund):
     return passes, fails, summary
 
 
-_FUND_MAX_RAW = 13.0   # 3 (P/E) + 3 (P/BV) + 3 (ROE) + 4 (Dividend) — for normalisation
+_FUND_MAX_RAW = 19.0   # 3(P/E)+3(P/BV)+3(ROE)+4(Div)+2(D/E)+2(Growth)+2(FCF)
 
 def calc_fundamental_score(fund):
     """
-    Graduated fundamental quality score: 0 – 10 (normalised from raw 0–13).
+    Graduated fundamental quality score: 0–10 (normalised from raw 0–19).
 
-    P/E  ratio (0–3 pts):  ≤8 → 3 | 8–12 → 2 | 12–15 → 1 | >15 or neg → 0
-    P/BV ratio (0–3 pts):  <1 → 3 | 1–1.5 → 2 | 1.5–3 → 1 | >3 → 0
-    ROE        (0–3 pts):  ≥20% → 3 | 12–20% → 2 | 8–12% → 1 | <8% → 0
-    Dividend   (0–4 pts):  ≥9% → 4 | ≥8% → 3.5 | ≥6.5% → 3 | ≥5% → 2.5
-                           ≥3% → 2 | has_div → 1 | none → 0
+    Original factors (0–13 pts):
+      P/E  (0–3):  ≤8→3 | 8–12→2 | 12–15→1 | >15 or neg→0
+      P/BV (0–3):  <1→3 | 1–1.5→2 | 1.5–3→1 | >3→0
+      ROE  (0–3):  ≥20%→3 | 12–20%→2 | 8–12%→1 | <8%→0
+      Div  (0–4):  ≥9%→4 | ≥8%→3.5 | ≥6.5%→3 | ≥5%→2.5 | ≥3%→2 | any→1 | none→0
 
-    Missing data → 1 pt each (benefit of the doubt, not penalised).
-    Raw total is normalised to 0–10 scale (÷13 × 10).
+    New quality factors (0–6 pts):
+      D/E ratio   (0–2):  <0.5→2 | <1.0→1 | ≥1.0→0  (low debt = better)
+      EPS growth  (0–2):  ≥15%→2 | >0%→1 | neg→0    (growing earnings)
+      FCF yield   (0–2):  ≥6%→2 | ≥3%→1 | <3%→0    (cash generation quality)
+
+    Missing data → 1 pt (benefit of the doubt). Normalised to 0–10 (÷19 × 10).
     """
     if not fund:
-        return 5.0          # neutral when no data at all
+        return 5.0
 
     score = 0.0
 
-    # P/E — max 3 pts
+    # ── P/E — max 3 pts ───────────────────────────────────────────────────────
     pe = fund.get("pe")
-    if pe is None:
-        score += 1          # unknown → neutral
-    elif pe <= 0:
-        score += 0          # loss-making
-    elif pe <= 8:
-        score += 3          # very cheap
-    elif pe <= 12:
-        score += 2          # cheap
-    elif pe <= 15:
-        score += 1          # fair (still passes filter)
-    # else 0               # expensive
+    if pe is None:      score += 1
+    elif pe <= 0:       score += 0
+    elif pe <= 8:       score += 3
+    elif pe <= 12:      score += 2
+    elif pe <= 15:      score += 1
 
-    # P/BV — max 3 pts (new: <1 earns bonus tier)
+    # ── P/BV — max 3 pts ──────────────────────────────────────────────────────
     pbv = fund.get("pbv")
-    if pbv is None:
-        score += 1
-    elif pbv < 1.0:
-        score += 3          # trading below book — deeply undervalued
-    elif pbv <= 1.5:
-        score += 2          # undervalued vs book
-    elif pbv <= 3:
-        score += 1          # acceptable
-    # else 0               # overvalued
+    if pbv is None:     score += 1
+    elif pbv < 1.0:     score += 3
+    elif pbv <= 1.5:    score += 2
+    elif pbv <= 3:      score += 1
 
-    # ROE — max 3 pts
+    # ── ROE — max 3 pts ───────────────────────────────────────────────────────
     roe = fund.get("roe")
-    if roe is None:
-        score += 1
-    elif roe >= 0.20:
-        score += 3          # excellent capital efficiency
-    elif roe >= 0.12:
-        score += 2          # good
-    elif roe >= 0.08:
-        score += 1          # acceptable (meets minimum)
-    # else 0               # poor
+    if roe is None:     score += 1
+    elif roe >= 0.20:   score += 3
+    elif roe >= 0.12:   score += 2
+    elif roe >= 0.08:   score += 1
 
-    # Dividend — max 4 pts (graduated yield tiers)
+    # ── Dividend — max 4 pts ──────────────────────────────────────────────────
     has_div = fund.get("has_div", False)
     div_yld = fund.get("div_yld") or 0.0
     if has_div:
-        if div_yld >= 0.09:    score += 4.0   # exceptional: ≥9%
-        elif div_yld >= 0.08:  score += 3.5   # very high: ≥8%
-        elif div_yld >= 0.065: score += 3.0   # high: ≥6.5%
-        elif div_yld >= 0.05:  score += 2.5   # solid: ≥5%
-        elif div_yld >= 0.03:  score += 2.0   # meaningful: ≥3%
-        else:                  score += 1.0   # paid but small/irregular
-    # else 0               # no dividend history
+        if div_yld >= 0.09:    score += 4.0
+        elif div_yld >= 0.08:  score += 3.5
+        elif div_yld >= 0.065: score += 3.0
+        elif div_yld >= 0.05:  score += 2.5
+        elif div_yld >= 0.03:  score += 2.0
+        else:                  score += 1.0
 
-    # Normalise raw score (0–13) → 0–10 scale
-    normalised = score / _FUND_MAX_RAW * 10.0
-    return round(min(10.0, normalised), 1)
+    # ── NEW: Debt/Equity — max 2 pts (low leverage = resilience) ─────────────
+    de = fund.get("de_ratio")
+    if de is None:      score += 1      # unknown → neutral
+    elif de < 0.5:      score += 2      # very low debt — financially strong
+    elif de < 1.0:      score += 1      # moderate leverage — acceptable
+
+    # ── NEW: Earnings Growth — max 2 pts (momentum in fundamentals) ──────────
+    eg = fund.get("eps_growth")
+    if eg is None:      score += 1      # unknown → neutral
+    elif eg >= 0.15:    score += 2      # growing fast (≥15% YoY)
+    elif eg > 0.0:      score += 1      # growing, even if slowly
+
+    # ── NEW: Free Cash Flow Yield — max 2 pts (quality of earnings) ──────────
+    fcf_y = fund.get("fcf_yield")
+    if fcf_y is None:   score += 1      # unknown → neutral
+    elif fcf_y >= 0.06: score += 2      # high FCF yield — real cash generator
+    elif fcf_y >= 0.03: score += 1      # decent FCF
+
+    return round(min(10.0, score / _FUND_MAX_RAW * 10.0), 1)
 
 
 def calc_composite_score(tech_score, fund_score):
     """
-    Blend technical (−3 to +3) and fundamental (0–10) into a single 0–10 score.
-    Technical is first normalised to 0–10: (score + 3) / 6 × 10.
+    Blend technical (−5 to +5) and fundamental (0–10) into a single 0–10 score.
+    Technical is first normalised to 0–10: (score + TECH_MAX) / (2 × TECH_MAX) × 10.
     Weights are set in set_config.json under scoring_weights.
     """
-    tech_norm = (tech_score + 3) / 6.0 * 10.0
+    tech_norm = (tech_score + TECH_MAX) / (2.0 * TECH_MAX) * 10.0
     composite = tech_norm * WEIGHT_TECH + fund_score * WEIGHT_FUND
     return round(composite, 2)
 
@@ -673,16 +787,23 @@ def build_rotation_alert(sell_trade, buy_trade, buy_result, port, prices):
     ]
 
     if buy_result:
-        fs = buy_result.get("fund_score", 5.0)
-        cs = buy_result.get("comp_score", calc_composite_score(buy_result["score"], fs))
+        fs      = buy_result.get("fund_score", 5.0)
+        cs      = buy_result.get("comp_score", calc_composite_score(buy_result["score"], fs))
+        rsi_s   = buy_result.get("rsi_sig",   0)
+        trend_s = buy_result.get("trend_sig", buy_result.get("ma_sig", 0))
+        macd_s  = buy_result.get("macd_sig",  0)
+        adx_s   = buy_result.get("adx_sig",   0)
+        vol_s   = buy_result.get("vol_sig",   0)
         lines += [
             "",
             "📊 New position scores",
-            "   Technical  : {0:+d}/3  ({1}RSI {2}MA {3}MACD  RSI={4:.0f})".format(
+            "   Technical  : {0:+d}/5  ({1}RSI {2}EMA {3}MACD {4}ADX {5}Vol  RSI={6:.0f})".format(
                 buy_result["score"],
-                "▲" if buy_result["rsi_sig"] > 0 else "▼",
-                "▲" if buy_result["ma_sig"]  > 0 else "▼",
-                "▲" if buy_result["macd_sig"]> 0 else "▼",
+                "▲" if rsi_s   > 0 else ("▼" if rsi_s   < 0 else "─"),
+                "▲" if trend_s > 0 else ("▼" if trend_s < 0 else "─"),
+                "▲" if macd_s  > 0 else ("▼" if macd_s  < 0 else "─"),
+                "▲" if adx_s   > 0 else ("▼" if adx_s   < 0 else "─"),
+                "▲" if vol_s   > 0 else ("▼" if vol_s   < 0 else "─"),
                 buy_result["rsi"],
             ),
             "   Fundamental : {0:.1f}/10".format(fs),
@@ -691,10 +812,11 @@ def build_rotation_alert(sell_trade, buy_trade, buy_result, port, prices):
         fund = buy_result.get("fund", {})
         if fund:
             lines += [
-                "   P/E {0}  PBV {1}  ROE {2}  Div {3}".format(
-                    "{:.1f}".format(fund["pe"])   if fund.get("pe")  else "N/A",
-                    "{:.2f}".format(fund["pbv"])  if fund.get("pbv") else "N/A",
-                    "{:.0%}".format(fund["roe"])  if fund.get("roe") else "N/A",
+                "   P/E {0}  PBV {1}  ROE {2}  D/E {3}  Div {4}".format(
+                    "{:.1f}".format(fund["pe"])   if fund.get("pe")   else "N/A",
+                    "{:.2f}".format(fund["pbv"])  if fund.get("pbv")  else "N/A",
+                    "{:.0%}".format(fund["roe"])  if fund.get("roe")  else "N/A",
+                    "{:.2f}x".format(fund["de_ratio"]) if fund.get("de_ratio") is not None else "N/A",
                     "✅" if fund.get("has_div") else "⚠️",
                 ),
             ]
@@ -724,16 +846,31 @@ def analyze(name, ticker):
             return {"ticker": ticker, "name": name, "error": "No data"}
 
         c = df["Close"].dropna()
-        if len(c) < max(SMA_PERIOD + 5, 60):
+        if len(c) < max(SMA_LONG + 5, 60):
             return {"ticker": ticker, "name": name, "error": "Not enough data"}
 
-        rsi_v          = calc_rsi(c, RSI_PERIOD)
-        sma_v          = calc_sma(c, SMA_PERIOD)
-        macd_v, msig_v = calc_macd(c)
-        price          = float(c.iloc[-1])
-        prev           = float(c.iloc[-2])
-        pct            = (price - prev) / prev * 100
-        sc, label, rs, ms, mc = score_signals(rsi_v, price, sma_v, macd_v, msig_v)
+        rsi_v             = calc_rsi(c, RSI_PERIOD)
+        ema_short_v       = calc_sma(c, SMA_SHORT)       # 20-period EMA (fast trend)
+        ema_long_v        = calc_sma(c, SMA_LONG)        # 50-period EMA (slow trend)
+        macd_v, msig_v    = calc_macd(c)
+        adx_v, dip_v, dim_v = calc_adx(df)
+        vol_20d           = calc_vol_20d(c)
+        price             = float(c.iloc[-1])
+        prev              = float(c.iloc[-2])
+        pct               = (price - prev) / prev * 100
+
+        # Volume surge score: bullish if vol spike on up-day, bearish if down-day
+        avg_vol   = float(df["Volume"].rolling(20).mean().iloc[-1]) if "Volume" in df.columns else 0.0
+        today_vol = float(df["Volume"].iloc[-1])          if "Volume" in df.columns else 0.0
+        price_chg = price - prev
+        if avg_vol > 0 and today_vol > VOL_SURGE_R * avg_vol:
+            vol_s = 1 if price_chg > 0 else -1
+        else:
+            vol_s = 0
+
+        sc, label, rs, trend, mc, ad, vs = score_signals(
+            rsi_v, price, ema_short_v, ema_long_v, macd_v, msig_v,
+            adx_v, dip_v, dim_v, vol_s)
 
         # Fundamental check (only fetch if stock is a BUY candidate — saves time)
         fund         = {}
@@ -749,22 +886,30 @@ def analyze(name, ticker):
         comp_score = calc_composite_score(sc, fund_score)
 
         return {
-            "ticker": ticker,    "name":     name,       "error":    None,
-            "price":  price,     "pct":      pct,
-            "rsi":    rsi_v,     "sma":      sma_v,
-            "macd":   macd_v,    "msig":     msig_v,
-            "score":  sc,        "signal":   label,
-            "rsi_sig": rs,       "ma_sig":   ms,         "macd_sig": mc,
-            "fund":   fund,      "fund_ok":  fund_ok,
-            "fund_fails": fund_fails, "fund_summary": fund_summary,
-            "fund_score": fund_score, "comp_score":   comp_score,
+            "ticker":    ticker,       "name":      name,        "error":     None,
+            "price":     price,        "pct":       pct,
+            "rsi":       rsi_v,        "ema_short": ema_short_v, "ema_long":  ema_long_v,
+            "macd":      macd_v,       "msig":      msig_v,
+            "adx":       adx_v,        "di_plus":   dip_v,       "di_minus":  dim_v,
+            "vol_20d":   vol_20d,      "avg_volume": avg_vol,
+            "score":     sc,           "signal":    label,
+            "rsi_sig":   rs,           "trend_sig": trend,       "macd_sig":  mc,
+            "adx_sig":   ad,           "vol_sig":   vs,
+            # backward-compat alias so rotation alerts still work
+            "ma_sig":    trend,
+            "fund":      fund,         "fund_ok":   fund_ok,
+            "fund_fails": fund_fails,  "fund_summary": fund_summary,
+            "fund_score": fund_score,  "comp_score":   comp_score,
         }
     except Exception as e:
         return {"ticker": ticker, "name": name, "error": str(e)[:60]}
 
 # ─── Trade execution ──────────────────────────────────────────────────────────
 def execute_buy(port, r):
-    """Buy stock r. Returns trade dict or None."""
+    """
+    Buy stock r with sector concentration, liquidity, and volatility-tiered sizing checks.
+    Returns trade dict or None.
+    """
     cash_floor = INITIAL_CAPITAL * CASH_FLOOR_PCT
     avail      = port["cash"] - cash_floor
     if avail <= 0:
@@ -774,10 +919,43 @@ def execute_buy(port, r):
     if len(port["holdings"]) >= MAX_POSITIONS:
         return None
 
+    # ── Sector concentration check ────────────────────────────────────────────
+    sector = SECTOR_MAP.get(r["ticker"], "OTHER")
+    if SECTOR_ENABLED and sector not in ("OTHER", "INDEX"):
+        sector_count = sum(
+            1 for t in port["holdings"]
+            if SECTOR_MAP.get(t, "OTHER") == sector
+        )
+        if sector_count >= SECTOR_MAX:
+            print(f"  ⛔ Sector cap ({sector}): {r['name']} blocked — "
+                  f"already {sector_count}/{SECTOR_MAX} in sector")
+            return None
+
     price  = r["price"]
     n_free = max(1, MAX_POSITIONS - len(port["holdings"]))
-    alloc  = min(avail / n_free, INITIAL_CAPITAL / MAX_POSITIONS * 1.5)
+
+    # ── Volatility-tiered position sizing ─────────────────────────────────────
+    vol_20d = r.get("vol_20d", 0.02)
+    if vol_20d > VOL_HIGH_THRESH:
+        size_mult = VOL_HIGH_MULT   # high vol → smaller position (less risk)
+    elif vol_20d < VOL_LOW_THRESH:
+        size_mult = VOL_LOW_MULT    # low vol → larger position (stable stock)
+    else:
+        size_mult = 1.0             # normal vol → standard allocation
+
+    alloc  = min(avail / n_free, INITIAL_CAPITAL / MAX_POSITIONS * 1.5) * size_mult
     shares = int(alloc / price / LOT_SIZE) * LOT_SIZE
+
+    # ── Liquidity check — cap at 10% of avg daily volume ─────────────────────
+    avg_vol = r.get("avg_volume", 0) or 0
+    if LIQUIDITY_ENABLED and avg_vol > 0:
+        max_liq_shares = int(avg_vol * MAX_POS_PCT_VOL / LOT_SIZE) * LOT_SIZE
+        if max_liq_shares > 0 and shares > max_liq_shares:
+            print(f"  ⚠  Liquidity cap: {r['name']} trimmed "
+                  f"{shares:,d}→{max_liq_shares:,d}sh "
+                  f"(≤{MAX_POS_PCT_VOL:.0%} of avg vol {avg_vol:,.0f})")
+            shares = max_liq_shares
+
     if shares <= 0:
         shares = LOT_SIZE
     cost = shares * price * (1 + TX_COST)
@@ -936,14 +1114,21 @@ def build_trade_alert(trade, port, prices, result=None):
     if result:
         fs = result.get("fund_score", 5.0)
         cs = result.get("comp_score", calc_composite_score(result["score"], fs))
+        rsi_s   = result.get("rsi_sig",   0)
+        trend_s = result.get("trend_sig", result.get("ma_sig", 0))
+        macd_s  = result.get("macd_sig",  0)
+        adx_s   = result.get("adx_sig",   0)
+        vol_s   = result.get("vol_sig",   0)
         lines += [
             "",
             "📊 Scores",
-            "   Technical  : {0:+d}/3  ({1}RSI {2}MA {3}MACD  RSI={4:.0f})".format(
+            "   Technical  : {0:+d}/5  ({1}RSI {2}EMA {3}MACD {4}ADX {5}Vol  RSI={6:.0f})".format(
                 result["score"],
-                "▲" if result["rsi_sig"] > 0 else "▼",
-                "▲" if result["ma_sig"]  > 0 else "▼",
-                "▲" if result["macd_sig"]> 0 else "▼",
+                "▲" if rsi_s   > 0 else ("▼" if rsi_s   < 0 else "─"),
+                "▲" if trend_s > 0 else ("▼" if trend_s < 0 else "─"),
+                "▲" if macd_s  > 0 else ("▼" if macd_s  < 0 else "─"),
+                "▲" if adx_s   > 0 else ("▼" if adx_s   < 0 else "─"),
+                "▲" if vol_s   > 0 else ("▼" if vol_s   < 0 else "─"),
                 result["rsi"],
             ),
             "   Fundamental : {0:.1f}/10".format(fs),
@@ -953,17 +1138,23 @@ def build_trade_alert(trade, port, prices, result=None):
         # Show fundamental data if available
         fund = result.get("fund", {})
         if fund:
-            pe  = fund.get("pe")
-            pbv = fund.get("pbv")
-            roe = fund.get("roe")
-            div = fund.get("has_div")
+            pe     = fund.get("pe")
+            pbv    = fund.get("pbv")
+            roe    = fund.get("roe")
+            div    = fund.get("has_div")
+            de     = fund.get("de_ratio")
+            eg     = fund.get("eps_growth")
+            fcf_y  = fund.get("fcf_yield")
             lines += [
                 "",
                 "📈 Fundamentals",
-                "   P/E   : {0}".format("{:.1f}".format(pe)  if pe  is not None else "N/A"),
-                "   P/BV  : {0}".format("{:.2f}".format(pbv) if pbv is not None else "N/A"),
-                "   ROE   : {0}".format("{:.1%}".format(roe)  if roe is not None else "N/A"),
-                "   Div   : {0}".format("Yes ✅" if div else "No ⚠️"),
+                "   P/E    : {0}".format("{:.1f}".format(pe)   if pe  is not None else "N/A"),
+                "   P/BV   : {0}".format("{:.2f}".format(pbv)  if pbv is not None else "N/A"),
+                "   ROE    : {0}".format("{:.1%}".format(roe)   if roe is not None else "N/A"),
+                "   D/E    : {0}".format("{:.2f}x".format(de)  if de  is not None else "N/A"),
+                "   EPS Gw : {0}".format("{:+.1%}".format(eg)  if eg  is not None else "N/A"),
+                "   FCF Yld: {0}".format("{:.1%}".format(fcf_y) if fcf_y is not None else "N/A"),
+                "   Div    : {0}".format("Yes ✅" if div else "No ⚠️"),
             ]
 
     lines += [
@@ -1241,6 +1432,9 @@ def main():
             "price":        r["price"],
             "fund_score":   r.get("fund_score", 5.0),
             "comp_score":   r.get("comp_score", calc_composite_score(score, 5.0)),
+            "fund":         r.get("fund", prev.get("fund", {}) if isinstance(prev, dict) else {}),
+            "vol_20d":      r.get("vol_20d", 0.02),
+            "avg_volume":   r.get("avg_volume", 0),
             "buy_alerted":  prev.get("buy_alerted",  False) if isinstance(prev, dict) else False,
             "sell_alerted": prev.get("sell_alerted", False) if isinstance(prev, dict) else False,
         }

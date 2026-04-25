@@ -642,8 +642,8 @@ let REMOTE_HISTORY = [{"day":1,"date":"2026-04-20","value":300815.31,"cash":2944
 // Weights (match set_config.json scoring_weights)
 const W_TECH = 0.6, W_FUND = 0.4;
 
-// Normalize technical score (-3..+3) to 0-10
-function techNorm(score){ return (score + 3) / 6 * 10; }
+// Normalize technical score (-5..+5) to 0-10  (TECH_MAX=5)
+function techNorm(score){ return (score + TECH_MAX) / (2 * TECH_MAX) * 10; }
 
 // Composite score: blend tech (normalized) + fundamental
 // If fund_score is missing, use 5.0 (neutral) and mark as estimated
@@ -677,19 +677,21 @@ function compColor(cs){
 }
 
 // Fundamental score from raw fund data (mirrors Python calc_fundamental_score)
-// Max raw = 13 (3 P/E + 3 P/BV + 3 ROE + 4 Div), normalised to 0-10
-const FUND_MAX_RAW = 13;
+// Max raw = 19 (3+3+3+4+2+2+2), normalised to 0-10
+const FUND_MAX_RAW = 19;
+const TECH_MAX     = 5;    // tech score range: -5 to +5
 function calcFundScore(fund){
   if(!fund) return null;
   let s = 0;
   const pe=fund.pe, pbv=fund.pbv, roe=fund.roe, hasDiv=fund.has_div, divYld=fund.div_yld||0;
+  const de=fund.de_ratio, eg=fund.eps_growth, fcfY=fund.fcf_yield;
   // P/E (0-3)
   if(pe==null)       s+=1;
   else if(pe<=0)     s+=0;
   else if(pe<=8)     s+=3;
   else if(pe<=12)    s+=2;
   else if(pe<=15)    s+=1;
-  // P/BV (0-3) — new: <1 earns 3pts
+  // P/BV (0-3) — <1 earns 3pts
   if(pbv==null)      s+=1;
   else if(pbv<1)     s+=3;
   else if(pbv<=1.5)  s+=2;
@@ -708,7 +710,19 @@ function calcFundScore(fund){
     else if(divYld>=0.03) s+=2.0;
     else                  s+=1.0;
   }
-  // Normalise raw (0-13) → 0-10
+  // D/E ratio (0-2) — low leverage
+  if(de==null)      s+=1;
+  else if(de<0.5)   s+=2;
+  else if(de<1.0)   s+=1;
+  // EPS growth (0-2)
+  if(eg==null)      s+=1;
+  else if(eg>=0.15) s+=2;
+  else if(eg>0)     s+=1;
+  // FCF yield (0-2)
+  if(fcfY==null)      s+=1;
+  else if(fcfY>=0.06) s+=2;
+  else if(fcfY>=0.03) s+=1;
+  // Normalise raw (0-19) → 0-10
   return Math.round(Math.min(10, s / FUND_MAX_RAW * 10) * 10) / 10;
 }
 
@@ -973,7 +987,7 @@ function renderSignals(){
       <div class="stat-val" style="color:${compColor(cs)};font-size:18px">${cs.toFixed(1)}</div>
       <div class="stat-sub" style="line-height:1.8">
         ฿${s.price?.toFixed(2)||'–'} · <span class="${compPill(cs)}">${lbl}</span><br>
-        Tech: ${(s.score>0?'+':'')+s.score}/3 &nbsp;·&nbsp; Fund: ${fs!=null?fs.toFixed(1):'–'}/10
+        Tech: ${(s.score>0?'+':'')+s.score}/5 &nbsp;·&nbsp; Fund: ${fs!=null?fs.toFixed(1):'–'}/10
       </div>
     </div>`;
   }).join('');
@@ -1003,7 +1017,7 @@ function renderSignals(){
       <div style="font-size:10px;line-height:1.8;border-top:1px solid rgba(255,255,255,.06);padding-top:6px">
         <div style="display:flex;justify-content:space-between">
           <span style="color:var(--muted)">Tech/10</span>
-          <span style="color:var(--text);font-weight:600">${techN.toFixed(1)} <span style="color:var(--muted);font-weight:400">(${(s.score>0?'+':'')+s.score}/3)</span></span>
+          <span style="color:var(--text);font-weight:600">${techN.toFixed(1)} <span style="color:var(--muted);font-weight:400">(${(s.score>0?'+':'')+s.score}/5)</span></span>
         </div>
         <div style="display:flex;justify-content:space-between">
           <span style="color:var(--muted)">Fund/10</span>
@@ -1013,6 +1027,14 @@ function renderSignals(){
           <span style="color:var(--muted)">Comp/10</span>
           <span style="color:${compColor(cs)};font-weight:700">${cs.toFixed(1)}</span>
         </div>
+        ${(()=>{
+          const f=s.fund||{};
+          const rows=[];
+          if(f.de_ratio!=null)    rows.push(`<div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">D/E</span><span style="color:var(--text)">${f.de_ratio.toFixed(2)}x</span></div>`);
+          if(f.eps_growth!=null)  rows.push(`<div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">EPS Gw</span><span style="color:${f.eps_growth>=0?'var(--green)':'var(--red)'}">${(f.eps_growth*100).toFixed(1)}%</span></div>`);
+          if(f.fcf_yield!=null)   rows.push(`<div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">FCF Yld</span><span style="color:var(--text)">${(f.fcf_yield*100).toFixed(1)}%</span></div>`);
+          return rows.join('');
+        })()}
         ${exDays!=null&&exDays>=0&&exDays<=21?`<div style="display:flex;justify-content:space-between;margin-top:2px"><span style="color:var(--yellow);font-size:9px">📅 Ex-div</span><span style="color:var(--yellow);font-size:9px;font-weight:600">${exDays}d</span></div>`:''}
       </div>
     </div>`;
