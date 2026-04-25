@@ -95,6 +95,10 @@ ROTATION_MAX_LOSS_PCT   = 0.03  # don't rotate out if down > 3% (avoid locking i
 ROTATION_MAX_PER_DAY    = 2     # max rotation swaps per trading day
 ROTATION_COOLDOWN_DAYS  = 5     # days before a rotated-out stock can re-enter
 
+# ─── Composite-score rotation (fires even when tech score is still +2) ────────
+ROTATION_COMP_FLOOR     = 7.2   # held comp_score below this qualifies for rotation-out
+ROTATION_COMP_MIN_GAIN  = 0.8   # incoming comp_score must exceed held by at least this much
+
 # ─── Dividend timing guard ────────────────────────────────────────────────────
 EX_DIV_HOLD_DAYS = 14           # don't sell/rotate within this many days before ex-div
 
@@ -558,13 +562,22 @@ def find_rotation_pair(port, buy_candidates, prices, state, today_str):
         if pnl_pct < -ROTATION_MAX_LOSS_PCT:
             continue                               # too deep in red — protect capital
 
-        curr_score = state.get(ticker, {})
-        curr_score = curr_score.get("score", 2) if isinstance(curr_score, dict) else 2
-        if curr_score > ROTATION_HELD_SCORE_MAX:
-            continue                               # still a strong hold — keep it
+        sig_state  = state.get(ticker, {})
+        sig_state  = sig_state if isinstance(sig_state, dict) else {}
+        curr_score = sig_state.get("score", 2)
+        held_comp  = sig_state.get("comp_score", 10.0)
+
+        # Two ways a holding qualifies to rotate out:
+        #   1. Tech score has faded to <= +1  (original rule)
+        #   2. Composite score is below floor (new rule — catches weak fundamentals
+        #      even when tech score is still +2, e.g. comp < 7.2)
+        score_weak = curr_score <= ROTATION_HELD_SCORE_MAX
+        comp_weak  = held_comp  <  ROTATION_COMP_FLOOR
+        if not (score_weak or comp_weak):
+            continue                               # still strong on both measures
 
         # Ex-dividend guard: don't rotate out if ex-div is imminent
-        held_fund = state.get(ticker, {}).get("fund", {}) if isinstance(state.get(ticker), dict) else {}
+        held_fund = sig_state.get("fund", {})
         if is_near_ex_div(held_fund):
             d = days_to_ex_div(held_fund)
             print(f"  ⏳ Skip rotation of {ticker}: ex-div in {d}d — holding for dividend")
@@ -577,13 +590,14 @@ def find_rotation_pair(port, buy_candidates, prices, state, today_str):
             "pnl_pct":   pnl_pct,
             "days_held": days_held,
             "score":     curr_score,
+            "comp_score": held_comp,
         })
 
     if not weak_holdings:
         return None, None
 
-    # Sort: lowest score first, then worst P&L — rotate out the weakest first
-    weak_holdings.sort(key=lambda x: (x["score"], x["pnl_pct"]))
+    # Sort: lowest composite score first, then worst P&L — rotate out the weakest first
+    weak_holdings.sort(key=lambda x: (x["comp_score"], x["pnl_pct"]))
 
     # Rotation cooldown: tickers that were recently rotated out
     rotated_out = state.get("_rotated_out", {})
@@ -602,16 +616,30 @@ def find_rotation_pair(port, buy_candidates, prices, state, today_str):
     # Sort buy candidates: highest composite score first
     allowed_buys.sort(key=lambda x: -x.get("comp_score", 0))
 
-    # Match: find first (weak holding, strong buy) pair where the upgrade is real
-    # Two-tier hold rule:
+    # Match: find first (weak holding, strong buy) pair where the upgrade is real.
+    #
+    # Two-tier hold rule (unchanged):
     #   days_held >= 5  →  incoming score +2 or +3 both allowed
     #   days_held 3-4   →  ONLY incoming score +3 (Strong Buy) qualifies
+    #
+    # Composite-score upgrade rule (new):
+    #   Incoming comp_score must exceed held comp_score by ROTATION_COMP_MIN_GAIN (0.8).
+    #   This prevents churning over tiny differences.
     for held in weak_holdings:
         for buy_r in allowed_buys:
-            if buy_r["score"] <= held["score"]:
-                continue                          # must be strictly better
+            # Tech-score must be strictly better OR comp upgrade must be large enough
+            tech_upgrade = buy_r["score"] > held["score"]
+            comp_upgrade = buy_r.get("comp_score", 0) >= held["comp_score"] + ROTATION_COMP_MIN_GAIN
+
+            if not (tech_upgrade or comp_upgrade):
+                continue                          # neither dimension is a real upgrade
+
             if held["days_held"] < ROTATION_MIN_HOLD_DAYS and buy_r["score"] < 3:
                 continue                          # fast-track only for score +3
+
+            gain = buy_r.get("comp_score", 0) - held["comp_score"]
+            print(f"  🔄 Rotation candidate: sell {held['ticker']} (comp {held['comp_score']:.1f}) "
+                  f"→ buy {buy_r['ticker']} (comp {buy_r.get('comp_score',0):.1f}, gain +{gain:.2f})")
             return held, buy_r
 
     return None, None

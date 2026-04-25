@@ -8,7 +8,8 @@
       "avg_cost": 113.5,
       "entry_date": "2026-04-20",
       "entry_score": 2,
-      "last_div_check": "2026-04-23"
+      "last_div_check": "2026-04-23",
+      "last_price": 113.5
     },
     "SIRI.BK": {
       "name": "SIRI",
@@ -16,7 +17,8 @@
       "avg_cost": 1.41,
       "entry_date": "2026-04-20",
       "entry_score": 2,
-      "last_div_check": "2026-04-23"
+      "last_div_check": "2026-04-23",
+      "last_price": 1.409999966621399
     },
     "TU.BK": {
       "name": "TU",
@@ -24,7 +26,8 @@
       "avg_cost": 11.4,
       "entry_date": "2026-04-20",
       "entry_score": 2,
-      "last_div_check": "2026-04-23"
+      "last_div_check": "2026-04-23",
+      "last_price": 11.199999809265137
     },
     "BAY.BK": {
       "name": "BAY",
@@ -32,7 +35,8 @@
       "avg_cost": 26.0,
       "entry_date": "2026-04-20",
       "entry_score": 2,
-      "last_div_check": "2026-04-23"
+      "last_div_check": "2026-04-23",
+      "last_price": 27.5
     },
     "KTC.BK": {
       "name": "KTC",
@@ -40,7 +44,8 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-20",
       "entry_score": 2,
-      "last_div_check": "2026-04-23"
+      "last_div_check": "2026-04-23",
+      "last_price": 29.25
     },
     "TQM.BK": {
       "name": "TQM",
@@ -48,7 +53,8 @@
       "avg_cost": 13.7,
       "entry_date": "2026-04-20",
       "entry_score": 2,
-      "last_div_check": "2026-04-23"
+      "last_div_check": "2026-04-23",
+      "last_price": 13.800000190734863
     },
     "WHA.BK": {
       "name": "WHA",
@@ -56,7 +62,8 @@
       "avg_cost": 4.4,
       "entry_date": "2026-04-20",
       "entry_score": 2,
-      "last_div_check": "2026-04-23"
+      "last_div_check": "2026-04-23",
+      "last_price": 4.380000114440918
     },
     "JASIF.BK": {
       "name": "JASIF",
@@ -64,7 +71,8 @@
       "avg_cost": 6.7,
       "entry_date": "2026-04-20",
       "entry_score": 2,
-      "last_div_check": "2026-04-23"
+      "last_div_check": "2026-04-23",
+      "last_price": 6.699999809265137
     },
     "CK.BK": {
       "name": "CK",
@@ -72,7 +80,8 @@
       "avg_cost": 17.2,
       "entry_date": "2026-04-20",
       "entry_score": 2,
-      "last_div_check": "2026-04-23"
+      "last_div_check": "2026-04-23",
+      "last_price": 16.5
     },
     "AMATA.BK": {
       "name": "AMATA",
@@ -80,7 +89,8 @@
       "avg_cost": 20.5,
       "entry_date": "2026-04-20",
       "entry_score": 2,
-      "last_div_check": "2026-04-23"
+      "last_div_check": "2026-04-23",
+      "last_price": 20.299999237060547
     }
   },
   "trades": [
@@ -216,6 +226,6 @@
     }
   ],
   "start_date": "2026-04-21",
-  "day_count": 7,
+  "day_count": 5,
   "peak_value": 303748.3059307933
 }

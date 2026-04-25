@@ -277,13 +277,38 @@ def build_excel(port: dict, prices: dict, report_date: datetime.date) -> str:
     # ═══════════════════════════════════════════════════════════════════════
     # SHEET 2: HOLDINGS (replaced each day with current state)
     # ═══════════════════════════════════════════════════════════════════════
+    # Load signal state for Signal/Comp Score columns
+    _sig_state = {}
+    _signal_path = os.path.join(SCRIPT_DIR, "set_signal_state.json")
+    if os.path.exists(_signal_path):
+        try:
+            with open(_signal_path) as _sf:
+                _sig_state = json.load(_sf)
+        except Exception:
+            pass
+
+    def _comp_score(tech, fund):
+        """Composite = TechNorm*0.6 + FundScore*0.4 (scale 0–10)."""
+        tech_norm = min(10, max(0, (tech + 3) / 6 * 10))
+        if fund is None:
+            return round(tech_norm, 2)
+        return round(tech_norm * 0.6 + fund * 0.4, 2)
+
+    def _comp_label(cs):
+        if cs is None: return "HOLD"
+        if cs >= 8.5:  return "STRONG BUY"
+        if cs >= 7.5:  return "BUY"
+        if cs >= 7.2:  return "WATCH"
+        if cs >= 6.5:  return "WEAK"
+        return "AVOID"
+
     if "Holdings" in wb.sheetnames:
         del wb["Holdings"]
     ws2 = wb.create_sheet("Holdings")
     ws2.sheet_view.showGridLines = False
-    _set_col_widths(ws2, [12, 14, 8, 13, 13, 14, 18, 16, 14])
+    _set_col_widths(ws2, [12, 14, 8, 13, 13, 14, 18, 16, 14, 14, 12])
 
-    ws2.merge_cells("A1:I1")
+    ws2.merge_cells("A1:K1")
     t2 = ws2["A1"]
     t2.value     = f"Current Holdings  —  {report_date.strftime('%d %b %Y')}"
     t2.font      = Font(name="Arial", bold=True, size=14, color="C9A84C")
@@ -293,7 +318,8 @@ def build_excel(port: dict, prices: dict, report_date: datetime.date) -> str:
 
     h2_labels = ["Ticker", "Stock Name", "Shares", "Avg Cost (฿)",
                  "Current Price (฿)", "Market Value (฿)",
-                 "Unrealised P&L (฿)", "P&L %", "Entry Date"]
+                 "Unrealised P&L (฿)", "P&L %", "Entry Date",
+                 "Comp Score", "Signal"]
     for c, h in enumerate(h2_labels, 1):
         _hdr(ws2, 2, c, h, bg=MID, sz=9)
     ws2.row_dimensions[2].height = 22
@@ -336,6 +362,17 @@ def build_excel(port: dict, prices: dict, report_date: datetime.date) -> str:
         pp = ws2.cell(r, 8, f"=(E{r}-D{r})/D{r}")
         _apply(pp, color=pnl_col, fmt='0.00%;(0.00%);"-"', bg=bg_row)
         _data(ws2, r, 9, h.get("entry_date", ""),  h="center", bg=bg_row, color="595959")
+
+        # Signal / Comp Score from signal state
+        _sig = _sig_state.get(ticker, {})
+        _sig = _sig if isinstance(_sig, dict) else {}
+        _tech  = _sig.get("score", 0)
+        _fund  = _sig.get("fund_score")
+        _cs    = _sig.get("comp_score") or _comp_score(_tech, _fund)
+        _label = _comp_label(_cs)
+        _sig_color = (GRN if _cs >= 7.5 else (YLW if _cs >= 6.5 else RED))
+        _data(ws2, r, 10, round(_cs, 2), fmt="0.00", bg=bg_row, color=_sig_color, bold=True)
+        _data(ws2, r, 11, _label,        h="center", bg=bg_row, color=_sig_color, bold=True)
         ws2.row_dimensions[r].height = 20
 
     # Totals

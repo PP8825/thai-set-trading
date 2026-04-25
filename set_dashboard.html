@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SET Portfolio Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
   --bg:     #1a2b1e;
@@ -77,6 +78,8 @@ tr:hover td{background:rgba(109,186,127,.04)}
 .pill-b{background:rgba(77,205,122,.15);color:var(--green)}
 .pill-s{background:rgba(240,100,100,.15);color:var(--red)}
 .pill-h{background:rgba(148,163,184,.08);color:var(--muted)}
+.pill-w{background:rgba(212,170,69,.15);color:var(--yellow)}
+.pill-wt{background:rgba(109,186,127,.12);color:var(--accent)}
 
 /* MINI BAR */
 .bar-wrap{display:flex;align-items:center;gap:6px}
@@ -129,6 +132,7 @@ tr:hover td{background:rgba(109,186,127,.04)}
     <span class="ts" id="tsLabel">Embedded · Apr 22 2026</span>
     <span class="ts" id="autoSyncLabel" style="color:var(--dim)">· auto-sync in 15:00</span>
   <button class="btn" id="ghBtn" onclick="refreshFromGitHub()">⟳ Sync Now</button>
+  <button class="btn" onclick="exportExcel()" style="background:#1d6f42" title="Export portfolio summary to Excel">⬇ Export Excel</button>
   </div>
 </div>
 
@@ -159,7 +163,7 @@ tr:hover td{background:rgba(109,186,127,.04)}
         </div>
         <div class="tbl-wrap">
           <table id="holdMiniTable">
-            <thead><tr><th>Stock</th><th>Shares</th><th>Cost</th><th>P&L %</th></tr></thead>
+            <thead><tr><th>Stock</th><th>Shares</th><th>Cost</th><th>P&L %</th><th>Signal</th></tr></thead>
             <tbody id="holdMiniBody"></tbody>
           </table>
         </div>
@@ -196,7 +200,7 @@ tr:hover td{background:rgba(109,186,127,.04)}
       <div class="tbl-wrap">
         <table>
           <thead>
-            <tr><th>Stock</th><th>Entry Date</th><th>Shares</th><th>Avg Cost</th><th>Last Price</th><th>Market Value</th><th>Cost Basis</th><th>Unrealised P&L</th><th>P&L %</th><th>Stop Loss</th></tr>
+            <tr><th>Stock</th><th>Entry Date</th><th>Shares</th><th>Avg Cost</th><th>Last Price</th><th>Market Value</th><th>Cost Basis</th><th>Unrealised P&L</th><th>P&L %</th><th>Stop Loss</th><th>Signal</th></tr>
           </thead>
           <tbody id="holdFullBody"></tbody>
         </table>
@@ -245,135 +249,131 @@ tr:hover td{background:rgba(109,186,127,.04)}
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
 
-      <!-- SCORING -->
+      <!-- COMPOSITE SCORE — PRIMARY METRIC -->
       <div class="box" style="grid-column:1/-1">
-        <div class="box-head"><div class="box-title">⚡ How Signals Are Scored</div><span class="chip">runs every 15 min during market hours</span></div>
+        <div class="box-head">
+          <div class="box-title">🏆 Composite Score — The Primary Decision Metric</div>
+          <span class="chip">0–10 scale · drives all buy, sell &amp; rotation decisions</span>
+        </div>
         <div style="padding:18px">
-          <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Each stock gets checked on 3 technical indicators. Each votes +1 or −1. Total score ranges from −3 to +3.</p>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7">
+            Every stock gets a single <strong style="color:var(--text)">Composite Score (0–10)</strong> that blends technical momentum with fundamental quality. This score is the primary metric — it determines which stocks get bought first, which get rotated out, and how strong the portfolio is at any given time.
+          </p>
 
-            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
-              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">① RSI — 14 day</div>
-              <div style="font-size:11px;color:var(--text);line-height:1.7">
-                Measures momentum & overbought/oversold levels<br>
-                <span style="color:var(--green)">RSI &lt; 30</span> → Oversold → <strong>+1</strong><br>
-                <span style="color:var(--red)">RSI &gt; 70</span> → Overbought → <strong>−1</strong><br>
-                <span style="color:var(--muted)">RSI 30–70</span> → Neutral → <strong>0</strong>
+          <!-- Formula -->
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">Formula</div>
+            <div style="font-size:12px;font-family:monospace;color:var(--accent);background:rgba(0,0,0,.2);padding:10px;border-radius:7px;margin-bottom:12px">
+              Tech Norm  = (Tech Score + 3) ÷ 6 × 10   → maps −3…+3 to 0–10<br>
+              Fund Score = Raw fundamental pts ÷ 13 × 10 → 0–10<br>
+              <strong>Composite  = Tech Norm × 60% + Fund Score × 40%</strong>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;font-size:11px;color:var(--muted)">
+              <div>Tech +2, Fund 9.2 (AMATA)<br>→ <strong style="color:var(--green)">(8.33×0.6)+(9.2×0.4) = <span style="font-size:13px">8.68</span>/10</strong></div>
+              <div>Tech +2, Fund 6.2 (JASIF)<br>→ <strong style="color:var(--yellow)">(8.33×0.6)+(6.2×0.4) = <span style="font-size:13px">6.84</span>/10</strong></div>
+              <div>Tech 0, Fund 8.5 (GFPT)<br>→ <strong style="color:var(--muted)">(5.0×0.6)+(8.5×0.4) = <span style="font-size:13px">6.40</span>/10 — HOLD</strong></div>
+            </div>
+          </div>
+
+          <!-- Composite score bands -->
+          <div style="overflow-x:auto;margin-bottom:16px">
+            <table style="width:100%;font-size:12px">
+              <thead><tr>
+                <th style="width:100px">Comp Score</th><th>Action Zone</th><th>Meaning</th>
+              </tr></thead>
+              <tbody>
+                <tr><td style="font-weight:700;color:var(--green)">≥ 8.5</td><td><span class="pill pill-b">STRONG BUY</span></td><td style="color:var(--muted)">Top-tier — buy immediately, highest rotation priority</td></tr>
+                <tr><td style="font-weight:700;color:var(--green)">7.5 – 8.4</td><td><span class="pill pill-b">BUY</span></td><td style="color:var(--muted)">Strong — buy when slot available, rotation-in candidate</td></tr>
+                <tr><td style="font-weight:700;color:var(--accent)">7.2 – 7.4</td><td><span class="pill pill-h">WATCH</span></td><td style="color:var(--muted)">Borderline — held positions kept, but may be rotated if better stock emerges</td></tr>
+                <tr><td style="font-weight:700;color:var(--yellow)">6.5 – 7.1</td><td><span class="pill pill-h">WEAK</span></td><td style="color:var(--muted)">Below floor (7.2) — qualifies to rotate out; still held if no better option</td></tr>
+                <tr><td style="font-weight:700;color:var(--red)">≤ 6.4</td><td><span class="pill pill-s">SELL / AVOID</span></td><td style="color:var(--muted)">Weak — not bought; held positions at high rotation risk</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="background:rgba(212,170,69,.08);border:1px solid rgba(212,170,69,.25);border-radius:10px;padding:14px">
+            <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:6px">📅 Ex-Dividend Date Guard</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.7">
+              If a holding's ex-dividend date is within <strong style="color:var(--text)">14 days</strong>, the system delays any SELL or ROTATION until after the record date — protecting dividend income. Stop-loss (−8%) overrides this guard.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TECHNICAL SCORE -->
+      <div class="box">
+        <div class="box-head"><div class="box-title">⚡ Technical Score (−3 to +3)</div><span class="chip">gate for buy &amp; sell signals</span></div>
+        <div style="padding:18px">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">Three indicators each vote +1 or −1. The total (−3 to +3) acts as the <strong style="color:var(--text)">gate</strong> — it must cross a threshold before a trade fires. Within the gate, composite score determines priority.</p>
+          <div style="display:grid;gap:10px;margin-bottom:14px">
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">① RSI 14-day — Momentum</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.7">
+                <span style="color:var(--green)">RSI &lt; 30</span> → Oversold → <strong>+1</strong> &nbsp;·&nbsp;
+                <span style="color:var(--red)">RSI &gt; 70</span> → Overbought → <strong>−1</strong> &nbsp;·&nbsp;
+                <span style="color:var(--muted)">30–70</span> → <strong>0</strong>
               </div>
             </div>
-
-            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
-              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">② SMA — 50 day</div>
-              <div style="font-size:11px;color:var(--text);line-height:1.7">
-                Compares current price to 50-day average trend<br>
-                <span style="color:var(--green)">Price &gt; SMA</span> → Uptrend → <strong>+1</strong><br>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">② SMA 50-day — Trend</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.7">
+                <span style="color:var(--green)">Price &gt; SMA</span> → Uptrend → <strong>+1</strong> &nbsp;·&nbsp;
                 <span style="color:var(--red)">Price &lt; SMA</span> → Downtrend → <strong>−1</strong>
               </div>
             </div>
-
-            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
-              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">③ MACD — 12/26/9</div>
-              <div style="font-size:11px;color:var(--text);line-height:1.7">
-                Compares short-term vs long-term momentum<br>
-                <span style="color:var(--green)">MACD &gt; Signal line</span> → Building → <strong>+1</strong><br>
-                <span style="color:var(--red)">MACD &lt; Signal line</span> → Fading → <strong>−1</strong>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">③ MACD 12/26/9 — Momentum shift</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.7">
+                <span style="color:var(--green)">MACD &gt; Signal</span> → Building → <strong>+1</strong> &nbsp;·&nbsp;
+                <span style="color:var(--red)">MACD &lt; Signal</span> → Fading → <strong>−1</strong>
               </div>
             </div>
-
           </div>
-
-          <!-- score table -->
-          <div style="margin-top:16px;overflow-x:auto">
-            <table style="width:100%;font-size:12px">
-              <thead><tr>
-                <th style="width:80px">Score</th><th>Label</th><th>Meaning</th>
-              </tr></thead>
+          <div style="overflow-x:auto">
+            <table style="width:100%;font-size:11px">
+              <thead><tr><th>Score</th><th>Label</th><th>Action</th></tr></thead>
               <tbody>
-                <tr><td style="font-weight:700;color:var(--green)">+3</td><td><span class="pill pill-b">STRONG BUY</span></td><td style="color:var(--muted)">All 3 indicators agree — strong upward signal</td></tr>
-                <tr><td style="font-weight:700;color:var(--green)">+2</td><td><span class="pill pill-b">BUY</span></td><td style="color:var(--muted)">2 of 3 indicators positive — buy signal fires</td></tr>
-                <tr><td style="font-weight:700;color:var(--muted)">+1</td><td><span class="pill pill-h">WATCH</span></td><td style="color:var(--muted)">Weak positive — monitor only, no action</td></tr>
-                <tr><td style="font-weight:700;color:var(--muted)">0</td><td><span class="pill pill-h">HOLD</span></td><td style="color:var(--muted)">Mixed signals — no action</td></tr>
-                <tr><td style="font-weight:700;color:var(--red)">−1</td><td><span class="pill pill-s">SELL</span></td><td style="color:var(--muted)">2 of 3 indicators negative — sell signal fires</td></tr>
-                <tr><td style="font-weight:700;color:var(--red)">−2</td><td><span class="pill pill-s">SELL</span></td><td style="color:var(--muted)">Stronger negative — sell signal fires</td></tr>
-                <tr><td style="font-weight:700;color:var(--red)">−3</td><td><span class="pill pill-s">STRONG SELL</span></td><td style="color:var(--muted)">All 3 negative — sell signal fires</td></tr>
+                <tr><td style="font-weight:700;color:var(--green)">+3</td><td><span class="pill pill-b">STRONG BUY</span></td><td style="color:var(--muted)">All 3 agree bullish — buy gate open</td></tr>
+                <tr><td style="font-weight:700;color:var(--green)">+2</td><td><span class="pill pill-b">BUY</span></td><td style="color:var(--muted)">2 of 3 bullish — buy gate open</td></tr>
+                <tr><td style="font-weight:700;color:var(--accent)">+1</td><td><span class="pill pill-h">WATCH</span></td><td style="color:var(--muted)">Weak positive — no trade, monitor only</td></tr>
+                <tr><td style="font-weight:700;color:var(--muted)">0</td><td><span class="pill pill-h">HOLD</span></td><td style="color:var(--muted)">Mixed — no action</td></tr>
+                <tr><td style="font-weight:700;color:var(--red)">−1</td><td><span class="pill pill-s">SELL</span></td><td style="color:var(--muted)">2 of 3 bearish — sell gate open</td></tr>
+                <tr><td style="font-weight:700;color:var(--red)">−2 / −3</td><td><span class="pill pill-s">STRONG SELL</span></td><td style="color:var(--muted)">Strong bearish — sell gate open</td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- FUNDAMENTAL + COMPOSITE SCORE -->
-      <div class="box" style="grid-column:1/-1">
-        <div class="box-head">
-          <div class="box-title">🏆 Fundamental Score (0–10) &amp; Composite Score (0–10)</div>
-          <span class="chip">weights: Technical 60% · Fundamental 40%</span>
-        </div>
+      <!-- FUNDAMENTAL SCORE -->
+      <div class="box">
+        <div class="box-head"><div class="box-title">📊 Fundamental Score (0–10)</div><span class="chip">40% weight in composite</span></div>
         <div style="padding:18px">
-          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7">
-            The fundamental score converts each financial metric into graduated points — not just pass/fail. Combined with the technical score it produces a single <strong style="color:var(--text)">composite score</strong> used to rank and prioritise which stocks to buy or rotate into.
-          </p>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px">
-            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
-              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">P/E Ratio · max 3 pts</div>
-              <div style="font-size:11px;color:var(--muted);line-height:1.8">
-                ≤ 8 &nbsp;→ <strong style="color:var(--green)">3 pts</strong> (very cheap)<br>
-                8–12 → <strong style="color:var(--green)">2 pts</strong> (cheap)<br>
-                12–15 → <strong style="color:var(--text)">1 pt</strong> (fair)<br>
-                &gt;15 or negative → <strong style="color:var(--red)">0 pts</strong>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">Four financial metrics scored on graduated tiers — not just pass/fail. A stock can score high fundamentally even with a neutral tech signal.</p>
+          <div style="display:grid;gap:10px">
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">P/E Ratio · max 3 pts</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.7">
+                ≤8 → <strong style="color:var(--green)">3</strong> · 8–12 → <strong style="color:var(--green)">2</strong> · 12–15 → <strong>1</strong> · &gt;15 → <strong style="color:var(--red)">0</strong>
               </div>
             </div>
-            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
-              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">P/BV Ratio · max 3 pts</div>
-              <div style="font-size:11px;color:var(--muted);line-height:1.8">
-                &lt; 1.0 → <strong style="color:var(--green)">3 pts</strong> (trading below book — deep value)<br>
-                1.0–1.5 → <strong style="color:var(--green)">2 pts</strong> (undervalued vs book)<br>
-                1.5–3 → <strong style="color:var(--text)">1 pt</strong> (acceptable)<br>
-                &gt; 3 &nbsp;→ <strong style="color:var(--red)">0 pts</strong> (overvalued)
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">P/BV Ratio · max 3 pts</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.7">
+                &lt;1.0 → <strong style="color:var(--green)">3</strong> (below book) · 1.0–1.5 → <strong style="color:var(--green)">2</strong> · 1.5–3 → <strong>1</strong> · &gt;3 → <strong style="color:var(--red)">0</strong>
               </div>
             </div>
-            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
-              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">ROE · max 3 pts</div>
-              <div style="font-size:11px;color:var(--muted);line-height:1.8">
-                ≥ 20% → <strong style="color:var(--green)">3 pts</strong> (excellent)<br>
-                12–20% → <strong style="color:var(--green)">2 pts</strong> (good)<br>
-                8–12% → <strong style="color:var(--text)">1 pt</strong> (acceptable)<br>
-                &lt; 8% &nbsp;→ <strong style="color:var(--red)">0 pts</strong>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">ROE · max 3 pts</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.7">
+                ≥20% → <strong style="color:var(--green)">3</strong> · 12–20% → <strong style="color:var(--green)">2</strong> · 8–12% → <strong>1</strong> · &lt;8% → <strong style="color:var(--red)">0</strong>
               </div>
             </div>
-            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
-              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">Dividend Yield · max 4 pts</div>
-              <div style="font-size:11px;color:var(--muted);line-height:1.8">
-                ≥ 9% → <strong style="color:var(--green)">4.0 pts</strong> (exceptional)<br>
-                ≥ 8% → <strong style="color:var(--green)">3.5 pts</strong> (very high)<br>
-                ≥ 6.5% → <strong style="color:var(--green)">3.0 pts</strong> (high)<br>
-                ≥ 5% &nbsp;→ <strong style="color:var(--green)">2.5 pts</strong> (solid)<br>
-                ≥ 3% &nbsp;→ <strong style="color:var(--text)">2.0 pts</strong> (meaningful)<br>
-                Paid (any) → <strong style="color:var(--text)">1.0 pt</strong><br>
-                No dividend → <strong style="color:var(--red)">0 pts</strong><br>
-                <span style="color:var(--dim)">Missing data → 1 pt (benefit of doubt)</span>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">Dividend Yield · max 4 pts</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.7">
+                ≥9% → <strong style="color:var(--green)">4.0</strong> · ≥8% → <strong style="color:var(--green)">3.5</strong> · ≥6.5% → <strong style="color:var(--green)">3.0</strong> · ≥5% → <strong style="color:var(--green)">2.5</strong> · ≥3% → <strong>2.0</strong> · any div → <strong>1.0</strong> · none → <strong style="color:var(--red)">0</strong>
               </div>
-            </div>
-          </div>
-
-          <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px">
-            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">Composite Score formula</div>
-            <div style="font-size:12px;font-family:monospace;color:var(--accent);background:rgba(0,0,0,.2);padding:10px;border-radius:7px;margin-bottom:10px">
-              Raw fund score (0–13) ÷ 13 × 10 → Fund/10<br>
-              Tech normalised = (Tech score + 3) ÷ 6 × 10 → 0–10<br>
-              Composite = Tech normalised × 60% + Fund score × 40%
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;font-size:11px;color:var(--muted)">
-              <div>Example A: Tech +2, Fund 8.5 (high div)<br>→ <strong style="color:var(--green)">(8.33×0.6) + (8.5×0.4) = 8.4/10</strong></div>
-              <div>Example B: Tech +2, Fund 5.0 (low div)<br>→ <strong style="color:var(--yellow)">(8.33×0.6) + (5.0×0.4) = 7.0/10</strong></div>
-              <div>Both get BUY signal, but A is bought first ↑</div>
-            </div>
-          </div>
-
-          <div style="background:rgba(212,170,69,.08);border:1px solid rgba(212,170,69,.25);border-radius:10px;padding:14px">
-            <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:6px">📅 Ex-Dividend Date Guard</div>
-            <div style="font-size:11px;color:var(--muted);line-height:1.7">
-              If a holding's ex-dividend date is within <strong style="color:var(--text)">14 days</strong>, the system will <strong style="color:var(--yellow)">delay any SELL or ROTATION</strong> until after the dividend record date. This protects the dividend income — missing a 6–8% yield by selling 10 days early is a real cost. Stop-loss (-8%) overrides this guard regardless.
             </div>
           </div>
         </div>
@@ -384,22 +384,20 @@ tr:hover td{background:rgba(109,186,127,.04)}
         <div class="box-head"><div class="box-title" style="color:var(--green)">🟢 BUY Criteria</div></div>
         <div style="padding:16px;font-size:12px;line-height:1.8">
 
-          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Technical gate (all must pass)</div>
-          <div style="color:var(--muted);margin-bottom:4px">✅ Score jumps to <strong style="color:var(--text)">≥ +2</strong> (was ≤ 0 last scan)</div>
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Gate conditions (all must pass)</div>
+          <div style="color:var(--muted);margin-bottom:4px">✅ Tech score crosses to <strong style="color:var(--text)">≥ +2</strong> (was ≤ 0 last scan)</div>
           <div style="color:var(--muted);margin-bottom:4px">✅ Stock not already held</div>
           <div style="color:var(--muted);margin-bottom:16px">✅ Portfolio has &lt; 10 positions</div>
 
-          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Fundamental gate (all must pass to buy)</div>
-          <div style="color:var(--muted);margin-bottom:4px">✅ P/E ratio <strong style="color:var(--text)">&lt; 15</strong></div>
-          <div style="color:var(--muted);margin-bottom:4px">✅ P/BV ratio <strong style="color:var(--text)">&lt; 3</strong></div>
-          <div style="color:var(--muted);margin-bottom:4px">✅ ROE <strong style="color:var(--text)">≥ 8%</strong></div>
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Fundamental quality gate</div>
+          <div style="color:var(--muted);margin-bottom:4px">✅ P/E &lt; 15 &nbsp;·&nbsp; P/BV &lt; 3 &nbsp;·&nbsp; ROE ≥ 8%</div>
           <div style="color:var(--muted);margin-bottom:16px">✅ Paid dividend in last 3 years</div>
 
-          <div style="font-weight:700;color:var(--text);margin-bottom:8px">When multiple stocks qualify — ranked by Composite Score</div>
-          <div style="color:var(--muted);margin-bottom:16px">Higher composite score → bought first. Equal technical score → better fundamentals wins.</div>
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Priority — ranked by Composite Score</div>
+          <div style="color:var(--muted);margin-bottom:16px">When multiple stocks qualify, highest composite score buys first. Two stocks both at tech +2 → better fundamentals wins the slot.</div>
 
           <div style="background:rgba(77,205,122,.07);border:1px solid rgba(77,205,122,.2);border-radius:8px;padding:10px;font-size:11px;color:var(--muted)">
-            ℹ️ Signal change rule: only fires when score crosses from neutral (≤0) into buy territory (≥+2) — prevents re-buying the same stock repeatedly on the same session.
+            ℹ️ Only fires when score crosses from neutral (≤0) into buy territory (≥+2) — prevents re-buying the same position repeatedly within one session.
           </div>
         </div>
       </div>
@@ -409,63 +407,77 @@ tr:hover td{background:rgba(109,186,127,.04)}
         <div class="box-head"><div class="box-title" style="color:var(--red)">🔴 SELL Criteria</div></div>
         <div style="padding:16px;font-size:12px;line-height:1.8">
 
-          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Signal sell (score reversal)</div>
-          <div style="color:var(--muted);margin-bottom:4px">⚠️ Score drops to <strong style="color:var(--text)">≤ −1</strong> (was ≥ +1 last scan)</div>
-          <div style="color:var(--muted);margin-bottom:16px">⚠️ Stock must be currently held</div>
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Signal sell — tech reversal</div>
+          <div style="color:var(--muted);margin-bottom:4px">⚠️ Tech score drops to <strong style="color:var(--text)">≤ −1</strong> (was ≥ +1 last scan)</div>
+          <div style="color:var(--muted);margin-bottom:16px">⚠️ RSI overbought + SMA breakdown + MACD fade all confirm exit</div>
 
-          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Stop-loss (automatic, any scan)</div>
-          <div style="color:var(--muted);margin-bottom:4px">🛑 Price falls <strong style="color:var(--text)">≥ 8%</strong> below average buy price</div>
-          <div style="color:var(--muted);margin-bottom:16px">🛑 Fires immediately regardless of score</div>
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Stop-loss — price-based, automatic</div>
+          <div style="color:var(--muted);margin-bottom:4px">🛑 Price falls <strong style="color:var(--text)">≥ 8%</strong> below average cost</div>
+          <div style="color:var(--muted);margin-bottom:16px">🛑 Fires immediately regardless of score or composite</div>
+
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Rotation — composite score weakness</div>
+          <div style="color:var(--muted);margin-bottom:16px">🔄 Composite score below <strong style="color:var(--text)">7.2</strong> AND a better stock (composite gain ≥ <strong style="color:var(--text)">+0.8</strong>) is waiting — see Rotation section below</div>
 
           <div style="background:rgba(240,100,100,.07);border:1px solid rgba(240,100,100,.2);border-radius:8px;padding:10px;font-size:11px;color:var(--muted)">
-            ℹ️ Stop-loss example: bought at ฿100 → auto-sell if price hits ฿92 or below, no matter what the technical score says.
+            ℹ️ Stop-loss example: bought at ฿100 → auto-sell at ฿92 regardless of any score.
           </div>
         </div>
       </div>
 
       <!-- ROTATION RULES -->
       <div class="box" style="grid-column:1/-1">
-        <div class="box-head"><div class="box-title">🔄 Rotation Criteria</div><span class="chip">runs only when portfolio is full (10/10) and no regular trade fired</span></div>
+        <div class="box-head"><div class="box-title">🔄 Rotation Criteria</div><span class="chip">portfolio full (10/10) · composite score drives selection</span></div>
         <div style="padding:16px;font-size:12px">
 
-          <p style="color:var(--muted);margin-bottom:16px;line-height:1.7">When the portfolio is full, the model checks whether any current holding should be swapped for a better opportunity. Two-tier hold time rule applies.</p>
+          <p style="color:var(--muted);margin-bottom:16px;line-height:1.7">When the portfolio is full, the system checks every scan whether any holding should be swapped for a meaningfully better stock. A holding qualifies to rotate out via <strong style="color:var(--text)">either</strong> trigger below — the composite score then determines which pair makes the best swap.</p>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:16px">
 
-            <div style="background:var(--card2);border:1px solid rgba(77,205,122,.3);border-radius:10px;padding:14px">
-              <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px">⚡ Fast-track (3+ days)</div>
+            <div style="background:var(--card2);border:1px solid rgba(240,100,100,.3);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:10px">📉 Trigger 1 — Tech Score Fade</div>
               <div style="font-size:11px;color:var(--muted);line-height:1.8">
-                Held stock score dropped to <strong style="color:var(--text)">≤ +1</strong><br>
-                Held ≥ <strong style="color:var(--text)">3 days</strong><br>
-                Loss not worse than <strong style="color:var(--text)">−3%</strong><br>
-                New stock score = <strong style="color:var(--green)">+3 only (Strong Buy)</strong>
+                Held tech score dropped to <strong style="color:var(--text)">≤ +1</strong><br>
+                RSI/SMA/MACD momentum has reversed<br>
+                Held ≥ <strong style="color:var(--text)">3 days</strong>
               </div>
             </div>
 
-            <div style="background:var(--card2);border:1px solid rgba(109,186,127,.3);border-radius:10px;padding:14px">
-              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px">📅 Standard (5+ days)</div>
+            <div style="background:var(--card2);border:1px solid rgba(212,170,69,.3);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:10px">📊 Trigger 2 — Composite Below Floor</div>
               <div style="font-size:11px;color:var(--muted);line-height:1.8">
-                Held stock score dropped to <strong style="color:var(--text)">≤ +1</strong><br>
-                Held ≥ <strong style="color:var(--text)">5 days</strong><br>
-                Loss not worse than <strong style="color:var(--text)">−3%</strong><br>
-                New stock score = <strong style="color:var(--accent)">+2 or +3</strong>
+                Held composite score <strong style="color:var(--text)">&lt; 7.2 / 10</strong><br>
+                Fires even if tech score is still +2<br>
+                Catches fundamentally weak positions<br>
+                Held ≥ <strong style="color:var(--text)">3 days</strong>
+              </div>
+            </div>
+
+            <div style="background:var(--card2);border:1px solid rgba(77,205,122,.3);border-radius:10px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px">✅ Incoming Stock Must Clear</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.8">
+                Tech score <strong style="color:var(--text)">≥ +2</strong> (buy signal)<br>
+                Composite gain <strong style="color:var(--text)">≥ +0.8</strong> over held stock<br>
+                Not in 5-day cooldown after prior rotation<br>
+                3–4 days held: incoming must be <strong style="color:var(--green)">+3</strong> only<br>
+                5+ days held: <strong style="color:var(--accent)">+2 or +3</strong> accepted
               </div>
             </div>
 
             <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px">
               <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px">🛡️ Anti-churn safeguards</div>
               <div style="font-size:11px;color:var(--muted);line-height:1.8">
-                Max <strong style="color:var(--text)">1 rotation per scan</strong> (15 min)<br>
+                Held loss &gt;3% → protected, no rotation<br>
+                Max <strong style="color:var(--text)">1 rotation per scan</strong><br>
                 Max <strong style="color:var(--text)">2 rotations per day</strong><br>
-                Rotated-out stock locked out for <strong style="color:var(--text)">5 days</strong><br>
-                No rotation if another trade already fired
+                No rotation if buy/sell already fired<br>
+                Ex-div within 14 days → skip rotation
               </div>
             </div>
 
           </div>
 
           <div style="background:rgba(109,186,127,.07);border:1px solid rgba(109,186,127,.2);border-radius:8px;padding:12px;font-size:11px;color:var(--muted);line-height:1.7">
-            ℹ️ <strong style="color:var(--text)">What rotation does NOT do:</strong> will not sell a stock that is down &gt;3% (locks in loss), will not rotate out a stock still scoring +2/+3 (still strong), will not fire on the same scan as a regular buy or sell signal.
+            ℹ️ <strong style="color:var(--text)">Selection order:</strong> weakest holding (lowest composite) is targeted first. Strongest incoming (highest composite) is matched in. The swap only fires if the composite gain clears +0.8 — small differences never trigger a rotation.
           </div>
         </div>
       </div>
@@ -477,9 +489,9 @@ tr:hover td{background:rgba(109,186,127,.04)}
           <div style="color:var(--muted);margin-bottom:4px">Capital: <strong style="color:var(--text)">฿300,000</strong></div>
           <div style="color:var(--muted);margin-bottom:4px">Max positions: <strong style="color:var(--text)">10 stocks</strong></div>
           <div style="color:var(--muted);margin-bottom:4px">Cash floor: <strong style="color:var(--text)">5%</strong> always kept in reserve</div>
-          <div style="color:var(--muted);margin-bottom:4px">Allocation per stock: equal split of available cash across remaining slots</div>
-          <div style="color:var(--muted);margin-bottom:4px">Lot size: <strong style="color:var(--text)">100 shares</strong> minimum per trade</div>
-          <div style="color:var(--muted)">Transaction cost: <strong style="color:var(--text)">0.25%</strong> each way (buy + sell)</div>
+          <div style="color:var(--muted);margin-bottom:4px">Allocation: equal split of available cash across remaining slots</div>
+          <div style="color:var(--muted);margin-bottom:4px">Lot size: <strong style="color:var(--text)">100 shares</strong> minimum</div>
+          <div style="color:var(--muted)">Transaction cost: <strong style="color:var(--text)">0.25%</strong> each way</div>
         </div>
       </div>
 
@@ -490,9 +502,9 @@ tr:hover td{background:rgba(109,186,127,.04)}
           <div style="color:var(--muted);margin-bottom:4px">Morning session: <strong style="color:var(--text)">10:00 – 12:30</strong> Bangkok</div>
           <div style="color:var(--muted);margin-bottom:4px">Afternoon session: <strong style="color:var(--text)">14:30 – 16:30</strong> Bangkok</div>
           <div style="color:var(--muted);margin-bottom:4px">Scan frequency: <strong style="color:var(--text)">every 15 minutes</strong></div>
-          <div style="color:var(--muted);margin-bottom:4px">EOD report: <strong style="color:var(--text)">16:35</strong> Bangkok (daily summary)</div>
+          <div style="color:var(--muted);margin-bottom:4px">EOD report: <strong style="color:var(--text)">16:35</strong> Bangkok — updates history &amp; regenerates dashboard</div>
           <div style="color:var(--muted);margin-bottom:4px">Monthly report: <strong style="color:var(--text)">last trading day</strong> of each month</div>
-          <div style="color:var(--muted)">Trigger: <strong style="color:var(--text)">cron-job.org → GitHub Actions</strong></div>
+          <div style="color:var(--muted)">Trigger: <strong style="color:var(--text)">cron job → set_session_runner.py</strong> on Mac</div>
         </div>
       </div>
 
@@ -521,7 +533,7 @@ tr:hover td{background:rgba(109,186,127,.04)}
 // ─── EMBEDDED DATA ───────────────────────────────────────────────────────────
 // Updated: 2026-04-24 23:11 Bangkok · 2026-04-24 23:07 Bangkok · 2026-04-22 22:40 Bangkok · 2026-04-22 · regenerate from set_dashboard_update.py when portfolio changes
 
-const PORT = {"capital":300000.0,"cash":29448.30848187208,"holdings":{"TISCO.BK":{"name":"TISCO","shares":200,"avg_cost":113.5,"entry_date":"2026-04-20","entry_score":2},"SIRI.BK":{"name":"SIRI","shares":20200,"avg_cost":1.41,"entry_date":"2026-04-20","entry_score":2},"TU.BK":{"name":"TU","shares":2500,"avg_cost":11.4,"entry_date":"2026-04-20","entry_score":2},"BAY.BK":{"name":"BAY","shares":1000,"avg_cost":26.0,"entry_date":"2026-04-20","entry_score":2},"KTC.BK":{"name":"KTC","shares":900,"avg_cost":29.25,"entry_date":"2026-04-20","entry_score":2},"TQM.BK":{"name":"TQM","shares":2000,"avg_cost":13.7,"entry_date":"2026-04-20","entry_score":2},"WHA.BK":{"name":"WHA","shares":6400,"avg_cost":4.4,"entry_date":"2026-04-20","entry_score":2},"JASIF.BK":{"name":"JASIF","shares":4200,"avg_cost":6.7,"entry_date":"2026-04-20","entry_score":2},"CK.BK":{"name":"CK","shares":1600,"avg_cost":17.2,"entry_date":"2026-04-20","entry_score":2},"AMATA.BK":{"name":"AMATA","shares":1300,"avg_cost":20.5,"entry_date":"2026-04-20","entry_score":2}},"trades":[{"date":"2026-04-20","action":"BUY","ticker":"TISCO.BK","name":"TISCO","shares":200,"price":113.5,"value":22700.0,"avg_cost":113.5,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"SIRI.BK","name":"SIRI","shares":20200,"price":1.41,"value":28482.0,"avg_cost":1.41,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"TU.BK","name":"TU","shares":2500,"price":11.4,"value":28500.0,"avg_cost":11.4,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"BAY.BK","name":"BAY","shares":1000,"price":26.0,"value":26000.0,"avg_cost":26.0,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"KTC.BK","name":"KTC","shares":900,"price":29.25,"value":26325.0,"avg_cost":29.25,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"TQM.BK","name":"TQM","shares":2000,"price":13.7,"value":27400.0,"avg_cost":13.7,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"WHA.BK","name":"WHA","shares":6400,"price":4.4,"value":28160.0,"avg_cost":4.4,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"JASIF.BK","name":"JASIF","shares":4200,"price":6.7,"value":28140.0,"avg_cost":6.7,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"CK.BK","name":"CK","shares":1600,"price":17.2,"value":27520.0,"avg_cost":17.2,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"AMATA.BK","name":"AMATA","shares":1300,"price":20.5,"value":26650.0,"avg_cost":20.5,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"}],"start_date":"2026-04-20","day_count":2,"peak_value":299325.30750244856};
+const PORT = {"capital":300000.0,"cash":29448.30848187208,"holdings":{"TISCO.BK":{"name":"TISCO","shares":200,"avg_cost":113.5,"entry_date":"2026-04-20","entry_score":2,"last_div_check":"2026-04-23","last_price":113.5},"SIRI.BK":{"name":"SIRI","shares":20200,"avg_cost":1.41,"entry_date":"2026-04-20","entry_score":2,"last_div_check":"2026-04-23","last_price":1.409999966621399},"TU.BK":{"name":"TU","shares":2500,"avg_cost":11.4,"entry_date":"2026-04-20","entry_score":2,"last_div_check":"2026-04-23","last_price":11.199999809265137},"BAY.BK":{"name":"BAY","shares":1000,"avg_cost":26.0,"entry_date":"2026-04-20","entry_score":2,"last_div_check":"2026-04-23","last_price":27.5},"KTC.BK":{"name":"KTC","shares":900,"avg_cost":29.25,"entry_date":"2026-04-20","entry_score":2,"last_div_check":"2026-04-23","last_price":29.25},"TQM.BK":{"name":"TQM","shares":2000,"avg_cost":13.7,"entry_date":"2026-04-20","entry_score":2,"last_div_check":"2026-04-23","last_price":13.800000190734863},"WHA.BK":{"name":"WHA","shares":6400,"avg_cost":4.4,"entry_date":"2026-04-20","entry_score":2,"last_div_check":"2026-04-23","last_price":4.380000114440918},"JASIF.BK":{"name":"JASIF","shares":4200,"avg_cost":6.7,"entry_date":"2026-04-20","entry_score":2,"last_div_check":"2026-04-23","last_price":6.699999809265137},"CK.BK":{"name":"CK","shares":1600,"avg_cost":17.2,"entry_date":"2026-04-20","entry_score":2,"last_div_check":"2026-04-23","last_price":16.5},"AMATA.BK":{"name":"AMATA","shares":1300,"avg_cost":20.5,"entry_date":"2026-04-20","entry_score":2,"last_div_check":"2026-04-23","last_price":20.299999237060547}},"trades":[{"date":"2026-04-20","action":"BUY","ticker":"TISCO.BK","name":"TISCO","shares":200,"price":113.5,"value":22700.0,"avg_cost":113.5,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"SIRI.BK","name":"SIRI","shares":20200,"price":1.41,"value":28482.0,"avg_cost":1.41,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"TU.BK","name":"TU","shares":2500,"price":11.4,"value":28500.0,"avg_cost":11.4,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"BAY.BK","name":"BAY","shares":1000,"price":26.0,"value":26000.0,"avg_cost":26.0,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"KTC.BK","name":"KTC","shares":900,"price":29.25,"value":26325.0,"avg_cost":29.25,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"TQM.BK","name":"TQM","shares":2000,"price":13.7,"value":27400.0,"avg_cost":13.7,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"WHA.BK","name":"WHA","shares":6400,"price":4.4,"value":28160.0,"avg_cost":4.4,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"JASIF.BK","name":"JASIF","shares":4200,"price":6.7,"value":28140.0,"avg_cost":6.7,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"CK.BK","name":"CK","shares":1600,"price":17.2,"value":27520.0,"avg_cost":17.2,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"},{"date":"2026-04-20","action":"BUY","ticker":"AMATA.BK","name":"AMATA","shares":1300,"price":20.5,"value":26650.0,"avg_cost":20.5,"pnl":0,"reason":"BUY (Day 1)","time":"15:47"}],"start_date":"2026-04-21","day_count":7,"peak_value":303748.3059307933};
 
 const SIGNALS = {"^SET.BK":{"score":2,"signal":"BUY","price":1456.1,"fund_score":2.3,"comp_score":5.92,"fund":{"pe":null,"pbv":null,"roe":null,"div_yld":0.0,"has_div":false,"ex_div_date":null},"buy_alerted":false,"sell_alerted":false},"PTT.BK":{"score":0,"signal":"HOLD","price":34.75,"fund_score":6.9,"comp_score":5.76,"fund":{"pe":11.0317,"pbv":0.873,"roe":0.0712,"div_yld":6.0,"has_div":true,"ex_div_date":"2026-03-05"},"buy_alerted":false,"sell_alerted":false},"KBANK.BK":{"score":0,"signal":"HOLD","price":190.0,"fund_score":7.7,"comp_score":6.08,"fund":{"pe":9.2144,"pbv":0.7746,"roe":0.0853,"div_yld":6.27,"has_div":true,"ex_div_date":"2026-04-21"},"buy_alerted":false,"sell_alerted":false},"AOT.BK":{"score":2,"signal":"BUY","price":54.5,"fund_score":4.6,"comp_score":6.84,"fund":{"pe":44.3089,"pbv":5.7453,"roe":0.1323,"div_yld":1.47,"has_div":true,"ex_div_date":"2025-12-11"},"buy_alerted":false,"sell_alerted":false},"ADVANC.BK":{"score":-2,"signal":"SELL","price":349.0,"fund_score":5.4,"comp_score":3.16,"fund":{"pe":21.6636,"pbv":9.685,"roe":0.4681,"div_yld":4.88,"has_div":true,"ex_div_date":"2026-02-27"},"buy_alerted":false,"sell_alerted":false},"SCB.BK":{"score":0,"signal":"HOLD","price":129.5,"fund_score":7.7,"comp_score":6.08,"fund":{"pe":9.1844,"pbv":0.8803,"roe":null,"div_yld":8.58,"has_div":true,"ex_div_date":"2026-04-20"},"buy_alerted":false,"sell_alerted":false},"CPALL.BK":{"score":0,"signal":"HOLD","price":44.75,"fund_score":4.6,"comp_score":4.84,"fund":{"pe":14.4355,"pbv":3.1109,"roe":0.0979,"div_yld":3.65,"has_div":true,"ex_div_date":"2026-04-30"},"buy_alerted":false,"sell_alerted":false},"DELTA.BK":{"score":2,"signal":"BUY","price":290.0,"fund_score":5.4,"comp_score":7.16,"fund":{"pe":145.7286,"pbv":37.4001,"roe":0.2809,"div_yld":0.2,"has_div":true,"ex_div_date":"2026-02-26"},"buy_alerted":false,"sell_alerted":false},"BH.BK":{"score":2,"signal":"BUY","price":170.0,"fund_score":5.4,"comp_score":7.16,"fund":{"pe":19.6305,"pbv":4.379,"roe":0.2565,"div_yld":2.93,"has_div":true,"ex_div_date":"2026-03-17"},"buy_alerted":false,"sell_alerted":false},"TRUE.BK":{"score":0,"signal":"HOLD","price":13.5,"fund_score":4.6,"comp_score":4.84,"fund":{"pe":50.0,"pbv":6.1785,"roe":0.122,"div_yld":2.25,"has_div":true,"ex_div_date":"2026-05-08"},"buy_alerted":false,"sell_alerted":false},"BBL.BK":{"score":-2,"signal":"SELL","price":158.5,"fund_score":7.7,"comp_score":4.08,"fund":{"pe":6.5768,"pbv":0.5235,"roe":0.0782,"div_yld":10.25,"has_div":true,"ex_div_date":"2026-04-22"},"buy_alerted":false,"sell_alerted":false},"GULF.BK":{"score":0,"signal":"HOLD","price":56.0,"fund_score":6.2,"comp_score":5.48,"fund":{"pe":32.7485,"pbv":2.4924,"roe":0.3504,"div_yld":1.87,"has_div":true,"ex_div_date":"2026-03-02"},"buy_alerted":false,"sell_alerted":false},"MINT.BK":{"score":0,"signal":"HOLD","price":21.6,"fund_score":4.6,"comp_score":4.84,"fund":{"pe":16.7442,"pbv":2.0993,"roe":0.1003,"div_yld":3.24,"has_div":true,"ex_div_date":"2026-05-05"},"buy_alerted":false,"sell_alerted":false},"IVL.BK":{"score":0,"signal":"HOLD","price":23.9,"fund_score":4.6,"comp_score":4.84,"fund":{"pe":17.8859,"pbv":1.3075,"roe":-0.0516,"div_yld":2.94,"has_div":true,"ex_div_date":"2026-05-05"},"buy_alerted":false,"sell_alerted":false},"PTTGC.BK":{"score":0,"signal":"HOLD","price":36.25,"fund_score":5.4,"comp_score":5.16,"fund":{"pe":17.6627,"pbv":0.5637,"roe":-0.0552,"div_yld":1.38,"has_div":true,"ex_div_date":"2026-02-24"},"buy_alerted":false,"sell_alerted":false},"PTTEP.BK":{"score":0,"signal":"HOLD","price":149.5,"fund_score":6.9,"comp_score":5.76,"fund":{"pe":9.8485,"pbv":1.1279,"roe":0.1136,"div_yld":5.93,"has_div":true,"ex_div_date":"2026-02-23"},"buy_alerted":false,"sell_alerted":false},"SCC.BK":{"score":1,"signal":"BUY","price":219.0,"fund_score":5.4,"comp_score":6.16,"fund":{"pe":18.6701,"pbv":0.7782,"roe":0.0259,"div_yld":2.34,"has_div":true,"ex_div_date":"2026-04-01"},"buy_alerted":false,"sell_alerted":false},"TOP.BK":{"score":-2,"signal":"SELL","price":45.75,"fund_score":8.5,"comp_score":4.4,"fund":{"pe":7.0061,"pbv":0.5943,"roe":0.0815,"div_yld":4.49,"has_div":true,"ex_div_date":"2026-02-25"},"buy_alerted":false,"sell_alerted":false},"IRPC.BK":{"score":0,"signal":"HOLD","price":1.68,"fund_score":5.4,"comp_score":5.16,"fund":{"pe":18.5185,"pbv":0.5204,"roe":-0.0529,"div_yld":0.63,"has_div":true,"ex_div_date":"2026-03-02"},"buy_alerted":false,"sell_alerted":false},"BANPU.BK":{"score":-2,"signal":"SELL","price":5.55,"fund_score":6.9,"comp_score":3.76,"fund":{"pe":9.4383,"pbv":0.495,"roe":0.0064,"div_yld":6.55,"has_div":true,"ex_div_date":"2026-04-16"},"buy_alerted":false,"sell_alerted":false},"RATCH.BK":{"score":0,"signal":"HOLD","price":29.25,"fund_score":6.9,"comp_score":5.76,"fund":{"pe":10.2273,"pbv":0.6808,"roe":0.0642,"div_yld":5.52,"has_div":true,"ex_div_date":"2026-03-12"},"buy_alerted":false,"sell_alerted":false},"EGCO.BK":{"score":0,"signal":"HOLD","price":110.0,"fund_score":6.2,"comp_score":5.48,"fund":{"pe":12.2494,"pbv":0.5803,"roe":0.0462,"div_yld":5.91,"has_div":true,"ex_div_date":"2026-03-13"},"buy_alerted":false,"sell_alerted":false},"GPSC.BK":{"score":0,"signal":"HOLD","price":35.5,"fund_score":5.4,"comp_score":5.16,"fund":{"pe":15.6388,"pbv":0.9588,"roe":0.0616,"div_yld":5.31,"has_div":true,"ex_div_date":"2026-02-25"},"buy_alerted":false,"sell_alerted":false},"BGRIM.BK":{"score":0,"signal":"HOLD","price":12.4,"fund_score":3.8,"comp_score":4.52,"fund":{"pe":42.7586,"pbv":1.8439,"roe":0.0644,"div_yld":3.38,"has_div":true,"ex_div_date":"2026-03-10"},"buy_alerted":false,"sell_alerted":false},"BPP.BK":{"score":-2,"signal":"SELL","price":11.4,"fund_score":6.9,"comp_score":3.76,"fund":{"pe":11.5152,"pbv":0.7179,"roe":0.0654,"div_yld":6.14,"has_div":true,"ex_div_date":"2026-04-16"},"buy_alerted":false,"sell_alerted":false},"GLOBAL.BK":{"score":0,"signal":"HOLD","price":6.6,"fund_score":4.6,"comp_score":4.84,"fund":{"pe":18.8571,"pbv":1.4477,"roe":0.0765,"div_yld":2.77,"has_div":true,"ex_div_date":"2026-02-24"},"buy_alerted":false,"sell_alerted":false},"HMPRO.BK":{"score":0,"signal":"HOLD","price":6.1,"fund_score":6.2,"comp_score":5.48,"fund":{"pe":13.2609,"pbv":3.0318,"roe":0.2273,"div_yld":7.1,"has_div":true,"ex_div_date":"2026-04-22"},"buy_alerted":false,"sell_alerted":false},"MAKRO.BK":{"score":0,"signal":"HOLD","price":0,"fund_score":2.3,"comp_score":3.92,"fund":{"pe":null,"pbv":null,"roe":null,"div_yld":0.0,"has_div":false,"ex_div_date":null},"buy_alerted":false,"sell_alerted":false},"ROBINS.BK":{"score":0,"signal":"HOLD","price":0,"fund_score":2.3,"comp_score":3.92,"fund":{"pe":null,"pbv":null,"roe":null,"div_yld":0.0,"has_div":false,"ex_div_date":null},"buy_alerted":false,"sell_alerted":false},"CRC.BK":{"score":2,"signal":"BUY","price":18.6,"fund_score":4.6,"comp_score":6.84,"fund":{"pe":16.6071,"pbv":1.7135,"roe":0.1002,"div_yld":2.83,"has_div":true,"ex_div_date":"2026-04-21"},"buy_alerted":false,"sell_alerted":false},"COM7.BK":{"score":-2,"signal":"SELL","price":21.7,"fund_score":6.2,"comp_score":3.48,"fund":{"pe":12.6901,"pbv":4.8448,"roe":0.4122,"div_yld":5.02,"has_div":true,"ex_div_date":"2026-03-10"},"buy_alerted":false,"sell_alerted":false},"BJC.BK":{"score":2,"signal":"BUY","price":14.7,"fund_score":6.2,"comp_score":7.48,"fund":{"pe":14.7,"pbv":0.4896,"roe":0.0389,"div_yld":3.45,"has_div":true,"ex_div_date":"2026-04-29"},"buy_alerted":false,"sell_alerted":false},"OSP.BK":{"score":0,"signal":"HOLD","price":15.2,"fund_score":6.9,"comp_score":5.76,"fund":{"pe":12.459,"pbv":2.7061,"roe":0.2327,"div_yld":5.26,"has_div":true,"ex_div_date":"2026-05-07"},"buy_alerted":false,"sell_alerted":false},"TU.BK":{"score":2,"signal":"BUY","price":11.2,"fund_score":7.7,"comp_score":8.08,"fund":{"pe":9.6552,"pbv":0.9659,"roe":0.1042,"div_yld":6.19,"has_div":true,"ex_div_date":"2026-03-02"},"buy_alerted":false,"sell_alerted":false},"GFPT.BK":{"score":0,"signal":"HOLD","price":9.05,"fund_score":8.5,"comp_score":6.4,"fund":{"pe":4.641,"pbv":0.5269,"roe":0.1192,"div_yld":2.2,"has_div":true,"ex_div_date":"2026-03-04"},"buy_alerted":false,"sell_alerted":false},"CPF.BK":{"score":0,"signal":"HOLD","price":19.2,"fund_score":8.5,"comp_score":6.4,"fund":{"pe":6.1538,"pbv":0.7626,"roe":0.1051,"div_yld":2.59,"has_div":true,"ex_div_date":"2026-05-05"},"buy_alerted":false,"sell_alerted":false},"CBG.BK":{"score":0,"signal":"HOLD","price":36.25,"fund_score":5.4,"comp_score":5.16,"fund":{"pe":15.625,"pbv":2.5704,"roe":0.1687,"div_yld":3.29,"has_div":true,"ex_div_date":"2026-03-05"},"buy_alerted":false,"sell_alerted":false},"KTC.BK":{"score":2,"signal":"BUY","price":29.25,"fund_score":6.9,"comp_score":7.76,"fund":{"pe":9.6854,"pbv":1.6281,"roe":0.1798,"div_yld":6.0,"has_div":true,"ex_div_date":"2026-04-10"},"buy_alerted":false,"sell_alerted":false},"MTC.BK":{"score":0,"signal":"HOLD","price":30.0,"fund_score":7.7,"comp_score":6.08,"fund":{"pe":9.4637,"pbv":1.4818,"roe":0.1683,"div_yld":0.95,"has_div":true,"ex_div_date":"2026-04-28"},"buy_alerted":false,"sell_alerted":false},"TIDLOR.BK":{"score":0,"signal":"HOLD","price":17.4,"fund_score":7.7,"comp_score":6.08,"fund":{"pe":10.2353,"pbv":1.4608,"roe":0.1527,"div_yld":1.99,"has_div":true,"ex_div_date":"2025-12-08"},"buy_alerted":false,"sell_alerted":false},"SAWAD.BK":{"score":0,"signal":"HOLD","price":23.3,"fund_score":8.5,"comp_score":6.4,"fund":{"pe":7.7152,"pbv":1.0336,"roe":0.1368,"div_yld":3.22,"has_div":true,"ex_div_date":"2026-05-07"},"buy_alerted":false,"sell_alerted":false},"BAM.BK":{"score":0,"signal":"HOLD","price":7.15,"fund_score":6.2,"comp_score":5.48,"fund":{"pe":12.7679,"pbv":0.5145,"roe":0.0407,"div_yld":7.09,"has_div":true,"ex_div_date":"2026-05-05"},"buy_alerted":false,"sell_alerted":false},"KTB.BK":{"score":0,"signal":"HOLD","price":32.25,"fund_score":7.7,"comp_score":6.08,"fund":{"pe":9.3478,"pbv":0.971,"roe":0.1099,"div_yld":11.04,"has_div":true,"ex_div_date":"2026-04-10"},"buy_alerted":false,"sell_alerted":false},"TTB.BK":{"score":0,"signal":"HOLD","price":2.24,"fund_score":7.7,"comp_score":6.08,"fund":{"pe":10.1818,"pbv":0.9014,"roe":0.0854,"div_yld":6.04,"has_div":true,"ex_div_date":"2026-04-27"},"buy_alerted":false,"sell_alerted":false},"BAY.BK":{"score":2,"signal":"BUY","price":27.5,"fund_score":8.5,"comp_score":8.4,"fund":{"pe":6.3805,"pbv":0.4778,"roe":0.0828,"div_yld":4.68,"has_div":true,"ex_div_date":"2026-05-05"},"buy_alerted":false,"sell_alerted":false},"TISCO.BK":{"score":2,"signal":"BUY","price":113.5,"fund_score":5.4,"comp_score":7.16,"fund":{"pe":13.6418,"pbv":2.0951,"roe":null,"div_yld":6.83,"has_div":true,"ex_div_date":"2026-04-29"},"buy_alerted":false,"sell_alerted":false},"BLA.BK":{"score":0,"signal":"HOLD","price":19.9,"fund_score":9.2,"comp_score":6.68,"fund":{"pe":4.8775,"pbv":0.6156,"roe":0.135,"div_yld":4.24,"has_div":true,"ex_div_date":"2026-04-21"},"buy_alerted":false,"sell_alerted":false},"THRE.BK":{"score":0,"signal":"HOLD","price":0.38,"fund_score":3.1,"comp_score":4.24,"fund":{"pe":null,"pbv":0.4294,"roe":0.0047,"div_yld":0.0,"has_div":false,"ex_div_date":"2021-04-29"},"buy_alerted":false,"sell_alerted":false},"TQM.BK":{"score":2,"signal":"BUY","price":13.8,"fund_score":7.7,"comp_score":8.08,"fund":{"pe":11.2195,"pbv":2.8186,"roe":0.227,"div_yld":7.91,"has_div":true,"ex_div_date":"2026-03-12"},"buy_alerted":false,"sell_alerted":false},"MTL.BK":{"score":0,"signal":"HOLD","price":0,"fund_score":2.3,"comp_score":3.92,"fund":{"pe":null,"pbv":null,"roe":null,"div_yld":0.0,"has_div":false,"ex_div_date":null},"buy_alerted":false,"sell_alerted":false},"WHA.BK":{"score":2,"signal":"BUY","price":4.38,"fund_score":6.2,"comp_score":7.48,"fund":{"pe":12.8824,"pbv":1.774,"roe":0.1399,"div_yld":4.83,"has_div":true,"ex_div_date":"2026-05-11"},"buy_alerted":false,"sell_alerted":false},"AMATA.BK":{"score":2,"signal":"BUY","price":20.3,"fund_score":9.2,"comp_score":8.68,"fund":{"pe":7.4088,"pbv":0.9921,"roe":0.1405,"div_yld":5.39,"has_div":true,"ex_div_date":"2026-05-05"},"buy_alerted":false,"sell_alerted":false},"STEC.BK":{"score":0,"signal":"HOLD","price":0,"fund_score":2.3,"comp_score":3.92,"fund":{"pe":null,"pbv":null,"roe":null,"div_yld":0.0,"has_div":false,"ex_div_date":null},"buy_alerted":false,"sell_alerted":false},"CK.BK":{"score":2,"signal":"BUY","price":16.5,"fund_score":8.5,"comp_score":8.4,"fund":{"pe":8.3333,"pbv":0.985,"roe":0.1216,"div_yld":3.01,"has_div":true,"ex_div_date":"2026-03-11"},"buy_alerted":false,"sell_alerted":false},"ITD.BK":{"score":2,"signal":"BUY","price":0.26,"fund_score":6.9,"comp_score":7.76,"fund":{"pe":0.7647,"pbv":0.4214,"roe":0.4289,"div_yld":0.0,"has_div":false,"ex_div_date":"2019-05-14"},"buy_alerted":false,"sell_alerted":false},"THAI.BK":{"score":0,"signal":"HOLD","price":6.05,"fund_score":8.5,"comp_score":6.4,"fund":{"pe":5.5505,"pbv":2.2583,"roe":0.5093,"div_yld":3.41,"has_div":true,"ex_div_date":"2026-04-24"},"buy_alerted":false,"sell_alerted":false},"AAV.BK":{"score":0,"signal":"HOLD","price":1.1,"fund_score":5.4,"comp_score":5.16,"fund":{"pe":6.1111,"pbv":1.0427,"roe":0.1874,"div_yld":0.0,"has_div":false,"ex_div_date":"2018-09-25"},"buy_alerted":false,"sell_alerted":false},"BA.BK":{"score":0,"signal":"HOLD","price":13.4,"fund_score":8.5,"comp_score":6.4,"fund":{"pe":7.929,"pbv":2.1277,"roe":0.2458,"div_yld":10.37,"has_div":true,"ex_div_date":"2026-03-11"},"buy_alerted":false,"sell_alerted":false},"NOK.BK":{"score":0,"signal":"HOLD","price":0,"fund_score":5.4,"comp_score":5.16,"fund":{"pe":0.2329,"pbv":-0.0577,"roe":null,"div_yld":0.0,"has_div":false,"ex_div_date":null},"buy_alerted":false,"sell_alerted":false},"BTS.BK":{"score":0,"signal":"HOLD","price":2.12,"fund_score":3.1,"comp_score":4.24,"fund":{"pe":-21.2,"pbv":0.5953,"roe":-0.0185,"div_yld":0.0,"has_div":true,"ex_div_date":"2023-08-07"},"buy_alerted":false,"sell_alerted":false},"BEM.BK":{"score":2,"signal":"BUY","price":5.3,"fund_score":4.6,"comp_score":6.84,"fund":{"pe":21.2,"pbv":2.1457,"roe":0.1028,"div_yld":2.83,"has_div":true,"ex_div_date":"2026-03-10"},"buy_alerted":false,"sell_alerted":false},"TPIPP.BK":{"score":2,"signal":"BUY","price":1.92,"fund_score":7.7,"comp_score":8.08,"fund":{"pe":7.1111,"pbv":0.4429,"roe":0.0637,"div_yld":3.65,"has_div":true,"ex_div_date":"2026-03-11"},"buy_alerted":false,"sell_alerted":false},"JASIF.BK":{"score":2,"signal":"BUY","price":6.7,"fund_score":4.6,"comp_score":6.84,"fund":{"pe":7.8846,"pbv":null,"roe":null,"div_yld":0.0,"has_div":true,"ex_div_date":null},"buy_alerted":false,"sell_alerted":false},"INTUCH.BK":{"score":0,"signal":"HOLD","price":0,"fund_score":2.3,"comp_score":3.92,"fund":{"pe":null,"pbv":null,"roe":null,"div_yld":0.0,"has_div":false,"ex_div_date":null},"buy_alerted":false,"sell_alerted":false},"DTAC.BK":{"score":0,"signal":"HOLD","price":0,"fund_score":2.3,"comp_score":3.92,"fund":{"pe":null,"pbv":null,"roe":null,"div_yld":0.0,"has_div":false,"ex_div_date":null},"buy_alerted":false,"sell_alerted":false},"JMART.BK":{"score":0,"signal":"HOLD","price":6.9,"fund_score":7.7,"comp_score":6.08,"fund":{"pe":4.1071,"pbv":0.5614,"roe":0.0028,"div_yld":3.94,"has_div":true,"ex_div_date":"2025-11-24"},"buy_alerted":false,"sell_alerted":false},"JMT.BK":{"score":0,"signal":"HOLD","price":9.45,"fund_score":6.2,"comp_score":5.48,"fund":{"pe":13.3099,"pbv":0.5086,"roe":0.0366,"div_yld":9.56,"has_div":true,"ex_div_date":"2026-03-02"},"buy_alerted":false,"sell_alerted":false},"SINGER.BK":{"score":0,"signal":"HOLD","price":5.3,"fund_score":3.1,"comp_score":4.24,"fund":{"pe":40.7692,"pbv":0.3255,"roe":0.0123,"div_yld":0.0,"has_div":true,"ex_div_date":"2023-05-03"},"buy_alerted":false,"sell_alerted":false},"LH.BK":{"score":0,"signal":"HOLD","price":3.78,"fund_score":6.9,"comp_score":5.76,"fund":{"pe":12.1935,"pbv":0.9509,"roe":null,"div_yld":6.28,"has_div":true,"ex_div_date":"2026-04-29"},"buy_alerted":false,"sell_alerted":false},"AP.BK":{"score":0,"signal":"HOLD","price":8.5,"fund_score":8.5,"comp_score":6.4,"fund":{"pe":6.2044,"pbv":0.5801,"roe":0.0962,"div_yld":6.12,"has_div":true,"ex_div_date":"2026-05-06"},"buy_alerted":false,"sell_alerted":false},"SIRI.BK":{"score":2,"signal":"BUY","price":1.41,"fund_score":8.5,"comp_score":8.4,"fund":{"pe":5.875,"pbv":0.5523,"roe":0.0874,"div_yld":11.43,"has_div":true,"ex_div_date":"2026-03-17"},"buy_alerted":false,"sell_alerted":false},"SC.BK":{"score":0,"signal":"HOLD","price":1.98,"fund_score":7.7,"comp_score":6.08,"fund":{"pe":5.5,"pbv":0.343,"roe":0.064,"div_yld":7.58,"has_div":true,"ex_div_date":"2026-05-07"},"buy_alerted":false,"sell_alerted":false},"ORI.BK":{"score":0,"signal":"HOLD","price":1.76,"fund_score":7.7,"comp_score":6.08,"fund":{"pe":6.069,"pbv":0.212,"roe":0.0363,"div_yld":3.93,"has_div":true,"ex_div_date":"2026-05-11"},"buy_alerted":false,"sell_alerted":false},"SPALI.BK":{"score":0,"signal":"HOLD","price":16.7,"fund_score":7.7,"comp_score":6.08,"fund":{"pe":7.9904,"pbv":0.5864,"roe":0.0746,"div_yld":8.43,"has_div":true,"ex_div_date":"2026-05-06"},"buy_alerted":false,"sell_alerted":false},"NOBLE.BK":{"score":0,"signal":"HOLD","price":1.94,"fund_score":8.5,"comp_score":6.4,"fund":{"pe":4.5116,"pbv":0.3942,"roe":0.0886,"div_yld":21.33,"has_div":true,"ex_div_date":"2025-05-07"},"buy_alerted":false,"sell_alerted":false},"CENTEL.BK":{"score":0,"signal":"HOLD","price":31.0,"fund_score":4.6,"comp_score":4.84,"fund":{"pe":20.9459,"pbv":1.8677,"roe":0.0902,"div_yld":2.14,"has_div":true,"ex_div_date":"2026-05-06"},"buy_alerted":false,"sell_alerted":false},"ERW.BK":{"score":0,"signal":"HOLD","price":2.46,"fund_score":6.2,"comp_score":5.48,"fund":{"pe":14.4706,"pbv":1.3406,"roe":0.0939,"div_yld":2.92,"has_div":true,"ex_div_date":"2026-03-10"},"buy_alerted":false,"sell_alerted":false},"DUSIT.BK":{"score":0,"signal":"HOLD","price":10.1,"fund_score":3.1,"comp_score":4.24,"fund":{"pe":4.7867,"pbv":1.6254,"roe":-0.0552,"div_yld":0.0,"has_div":false,"ex_div_date":"2020-04-01"},"buy_alerted":false,"sell_alerted":false},"SHR.BK":{"score":2,"signal":"BUY","price":1.58,"fund_score":7.7,"comp_score":8.08,"fund":{"pe":6.8794,"pbv":0.4246,"roe":-0.1083,"div_yld":6.37,"has_div":true,"ex_div_date":"2026-03-11"},"buy_alerted":false,"sell_alerted":false},"THG.BK":{"score":2,"signal":"BUY","price":8.7,"fund_score":4.6,"comp_score":6.84,"fund":{"pe":108.75,"pbv":1.1586,"roe":0.0128,"div_yld":1.61,"has_div":true,"ex_div_date":"2026-03-12"},"buy_alerted":false,"sell_alerted":false},"BCH.BK":{"score":0,"signal":"HOLD","price":9.75,"fund_score":4.6,"comp_score":4.84,"fund":{"pe":18.3962,"pbv":1.8441,"roe":0.101,"div_yld":4.62,"has_div":true,"ex_div_date":"2026-04-29"},"buy_alerted":false,"sell_alerted":false},"BDMS.BK":{"score":0,"signal":"HOLD","price":18.5,"fund_score":5.4,"comp_score":5.16,"fund":{"pe":18.5,"pbv":2.7765,"roe":0.153,"div_yld":4.32,"has_div":true,"ex_div_date":"2026-03-10"},"buy_alerted":false,"sell_alerted":false},"NTV.BK":{"score":-2,"signal":"SELL","price":22.0,"fund_score":6.2,"comp_score":3.48,"fund":{"pe":12.7168,"pbv":1.2495,"roe":0.0992,"div_yld":4.71,"has_div":true,"ex_div_date":"2026-03-19"},"buy_alerted":false,"sell_alerted":false},"PR9.BK":{"score":0,"signal":"HOLD","price":16.4,"fund_score":5.4,"comp_score":5.16,"fund":{"pe":15.619,"pbv":2.1949,"roe":0.1454,"div_yld":3.03,"has_div":true,"ex_div_date":"2026-04-30"},"buy_alerted":false,"sell_alerted":false},"VGI.BK":{"score":0,"signal":"HOLD","price":0.86,"fund_score":5.4,"comp_score":5.16,"fund":{"pe":Infinity,"pbv":0.4983,"roe":0.0015,"div_yld":1.49,"has_div":true,"ex_div_date":"2025-07-29"},"buy_alerted":false,"sell_alerted":false},"WORK.BK":{"score":0,"signal":"HOLD","price":3.58,"fund_score":3.1,"comp_score":4.24,"fund":{"pe":-119.3333,"pbv":0.3802,"roe":-0.0079,"div_yld":0.0,"has_div":true,"ex_div_date":"2024-03-06"},"buy_alerted":false,"sell_alerted":false},"PLANB.BK":{"score":0,"signal":"HOLD","price":4.44,"fund_score":4.6,"comp_score":4.84,"fund":{"pe":17.76,"pbv":1.7453,"roe":0.1183,"div_yld":4.77,"has_div":true,"ex_div_date":"2026-04-20"},"buy_alerted":false,"sell_alerted":false},"ANAN.BK":{"score":0,"signal":"HOLD","price":0.37,"fund_score":2.3,"comp_score":3.92,"fund":{"pe":-2.6429,"pbv":0.136,"roe":0.005,"div_yld":0.0,"has_div":false,"ex_div_date":"2020-05-11"},"buy_alerted":false,"sell_alerted":false},"PSH.BK":{"score":0,"signal":"HOLD","price":3.46,"fund_score":5.4,"comp_score":5.16,"fund":{"pe":17.0167,"pbv":0.1913,"roe":-0.0121,"div_yld":5.17,"has_div":true,"ex_div_date":"2026-03-12"},"buy_alerted":false,"sell_alerted":false},"LALIN.BK":{"score":-2,"signal":"SELL","price":4.42,"fund_score":6.9,"comp_score":3.76,"fund":{"pe":8.84,"pbv":0.4254,"roe":0.0486,"div_yld":6.73,"has_div":true,"ex_div_date":"2026-03-17"},"buy_alerted":false,"sell_alerted":false},"MEGA.BK":{"score":0,"signal":"HOLD","price":33.25,"fund_score":5.4,"comp_score":5.16,"fund":{"pe":15.1826,"pbv":2.838,"roe":0.1903,"div_yld":4.67,"has_div":true,"ex_div_date":"2026-03-09"},"buy_alerted":false,"sell_alerted":false},"GLAND.BK":{"score":-1,"signal":"SELL","price":0.74,"fund_score":4.6,"comp_score":3.84,"fund":{"pe":9.25,"pbv":0.2951,"roe":0.0268,"div_yld":0.0,"has_div":true,"ex_div_date":"2026-03-04"},"buy_alerted":false,"sell_alerted":false},"CPN.BK":{"score":2,"signal":"BUY","price":62.25,"fund_score":6.2,"comp_score":7.48,"fund":{"pe":14.8214,"pbv":2.5426,"roe":0.1674,"div_yld":3.86,"has_div":true,"ex_div_date":"2026-03-09"},"buy_alerted":false,"sell_alerted":false},"SF.BK":{"score":0,"signal":"HOLD","price":0,"fund_score":2.3,"comp_score":3.92,"fund":{"pe":null,"pbv":null,"roe":null,"div_yld":0.0,"has_div":false,"ex_div_date":null},"buy_alerted":false,"sell_alerted":false},"SPRC.BK":{"score":-2,"signal":"SELL","price":7.2,"fund_score":6.2,"comp_score":3.48,"fund":{"pe":12.2034,"pbv":0.8234,"roe":0.0667,"div_yld":9.09,"has_div":true,"ex_div_date":"2026-03-05"},"buy_alerted":false,"sell_alerted":false},"ESSO.BK":{"score":0,"signal":"HOLD","price":0,"fund_score":2.3,"comp_score":3.92,"fund":{"pe":null,"pbv":null,"roe":null,"div_yld":0.0,"has_div":false,"ex_div_date":null},"buy_alerted":false,"sell_alerted":false},"PYLON.BK":{"score":0,"signal":"HOLD","price":2.86,"fund_score":7.7,"comp_score":6.08,"fund":{"pe":10.2143,"pbv":1.9079,"roe":0.204,"div_yld":8.28,"has_div":true,"ex_div_date":"2026-03-17"},"buy_alerted":false,"sell_alerted":false}};
 
@@ -620,7 +632,7 @@ const B = (n,d=0)=>'฿'+n.toLocaleString('th-TH',{minimumFractionDigits:d,maxim
 const P = n=>(n>=0?'+':'')+n.toFixed(2)+'%';
 const cc = n=>n>0?'up':n<0?'down':'flat';
 const holdTickers = new Set(Object.keys(PORT.holdings));
-let REMOTE_HISTORY = null; // populated from set_history.json after sync
+let REMOTE_HISTORY = [{"day":1,"date":"2026-04-20","value":300815.31,"cash":29448.308482,"pnl":815.31,"pnlPct":0.2718,"drawdown":0.0,"trades":10},{"day":2,"date":"2026-04-21","value":299325.31,"cash":29448.308482,"pnl":-674.69,"pnlPct":-0.2249,"drawdown":-0.4953,"trades":0},{"day":3,"date":"2026-04-22","value":303748.31,"cash":29448.308482,"pnl":3748.31,"pnlPct":1.2494,"drawdown":0.0,"trades":0},{"day":4,"date":"2026-04-23","value":299325.31,"cash":29448.308482,"pnl":-674.69,"pnlPct":-0.2249,"drawdown":-1.4561,"trades":0},{"day":5,"date":"2026-04-24","value":299017.31,"cash":29448.31,"pnl":-982.69,"pnlPct":-0.3276,"drawdown":-1.5575,"trades":0}]; // pre-baked; refreshed from GitHub on sync
 
 // Weights (match set_config.json scoring_weights)
 const W_TECH = 0.6, W_FUND = 0.4;
@@ -633,6 +645,30 @@ function techNorm(score){ return (score + 3) / 6 * 10; }
 function compositeScore(techScore, fundScore){
   const fs = (fundScore != null && !isNaN(fundScore)) ? fundScore : 5.0;
   return techNorm(techScore) * W_TECH + fs * W_FUND;
+}
+
+// Composite-score based signal label and pill class (replaces tech-only BUY/HOLD/SELL)
+function compLabel(cs){
+  if(cs == null) return 'HOLD';
+  if(cs >= 8.5) return 'STRONG BUY';
+  if(cs >= 7.5) return 'BUY';
+  if(cs >= 7.2) return 'WATCH';
+  if(cs >= 6.5) return 'WEAK';
+  return 'AVOID';
+}
+function compPill(cs){
+  if(cs == null) return 'pill pill-h';
+  if(cs >= 7.5) return 'pill pill-b';
+  if(cs >= 7.2) return 'pill pill-wt';
+  if(cs >= 6.5) return 'pill pill-w';
+  return 'pill pill-s';
+}
+function compColor(cs){
+  if(cs == null) return 'var(--muted)';
+  if(cs >= 7.5) return 'var(--green)';
+  if(cs >= 7.2) return 'var(--accent)';
+  if(cs >= 6.5) return 'var(--yellow)';
+  return 'var(--red)';
 }
 
 // Fundamental score from raw fund data (mirrors Python calc_fundamental_score)
@@ -760,8 +796,13 @@ function renderHoldMini(){
   const{rows}=calcPortfolio();
   rows.sort((a,b)=>b.pnlPct-a.pnlPct);
   document.getElementById('holdChip').textContent=rows.length+'/10';
-  document.getElementById('holdMiniBody').innerHTML=rows.map(r=>`
-    <tr>
+  document.getElementById('holdMiniBody').innerHTML=rows.map(r=>{
+    const sig=SIGNALS[r.ticker]||{};
+    const cs=sig.comp_score??compositeScore(sig.score??0, sig.fund_score??null);
+    const lbl=compLabel(cs);
+    const techSc=sig.score??0;
+    const scoreStr=(techSc>=0?'+':'')+techSc;
+    return`<tr>
       <td><span class="ticker">${r.h.name}</span></td>
       <td style="color:var(--muted)">${r.h.shares.toLocaleString()}</td>
       <td style="color:var(--muted)">${B(r.h.avg_cost,2)}</td>
@@ -771,8 +812,9 @@ function renderHoldMini(){
           ${P(r.pnlPct)}
         </div>
       </td>
-    </tr>
-  `).join('');
+      <td><span class="${compPill(cs)}" style="font-size:10px">${lbl}</span> <span style="color:var(--muted);font-size:10px">${cs.toFixed(1)}</span></td>
+    </tr>`;
+  }).join('');
 }
 
 // ─── HOLDINGS FULL ────────────────────────────────────────────────────────────
@@ -782,6 +824,10 @@ function renderHoldFull(){
   document.getElementById('holdChip2').textContent=rows.length+'/10';
   document.getElementById('holdFullBody').innerHTML=rows.map(r=>{
     const stopHit=r.px<=r.stop;
+    const sig=SIGNALS[r.ticker]||{};
+    const cs=sig.comp_score??compositeScore(sig.score??0, sig.fund_score??null);
+    const lbl=compLabel(cs);
+    const techSc=sig.score??0;
     return`<tr>
       <td><span class="ticker">${r.h.name}</span><br><span style="font-size:10px;color:var(--muted)">${r.ticker}</span></td>
       <td style="color:var(--muted)">${r.h.entry_date}</td>
@@ -798,6 +844,10 @@ function renderHoldFull(){
         </div>
       </td>
       <td style="color:var(--red);font-size:11px">${B(r.stop,2)} ${stopHit?'⚠️ HIT':''}</td>
+      <td style="white-space:nowrap">
+        <span class="${compPill(cs)}" style="font-size:10px">${lbl}</span><br>
+        <span style="color:var(--muted);font-size:10px">${cs.toFixed(1)}/10 · Tech ${(techSc>=0?'+':'')+techSc}</span>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -879,99 +929,86 @@ function renderHistTable(){
 
 // ─── SIGNALS ──────────────────────────────────────────────────────────────────
 function renderSignals(){
+  // Helper: get composite score for a signal entry
+  function getCS(s){
+    const rawFund = s.fund!=null ? calcFundScore(s.fund) : null;
+    const fs = s.fund_score!=null ? s.fund_score : rawFund;
+    return s.comp_score!=null ? s.comp_score : compositeScore(s.score, fs);
+  }
+
   const entries=Object.entries(SIGNALS)
     .filter(([k])=>!k.startsWith('_'))
-    .sort((a,b)=>b[1].score-a[1].score);
+    .sort((a,b)=>getCS(b[1])-getCS(a[1]));   // sort by composite score descending
 
-  const buys=entries.filter(e=>e[1].signal==='BUY').length;
-  const sells=entries.filter(e=>e[1].signal==='SELL').length;
-  const holds=entries.filter(e=>e[1].signal==='HOLD').length;
+  // Summary counts based on composite score bands
+  const buys  = entries.filter(e=>getCS(e[1])>=7.5).length;
+  const sells  = entries.filter(e=>getCS(e[1])<6.5).length;
+  const holds  = entries.length - buys - sells;
+  document.getElementById('sigSummaryLine').textContent=
+    `BUY/STRONG: ${buys}  ·  WEAK/AVOID: ${sells}  ·  WATCH/HOLD: ${holds}`;
 
-  document.getElementById('sigSummaryLine').textContent=`BUY: ${buys}  ·  SELL: ${sells}  ·  HOLD: ${holds}`;
-
-  // overview grid — show buy/sell only
-  const notable=entries.filter(e=>e[1].signal!=='HOLD');
+  // overview grid — show actionable stocks (composite ≥ 7.5 or < 6.5, or already held)
+  const notable=entries.filter(([t,s])=>{
+    const cs=getCS(s);
+    return cs>=7.5 || cs<6.5 || holdTickers.has(t);
+  });
   document.getElementById('sigOverviewGrid').innerHTML=notable.map(([t,s])=>{
     const name=t.replace('.BK','');
     const held=holdTickers.has(t);
-    const pchip=s.signal==='BUY'?'chip chip-buy':'chip chip-sell';
     const rawFund=s.fund!=null?calcFundScore(s.fund):null;
     const fs=s.fund_score!=null?s.fund_score:rawFund;
-    const hasFundData = fs != null;
-    const techN = techNorm(s.score);
-    const csReal = hasFundData ? compositeScore(s.score, fs) : null;
-    const csColor = csReal!=null ? (csReal>=7?'var(--green)':csReal>=5?'var(--text)':'var(--red)') : 'var(--muted)';
-    const exDays = daysToExDiv(s.fund);
-    const exBadge = (exDays!=null && exDays>=0 && exDays<=21)
-      ? `<span style="background:rgba(212,170,69,.18);color:var(--yellow);border-radius:4px;padding:1px 5px;font-size:10px;margin-left:4px">📅 Ex-div ${exDays}d</span>` : '';
-    return`<div class="stat-block" style="${s.signal==='BUY'?'border-color:rgba(77,205,122,.4)':'border-color:rgba(240,100,100,.3)'}">
+    const cs=s.comp_score!=null?s.comp_score:compositeScore(s.score,fs);
+    const lbl=compLabel(cs);
+    const bdrColor=cs>=7.5?'rgba(77,205,122,.4)':cs>=7.2?'rgba(109,186,127,.3)':cs>=6.5?'rgba(212,170,69,.3)':'rgba(240,100,100,.3)';
+    const exDays=daysToExDiv(s.fund);
+    const exBadge=(exDays!=null&&exDays>=0&&exDays<=21)
+      ?`<span style="background:rgba(212,170,69,.18);color:var(--yellow);border-radius:4px;padding:1px 5px;font-size:10px;margin-left:4px">📅 Ex-div ${exDays}d</span>`:'';
+    return`<div class="stat-block" style="border-color:${bdrColor}">
       <div class="stat-label">${name} ${held?'💼':''}${exBadge}</div>
-      <div class="stat-val ${cc(s.score)}">${s.score>0?'+':''}${s.score}/3</div>
+      <div class="stat-val" style="color:${compColor(cs)};font-size:18px">${cs.toFixed(1)}</div>
       <div class="stat-sub" style="line-height:1.8">
-        ฿${s.price?.toFixed(2)||'–'} · <span class="${pchip}">${s.signal}</span><br>
-        Tech: ${techN.toFixed(1)}/10 &nbsp;
-        ${hasFundData
-          ? `Fund: ${fs.toFixed(1)}/10 &nbsp; Comp: <span style="color:${csColor};font-weight:700">${csReal.toFixed(1)}/10</span>`
-          : `<span style="color:var(--dim)">Fund: run updater for real scores</span>`}
+        ฿${s.price?.toFixed(2)||'–'} · <span class="${compPill(cs)}">${lbl}</span><br>
+        Tech: ${(s.score>0?'+':'')+s.score}/3 &nbsp;·&nbsp; Fund: ${fs!=null?fs.toFixed(1):'–'}/10
       </div>
     </div>`;
   }).join('');
 
-  // full grid
+  // full signal cards — sorted by composite, labelled by composite
   document.getElementById('sigGridFull').innerHTML=entries.map(([t,s])=>{
     const name=t.replace('.BK','');
     const held=holdTickers.has(t);
-    const cls=s.signal==='BUY'?'sbuy':s.signal==='SELL'?'ssell':'';
-    const dot=s.score>0?'var(--green)':s.score<0?'var(--red)':'var(--muted)';
-    const pill=s.signal==='BUY'?'pill pill-b':s.signal==='SELL'?'pill pill-s':'pill pill-h';
-
-    // fund_score: real if synced from GitHub, else compute from raw fund data, else null
-    const rawFund = s.fund != null ? calcFundScore(s.fund) : null;
-    const hasFund = s.fund_score!=null || rawFund!=null;
-    const fs = s.fund_score!=null ? s.fund_score : rawFund;
-    const fsLabel = fs!=null ? fs.toFixed(1)+'/10' : '~/10';
-    const fsEst   = fs==null;
-
-    // composite: real if synced, else compute (fund or neutral 5.0)
-    const cs = s.comp_score!=null ? s.comp_score : compositeScore(s.score, fs);
-    const csEst = s.comp_score==null;
-    const csColor = cs>=7?'var(--green)':cs>=5?'var(--text)':'var(--red)';
-
-    // tech score display: +2/3 format
-    const techLabel = (s.score>0?'+':'')+s.score+'/3';
-
-    // Only show composite when we have real fund data; otherwise show tech/10
-    const hasFundData = fs != null;
-    const techN = techNorm(s.score);
-    const csReal = hasFundData ? compositeScore(s.score, fs) : null;
+    const rawFund=s.fund!=null?calcFundScore(s.fund):null;
+    const fs=s.fund_score!=null?s.fund_score:rawFund;
+    const cs=s.comp_score!=null?s.comp_score:compositeScore(s.score,fs);
+    const lbl=compLabel(cs);
+    const techN=techNorm(s.score);
+    const dot=cs>=7.5?'var(--green)':cs>=7.2?'var(--accent)':cs>=6.5?'var(--yellow)':'var(--red)';
+    // card border class based on composite
+    const cls=cs>=7.5?'sbuy':cs<6.5?'ssell':'';
+    const exDays=daysToExDiv(s.fund);
 
     return`<div class="sig-card ${cls}">
       <div class="sc-name">${name} ${held?'💼':''}</div>
       <div class="sc-px">฿${s.price!=null?s.price.toFixed(2):'–'}</div>
       <div class="sc-row" style="margin-bottom:6px">
         <div class="dot" style="background:${dot}"></div>
-        <span class="sc-score ${cc(s.score)}" style="font-size:12px;font-weight:700">${techLabel}</span>
-        &nbsp;<span class="${pill}">${s.signal}</span>
+        <span class="sc-score" style="font-size:13px;font-weight:700;color:${compColor(cs)}">${cs.toFixed(1)}</span>
+        &nbsp;<span class="${compPill(cs)}" style="font-size:10px">${lbl}</span>
       </div>
       <div style="font-size:10px;line-height:1.8;border-top:1px solid rgba(255,255,255,.06);padding-top:6px">
         <div style="display:flex;justify-content:space-between">
           <span style="color:var(--muted)">Tech/10</span>
-          <span style="color:var(--text);font-weight:600">${techN.toFixed(1)}</span>
+          <span style="color:var(--text);font-weight:600">${techN.toFixed(1)} <span style="color:var(--muted);font-weight:400">(${(s.score>0?'+':'')+s.score}/3)</span></span>
         </div>
-        ${hasFundData ? `
         <div style="display:flex;justify-content:space-between">
           <span style="color:var(--muted)">Fund/10</span>
-          <span style="color:var(--text);font-weight:600">${fs.toFixed(1)}</span>
+          <span style="color:var(--text);font-weight:600">${fs!=null?fs.toFixed(1):'–'}</span>
         </div>
         <div style="display:flex;justify-content:space-between">
           <span style="color:var(--muted)">Comp/10</span>
-          <span style="color:${csReal>=7?'var(--green)':csReal>=5?'var(--text)':'var(--red)'};font-weight:700">${csReal.toFixed(1)}</span>
-        </div>` : `
-        <div style="display:flex;justify-content:space-between">
-          <span style="color:var(--dim)">Fund/10</span>
-          <span style="color:var(--dim)">sync for real</span>
-        </div>`}
-        ${(()=>{const d=daysToExDiv(s.fund);return(d!=null&&d>=0&&d<=21)?`<div style="display:flex;justify-content:space-between;margin-top:3px"><span style="color:var(--yellow);font-size:9px">📅 Ex-div</span><span style="color:var(--yellow);font-size:9px;font-weight:600">${d}d</span></div>`:''})()}
+          <span style="color:${compColor(cs)};font-weight:700">${cs.toFixed(1)}</span>
+        </div>
+        ${exDays!=null&&exDays>=0&&exDays<=21?`<div style="display:flex;justify-content:space-between;margin-top:2px"><span style="color:var(--yellow);font-size:9px">📅 Ex-div</span><span style="color:var(--yellow);font-size:9px;font-weight:600">${exDays}d</span></div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -988,6 +1025,24 @@ function renderTrades(){
     const isDiv=t.action==='DIVIDEND';
     const pillClass=isDiv?'pill':'pill '+(b?'pill-b':'pill-s');
     const pillStyle=isDiv?'background:rgba(212,170,69,.18);color:var(--yellow)':'';
+    // For open BUY positions, show current unrealised P&L
+    let pnlCell='–', pnlClass='flat';
+    if(isDiv){
+      pnlCell='+'+B(t.value); pnlClass='up';
+    } else if(!b){
+      // Realised SELL P&L
+      pnlCell=(t.pnl>=0?'+':'')+B(t.pnl||0);
+      pnlClass=cc(t.pnl||0);
+    } else {
+      // BUY — show unrealised P&L if still holding
+      const holding=PORT.holdings[t.ticker];
+      if(holding){
+        const curPx=holding.last_price||(SIGNALS[t.ticker]?.price)||t.price;
+        const unreal=(curPx-t.price)*t.shares;
+        pnlCell=(unreal>=0?'+':'')+B(unreal)+' <span style="font-size:10px;color:var(--muted)">(open)</span>';
+        pnlClass=cc(unreal);
+      }
+    }
     return`<tr style="${isDiv?'background:rgba(212,170,69,.04)':''}">
       <td style="color:var(--muted)">${t.date}</td>
       <td style="color:var(--muted)">${t.time||'–'}</td>
@@ -996,10 +1051,107 @@ function renderTrades(){
       <td>${isDiv?'–':t.shares.toLocaleString()}</td>
       <td>${isDiv?B(t.price,4)+'/sh':B(t.price,2)}</td>
       <td>${B(t.value)}</td>
-      <td class="${isDiv?'up':cc(t.pnl||0)}">${isDiv?'+'+B(t.value):(!b?(t.pnl>=0?'+':'')+B(t.pnl||0):'–')}</td>
+      <td class="${pnlClass}">${pnlCell}</td>
       <td style="font-size:11px;color:var(--muted)">${t.reason||'–'}</td>
     </tr>`;
   }).join('');
+}
+
+// ─── EXCEL EXPORT — matches Portfolio_Master.xlsx format ──────────────────────
+function exportExcel(){
+  if(typeof XLSX === 'undefined'){ alert('SheetJS not loaded yet — try again in a moment.'); return; }
+
+  const wb   = XLSX.utils.book_new();
+  const today = new Date().toISOString().slice(0,10);
+  const fmt2  = v => v!=null && !isNaN(v) ? Math.round(v*100)/100 : v;
+
+  const {totalVal, totalPnl, totalPct, rows} = calcPortfolio();
+  const peak  = PORT.peak_value || PORT.capital;
+  const invested = rows.reduce((s,r)=>s+r.val, 0);
+
+  // ── Sheet 1: Daily Performance (one row per day, cumulative) ─────────────────
+  const hist = (REMOTE_HISTORY && REMOTE_HISTORY.length) ? REMOTE_HISTORY : getHistory();
+  const dpHeader = ['Date','Day','Portfolio Value (฿)','Cash (฿)','Invested (฿)',
+                    'Total P&L (฿)','Total Return (%)','Realised P&L Today (฿)',
+                    'Drawdown (%)','Positions','Buys','Sells'];
+  // Build rows from history; last row = today live if not already there
+  const histRows = hist.map(h=>[
+    h.date, h.day,
+    fmt2(h.value), fmt2(h.cash),
+    fmt2((h.value||0)-(h.cash||0)),            // invested = value - cash
+    fmt2(h.pnl), fmt2(h.pnlPct),
+    fmt2(h.realised_pnl ?? 0),
+    fmt2(h.drawdown),
+    h.positions ?? (h.day===PORT.day_count ? rows.length : '–'),
+    h.buys  ?? '–', h.sells ?? '–'
+  ]);
+  const wsDp = XLSX.utils.aoa_to_sheet([dpHeader, ...histRows]);
+  wsDp['!cols'] = [13,6,20,16,16,16,16,20,14,10,8,8].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, wsDp, 'Daily Performance');
+
+  // ── Sheet 2: Holdings ────────────────────────────────────────────────────────
+  const holdHeader = ['Ticker','Stock Name','Shares','Avg Cost (฿)','Current Price (฿)',
+                      'Market Value (฿)','Unrealised P&L (฿)','P&L %','Entry Date',
+                      'Comp Score','Signal'];
+  const sortedRows = [...rows].sort((a,b)=>b.val-a.val);
+  const holdRows = sortedRows.map(r=>{
+    const sig = SIGNALS[r.ticker]||{};
+    const cs  = sig.comp_score!=null ? sig.comp_score
+                : compositeScore(sig.score??0, sig.fund_score??null);
+    const pnlPct = r.cost>0 ? (r.val-r.cost)/r.cost*100 : 0;
+    return [
+      r.ticker, r.h.name, r.h.shares,
+      fmt2(r.h.avg_cost), fmt2(r.px),
+      fmt2(r.val),
+      fmt2(r.pnl),
+      fmt2(pnlPct),
+      r.h.entry_date||'–',
+      cs!=null?fmt2(cs):'–', compLabel(cs)
+    ];
+  });
+  const wsHold = XLSX.utils.aoa_to_sheet([holdHeader, ...holdRows]);
+  wsHold['!cols'] = [12,14,8,13,13,14,18,10,14,12,14].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, wsHold, 'Holdings');
+
+  // ── Sheet 3: Today's Trades ──────────────────────────────────────────────────
+  const todayTrades = PORT.trades.filter(t=>t.date===today);
+  const t3Header = ['Date','Stock','Shares','Action','Price (฿)','Lots',
+                    'Value (฿)','Realised P&L (฿)','Reason / Signal'];
+  const t3Rows = todayTrades.map(t=>{
+    const isBuy = t.action==='BUY';
+    return [
+      t.date, t.name||'–', isBuy?t.shares:(t.action==='DIVIDEND'?'–':t.shares),
+      t.action,
+      fmt2(t.price),
+      t.action==='DIVIDEND'?'–':Math.floor((t.shares||0)/100),
+      fmt2(t.value),
+      isBuy?'—':fmt2(t.pnl),
+      t.reason||'–'
+    ];
+  });
+  const t3NoTrades = [['No trades were executed today.']];
+  const wsT3 = XLSX.utils.aoa_to_sheet([t3Header, ...(t3Rows.length?t3Rows:t3NoTrades)]);
+  wsT3['!cols'] = [13,14,8,8,13,8,14,16,22].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, wsT3, "Today's Trades");
+
+  // ── Sheet 4: Trade History (all trades, newest first) ────────────────────────
+  const t4Header = ['Date','Ticker','Stock','Action','Shares','Price (฿)',
+                    'Lots','Value (฿)','Realised P&L (฿)','Reason / Signal'];
+  const t4Rows = [...PORT.trades].reverse().map(t=>[
+    t.date, t.ticker||'–', t.name||'–', t.action,
+    t.action==='DIVIDEND'?'–':t.shares,
+    fmt2(t.price),
+    t.action==='DIVIDEND'?'–':Math.floor((t.shares||0)/100),
+    fmt2(t.value),
+    t.action==='SELL'?fmt2(t.pnl): t.action==='DIVIDEND'?fmt2(t.value):'—',
+    t.reason||'–'
+  ]);
+  const wsT4 = XLSX.utils.aoa_to_sheet([t4Header, ...t4Rows]);
+  wsT4['!cols'] = [13,12,14,8,8,13,8,14,16,22].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, wsT4, 'Trade History');
+
+  // Download as Portfolio_Master.xlsx (matches the server-generated master)
+  XLSX.writeFile(wb, 'Portfolio_Master.xlsx');
 }
 
 // ─── P&L BAR CHART ────────────────────────────────────────────────────────────
