@@ -96,8 +96,8 @@ MAX_POSITIONS   = 10
 CASH_FLOOR_PCT  = 0.05
 
 # ─── Signal-change thresholds ─────────────────────────────────────────────────
-# Tech score now ranges -5 to +5 (5 indicators).  Buy needs 3+ bullish (≥+3).
-BUY_SCORE_MIN  = 3     # score >= +3 triggers BUY  (was +2 with 3 indicators)
+# Tech score now ranges -5 to +5 (5 indicators).  Buy needs 2+ bullish (≥+2).
+BUY_SCORE_MIN  = 2     # score >= +2 triggers BUY  (sweep: score=2 beats score=3 across all params)
 SELL_SCORE_MAX = -2    # score <= -2 triggers SELL  (was -1)
 BUY_PREV_MAX   = 0     # only buy if previous score was <= 0 (fresh cross)
 SELL_PREV_MIN  = 0     # sell if previous score was >= 0 (catches crash from neutral → -2)
@@ -113,7 +113,7 @@ ROTATION_COOLDOWN_DAYS  = 5
 
 # ─── Composite-score rotation ─────────────────────────────────────────────────
 # Rotation uses a LOWER incoming bar than fresh buys (comp-driven, not score-driven).
-# Fresh buy still requires BUY_SCORE_MIN (+3).  Rotation only requires +2 incoming
+# Fresh buy requires BUY_SCORE_MIN (+2).  Rotation only requires +2 incoming
 # tech + decent composite — the 0.8 gain requirement prevents churn.
 ROTATION_IN_SCORE_MIN  = 2     # incoming tech score for rotation (fresh buy = +3)
 ROTATION_IN_COMP_MIN   = 7.0   # incoming comp must clear this floor
@@ -133,7 +133,7 @@ REGIME_MA_PERIOD = 200
 # Adapts to each stock's own volatility — volatile stocks get wider stops,
 # stable stocks get tighter stops.  Replaces the blunt fixed 8% stop.
 ATR_PERIOD      = 14
-ATR_MULTIPLIER  = 2.0    # 2 × ATR — standard Wilder / Van Tharp setting
+ATR_MULTIPLIER  = 1.5    # 1.5 × ATR — sweep winner: best Sharpe (0.38) + lowest drawdown (-14.5%)
 ATR_FALLBACK_PCT = 0.08  # 8% fallback for holdings that pre-date ATR tracking
 
 # ─── Maximum hold period ─────────────────────────────────────────────────────
@@ -144,7 +144,7 @@ MAX_HOLD_DAYS = 60   # calendar days
 # ─── Take-profit ─────────────────────────────────────────────────────────────
 # Sell a position if it has gained more than this % from avg cost.
 # Prevents giving back large gains while waiting for a technical sell signal.
-TAKE_PROFIT_PCT = 0.25   # 25% gain → trigger take-profit sell
+TAKE_PROFIT_PCT = 0.50   # 50% gain → trigger take-profit sell (sweep: let winners run further)
 
 # ─── Portfolio drawdown brake ────────────────────────────────────────────────
 # Suspend ALL new buys and rotations when portfolio has dropped more than this

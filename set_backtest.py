@@ -188,9 +188,13 @@ def calc_fund_score(fund):
 def comp_score(tech, fund):
     return round((tech+TECH_MAX)/(2.0*TECH_MAX)*10.0*WEIGHT_TECH + fund*WEIGHT_FUND, 2)
 
+def _to_float(v):
+    try: return float(v)
+    except (TypeError, ValueError): return None
+
 def fund_ok(fund):
     if not FUND_ENABLED or not fund: return True
-    pe=fund.get("pe"); pbv=fund.get("pbv"); roe=fund.get("roe")
+    pe=_to_float(fund.get("pe")); pbv=_to_float(fund.get("pbv")); roe=_to_float(fund.get("roe"))
     has_d=fund.get("has_div",True)
     if pe is not None and pe>0 and pe>MAX_PE: return False
     if pe is not None and pe<0: return False
@@ -230,67 +234,16 @@ def fetch_fund(ticker):
     except: return {}
 
 
-# ── Main backtest ─────────────────────────────────────────────────────────────
-def run_backtest(years=5, regime_enabled=True):
-    print("="*60)
-    print("SET Strategy Backtester")
-    print(f"Period: {years} years  |  Capital: ฿{INITIAL_CAPITAL:,.0f}")
-    print(f"Regime filter: {'ON' if regime_enabled else 'OFF'}")
-    print("="*60)
+# ── Simulation kernel (fast — reused by sweep) ────────────────────────────────
+def _simulate(all_dates, sig, all_data, fok_map, fs_map,
+              regime_bull, set_df, years, regime_enabled, params=None):
+    """Run the strategy loop and return a performance dict."""
+    p = params or {}
+    atr_mult      = p.get("atr_mult",      ATR_MULTIPLIER)
+    tp_pct        = p.get("tp_pct",        TAKE_PROFIT_PCT)
+    buy_score_min = p.get("buy_score_min", BUY_SCORE_MIN)
+    comp_min      = p.get("comp_min",      0.0)   # optional composite floor
 
-    # Fetch history
-    print(f"\n[1/4] Fetching {len(INSTRUMENTS)} instruments...")
-    all_data = {}
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
-        futs = {ex.submit(fetch_hist,tk,years):(nm,tk) for nm,tk in INSTRUMENTS}
-        done=0
-        for future in as_completed(futs):
-            nm,tk=futs[future]; df=future.result(); done+=1
-            if df is not None and len(df)>SMA_LONG+10:
-                all_data[tk]=(nm,df)
-            sys.stdout.write(f"\r  {done}/{len(INSTRUMENTS)} fetched..."); sys.stdout.flush()
-    print(f"\r  {len(all_data)}/{len(INSTRUMENTS)} instruments loaded.     ")
-
-    # SET regime
-    print("[2/4] Fetching SET Index for regime...")
-    set_df = fetch_hist(REGIME_TICKER, years)
-    if set_df is not None:
-        sc = set_df["Close"]
-        regime_bull = (sc > sc.rolling(REGIME_MA_PERIOD).mean()).reindex(
-            method="ffill")
-        print(f"  {len(set_df)} days of SET data loaded.")
-    else:
-        regime_bull = None
-        print("  Could not load SET — regime disabled.")
-
-    # Fundamentals
-    print(f"[3/4] Fetching fundamentals (takes ~3 min)...")
-    fund_cache = {}
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
-        futs = {ex.submit(fetch_fund,tk):tk for tk in all_data}
-        done=0
-        for future in as_completed(futs):
-            tk=futs[future]; fund_cache[tk]=future.result(); done+=1
-            sys.stdout.write(f"\r  {done}/{len(all_data)} done..."); sys.stdout.flush()
-    print(f"\r  {len(fund_cache)} fundamentals loaded.     ")
-    fs_map  = {tk: calc_fund_score(f) for tk,f in fund_cache.items()}
-    fok_map = {tk: fund_ok(f)         for tk,f in fund_cache.items()}
-
-    # Compute signals
-    print("[4/4] Computing daily signals...")
-    sig = {}
-    for tk,(nm,df) in all_data.items():
-        try: sig[tk]=compute_signals(df)
-        except: pass
-    print(f"  Done. {len(sig)} tickers with signals.\n")
-
-    # Trading days
-    cutoff = (datetime.date.today()-datetime.timedelta(days=years*365)).isoformat()
-    all_dates = sorted({d for tk in sig for d in sig[tk].index
-                        if str(d.date())>=cutoff})
-    print(f"Simulating {len(all_dates)} trading days...")
-
-    # ── Simulation loop ───────────────────────────────────────────────────────
     cash=INITIAL_CAPITAL; holdings={}; trades=[]; equity_curve=[]
     prev_scores={}
 
@@ -313,7 +266,7 @@ def run_backtest(years=5, regime_enabled=True):
         for tk in list(holdings.keys()):
             h=holdings[tk]; px=prices.get(tk,h["avg_cost"])
             gain=(px-h["avg_cost"])/h["avg_cost"]
-            if gain>=TAKE_PROFIT_PCT:
+            if gain>=tp_pct:
                 proceeds=h["shares"]*px*(1-TX_COST)
                 pnl=proceeds-h["shares"]*h["avg_cost"]*(1+TX_COST)
                 cash+=proceeds
@@ -360,10 +313,11 @@ def run_backtest(years=5, regime_enabled=True):
                 if tk not in sig or date not in sig[tk].index: continue
                 if not fok_map.get(tk,True): continue
                 sc=int(sig[tk].loc[date,"score"]); ps=prev_scores.get(tk,0)
-                if sc>=BUY_SCORE_MIN and ps<=BUY_PREV_MAX:
+                if sc>=buy_score_min and ps<=BUY_PREV_MAX:
                     atr=float(sig[tk].loc[date,"atr"])
-                    buys.append({"ticker":tk,"name":nm,"score":sc,
-                                 "comp":comp_score(sc,fs_map.get(tk,5.0)),"atr":atr})
+                    cmp=comp_score(sc,fs_map.get(tk,5.0))
+                    if cmp<comp_min: continue
+                    buys.append({"ticker":tk,"name":nm,"score":sc,"comp":cmp,"atr":atr})
             buys.sort(key=lambda x:-x["comp"])
             for bc in buys:
                 if len(holdings)>=MAX_POSITIONS: break
@@ -386,7 +340,7 @@ def run_backtest(years=5, regime_enabled=True):
                 cost=shares*buy_px*(1+TX_COST)
                 if cost>avail: continue
                 atr_v=bc["atr"]
-                atr_stop=round(buy_px-ATR_MULTIPLIER*atr_v,2) if atr_v>0 \
+                atr_stop=round(buy_px-atr_mult*atr_v,2) if atr_v>0 \
                          else round(buy_px*(1-ATR_FALLBACK_PCT),2)
                 cash-=cost
                 holdings[tk]={"name":bc["name"],"shares":shares,
@@ -414,51 +368,132 @@ def run_backtest(years=5, regime_enabled=True):
             "pnl":round(pnl,2),"reason":"End of backtest",
             "hold_days":(all_dates[-1].date()-h["entry_date"]).days})
 
-    # ── Performance ───────────────────────────────────────────────────────────
-    final_val    = cash
-    total_ret    = (final_val-INITIAL_CAPITAL)/INITIAL_CAPITAL*100
-    ann_ret      = ((final_val/INITIAL_CAPITAL)**(1/years)-1)*100
-    eq           = np.array([e["value"] for e in equity_curve],dtype=float)
-    dr           = np.diff(eq)/eq[:-1]
-    sharpe       = dr.mean()/dr.std()*np.sqrt(252) if dr.std()>0 else 0
-    peak         = np.maximum.accumulate(eq)
-    max_dd       = float(((eq-peak)/peak*100).min())
-    sells        = [t for t in trades if t["action"]=="SELL"
-                    and t["reason"]!="End of backtest"]
-    wins         = [t for t in sells if t["pnl"]>0]
-    losses       = [t for t in sells if t["pnl"]<=0]
-    win_rate     = len(wins)/len(sells)*100 if sells else 0
-    avg_win      = sum(t["pnl"] for t in wins)/len(wins)     if wins   else 0
-    avg_loss     = sum(t["pnl"] for t in losses)/len(losses) if losses else 0
-    pf           = abs(avg_win/avg_loss) if avg_loss!=0 else float("inf")
-    avg_hold     = sum(t.get("hold_days",0) for t in sells)/len(sells) if sells else 0
-    set_ret=None
+    # Performance metrics
+    final_val = cash
+    total_ret = (final_val-INITIAL_CAPITAL)/INITIAL_CAPITAL*100
+    ann_ret   = ((final_val/INITIAL_CAPITAL)**(1/years)-1)*100
+    eq        = np.array([e["value"] for e in equity_curve],dtype=float)
+    dr        = np.diff(eq)/eq[:-1]
+    sharpe    = dr.mean()/dr.std()*np.sqrt(252) if dr.std()>0 else 0
+    peak      = np.maximum.accumulate(eq)
+    max_dd    = float(((eq-peak)/peak*100).min())
+    sells     = [t for t in trades if t["action"]=="SELL"
+                 and t["reason"]!="End of backtest"]
+    wins      = [t for t in sells if t["pnl"]>0]
+    losses    = [t for t in sells if t["pnl"]<=0]
+    win_rate  = len(wins)/len(sells)*100 if sells else 0
+    avg_win   = sum(t["pnl"] for t in wins)/len(wins)     if wins   else 0
+    avg_loss  = sum(t["pnl"] for t in losses)/len(losses) if losses else 0
+    pf        = abs(avg_win/avg_loss) if avg_loss!=0 else float("inf")
+    avg_hold  = sum(t.get("hold_days",0) for t in sells)/len(sells) if sells else 0
+    set_ret   = None
     if set_df is not None:
         dates_set={e["date"] for e in equity_curve}
         s_filt=set_df[[str(d.date()) in dates_set for d in set_df.index]]
         if not s_filt.empty:
-            set_ret=(float(s_filt["Close"].iloc[-1])-float(s_filt["Close"].iloc[0]))/float(s_filt["Close"].iloc[0])*100
+            set_ret=(float(s_filt["Close"].iloc[-1])-float(s_filt["Close"].iloc[0]))\
+                    /float(s_filt["Close"].iloc[0])*100
 
+    return {"final_value":round(final_val,2),
+            "total_return":round(total_ret,2),
+            "annual_return":round(ann_ret,2),
+            "set_bah_return":round(set_ret,2) if set_ret is not None else None,
+            "alpha":round(total_ret-(set_ret or 0),2),
+            "sharpe":round(sharpe,2),
+            "max_drawdown":round(max_dd,2),
+            "n_trades":len(sells),"win_rate":round(win_rate,1),
+            "profit_factor":round(pf,2),"avg_hold_days":round(avg_hold,1),
+            "trades":trades,"equity_curve":equity_curve}
+
+
+# ── Data loader (shared between single run + sweep) ───────────────────────────
+def _load_data(years, regime_enabled):
+    print("="*60)
+    print("SET Strategy Backtester")
+    print(f"Period: {years} years  |  Capital: ฿{INITIAL_CAPITAL:,.0f}")
+    print(f"Regime filter: {'ON' if regime_enabled else 'OFF'}")
+    print("="*60)
+
+    print(f"\n[1/4] Fetching {len(INSTRUMENTS)} instruments...")
+    all_data = {}
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
+        futs = {ex.submit(fetch_hist,tk,years):(nm,tk) for nm,tk in INSTRUMENTS}
+        done=0
+        for future in as_completed(futs):
+            nm,tk=futs[future]; df=future.result(); done+=1
+            if df is not None and len(df)>SMA_LONG+10:
+                all_data[tk]=(nm,df)
+            sys.stdout.write(f"\r  {done}/{len(INSTRUMENTS)} fetched..."); sys.stdout.flush()
+    print(f"\r  {len(all_data)}/{len(INSTRUMENTS)} instruments loaded.     ")
+
+    print("[2/4] Fetching SET Index for regime...")
+    set_df = fetch_hist(REGIME_TICKER, years)
+    regime_bull = None
+    if set_df is not None:
+        sc = set_df["Close"]
+        regime_bull = (sc > sc.rolling(REGIME_MA_PERIOD).mean()).reindex(method="ffill")
+        print(f"  {len(set_df)} days of SET data loaded.")
+    else:
+        print("  Could not load SET — regime disabled.")
+
+    print(f"[3/4] Fetching fundamentals (takes ~3 min)...")
+    fund_cache = {}
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
+        futs = {ex.submit(fetch_fund,tk):tk for tk in all_data}
+        done=0
+        for future in as_completed(futs):
+            tk=futs[future]; fund_cache[tk]=future.result(); done+=1
+            sys.stdout.write(f"\r  {done}/{len(all_data)} done..."); sys.stdout.flush()
+    print(f"\r  {len(fund_cache)} fundamentals loaded.     ")
+    fs_map  = {tk: calc_fund_score(f) for tk,f in fund_cache.items()}
+    fok_map = {tk: fund_ok(f)         for tk,f in fund_cache.items()}
+
+    print("[4/4] Computing daily signals...")
+    sig = {}
+    for tk,(nm,df) in all_data.items():
+        try: sig[tk]=compute_signals(df)
+        except: pass
+    print(f"  Done. {len(sig)} tickers with signals.\n")
+
+    cutoff    = (datetime.date.today()-datetime.timedelta(days=years*365)).isoformat()
+    all_dates = sorted({d for tk in sig for d in sig[tk].index
+                        if str(d.date())>=cutoff})
+    return all_data, sig, fok_map, fs_map, regime_bull, set_df, all_dates
+
+
+# ── Print + save helpers ──────────────────────────────────────────────────────
+def _print_results(perf, all_dates, params=None):
+    sells = [t for t in perf["trades"] if t["action"]=="SELL"
+             and t["reason"]!="End of backtest"]
+    wins   = [t for t in sells if t["pnl"]>0]
+    losses = [t for t in sells if t["pnl"]<=0]
+    avg_win  = sum(t["pnl"] for t in wins)/len(wins)     if wins   else 0
+    avg_loss = sum(t["pnl"] for t in losses)/len(losses) if losses else 0
+    set_ret  = perf["set_bah_return"]
     print("\n"+"="*60)
     print("BACKTEST RESULTS")
+    if params:
+        print(f"  ATR×{params.get('atr_mult',ATR_MULTIPLIER)}  "
+              f"TP={params.get('tp_pct',TAKE_PROFIT_PCT)*100:.0f}%  "
+              f"BuyScore≥{params.get('buy_score_min',BUY_SCORE_MIN)}")
     print("="*60)
     print(f"Period         : {str(all_dates[0].date())} → {str(all_dates[-1].date())}")
     print(f"Initial capital: ฿{INITIAL_CAPITAL:>12,.0f}")
-    print(f"Final value    : ฿{final_val:>12,.0f}")
-    print(f"Total return   : {total_ret:>+.1f}%")
-    print(f"Annual return  : {ann_ret:>+.1f}%")
+    print(f"Final value    : ฿{perf['final_value']:>12,.0f}")
+    print(f"Total return   : {perf['total_return']:>+.1f}%")
+    print(f"Annual return  : {perf['annual_return']:>+.1f}%")
     if set_ret is not None:
         print(f"SET B&H return : {set_ret:>+.1f}%  (same period)")
-        print(f"Alpha vs SET   : {total_ret-set_ret:>+.1f}%")
-    print(f"Sharpe ratio   : {sharpe:.2f}")
-    print(f"Max drawdown   : {max_dd:.1f}%")
+        print(f"Alpha vs SET   : {perf['alpha']:>+.1f}%")
+    print(f"Sharpe ratio   : {perf['sharpe']:.2f}")
+    print(f"Max drawdown   : {perf['max_drawdown']:.1f}%")
     print("─"*60)
-    print(f"Total trades   : {len(sells)}")
-    print(f"Win rate       : {win_rate:.1f}%  ({len(wins)} wins / {len(losses)} losses)")
+    print(f"Total trades   : {perf['n_trades']}")
+    print(f"Win rate       : {perf['win_rate']:.1f}%  ({len(wins)} wins / {len(losses)} losses)")
     print(f"Avg win        : ฿{avg_win:>+,.0f}")
     print(f"Avg loss       : ฿{avg_loss:>+,.0f}")
-    print(f"Profit factor  : {pf:.2f}x")
-    print(f"Avg hold       : {avg_hold:.0f} days")
+    print(f"Profit factor  : {perf['profit_factor']:.2f}x")
+    print(f"Avg hold       : {perf['avg_hold_days']:.0f} days")
     print("─"*60)
     sells.sort(key=lambda x:-x["pnl"])
     print("\nTop 5 winning trades:")
@@ -468,32 +503,106 @@ def run_backtest(years=5, regime_enabled=True):
     for t in sells[-5:][::-1]:
         print(f"  {t['date']}  {t['name']:10s}   ฿{t['pnl']:,.0f}  [{t['reason'][:28]}]  {t['hold_days']}d")
 
-    # Save
-    results={"meta":{"run_date":datetime.date.today().isoformat(),
-                      "years":years,"regime":regime_enabled,
-                      "capital":INITIAL_CAPITAL},
-             "performance":{"final_value":round(final_val,2),
-                            "total_return":round(total_ret,2),
-                            "annual_return":round(ann_ret,2),
-                            "set_bah_return":round(set_ret,2) if set_ret else None,
-                            "alpha":round(total_ret-(set_ret or 0),2),
-                            "sharpe":round(sharpe,2),
-                            "max_drawdown":round(max_dd,2),
-                            "n_trades":len(sells),"win_rate":round(win_rate,1),
-                            "profit_factor":round(pf,2),
-                            "avg_hold_days":round(avg_hold,1)},
-             "trades":trades,"equity_curve":equity_curve}
-    out=os.path.join(SCRIPT_DIR,"set_backtest_results.json")
+
+# ── Main backtest ─────────────────────────────────────────────────────────────
+def run_backtest(years=5, regime_enabled=True):
+    all_data, sig, fok_map, fs_map, regime_bull, set_df, all_dates = \
+        _load_data(years, regime_enabled)
+
+    print(f"Simulating {len(all_dates)} trading days...")
+    perf = _simulate(all_dates, sig, all_data, fok_map, fs_map,
+                     regime_bull, set_df, years, regime_enabled)
+
+    _print_results(perf, all_dates)
+
+    results = {"meta":{"run_date":datetime.date.today().isoformat(),
+                        "years":years,"regime":regime_enabled,
+                        "capital":INITIAL_CAPITAL},
+               "performance":{k:v for k,v in perf.items()
+                               if k not in ("trades","equity_curve")},
+               "trades":perf["trades"],"equity_curve":perf["equity_curve"]}
+    out = os.path.join(SCRIPT_DIR,"set_backtest_results.json")
     with open(out,"w",encoding="utf-8") as f:
         json.dump(results,f,indent=2,default=str)
-    print(f"\n✅ Results saved → set_backtest_results.json")
-    print(f"   To view the equity curve, open set_dashboard.html\n")
+    print(f"\n✅ Results saved → set_backtest_results.json\n")
     return results
+
+
+# ── Parameter sweep ───────────────────────────────────────────────────────────
+def run_sweep(years=5, regime_enabled=True):
+    """Load data once, then simulate every parameter combination.
+    Sweeps: ATR multiplier × take-profit % × buy score minimum
+    """
+    all_data, sig, fok_map, fs_map, regime_bull, set_df, all_dates = \
+        _load_data(years, regime_enabled)
+
+    atr_mults      = [1.5, 2.0, 2.5, 3.0]
+    tp_pcts        = [0.20, 0.25, 0.35, 0.50]
+    buy_score_mins = [2, 3]
+
+    total = len(atr_mults) * len(tp_pcts) * len(buy_score_mins)
+    print(f"\nRunning {total} parameter combinations...")
+    print(f"{'ATR':>5} {'TP%':>5} {'BScore':>6}  "
+          f"{'Ann%':>6} {'Alpha':>6} {'Shrp':>5} {'MaxDD':>6} "
+          f"{'WinR%':>6} {'PF':>5} {'Trades':>7}")
+    print("─"*68)
+
+    sweep_results = []
+    n = 0
+    for atr in atr_mults:
+        for tp in tp_pcts:
+            for bs in buy_score_mins:
+                params = {"atr_mult":atr, "tp_pct":tp, "buy_score_min":bs}
+                p = _simulate(all_dates, sig, all_data, fok_map, fs_map,
+                              regime_bull, set_df, years, regime_enabled, params)
+                n += 1
+                print(f"{atr:>5.1f} {tp*100:>4.0f}% {bs:>6}  "
+                      f"{p['annual_return']:>+6.1f} {p['alpha']:>+6.1f} "
+                      f"{p['sharpe']:>5.2f} {p['max_drawdown']:>5.1f}% "
+                      f"{p['win_rate']:>5.1f}% {p['profit_factor']:>5.2f} "
+                      f"{p['n_trades']:>7}   [{n}/{total}]")
+                sweep_results.append({"params":params,
+                    "annual_return":p["annual_return"],
+                    "alpha":p["alpha"],
+                    "sharpe":p["sharpe"],
+                    "max_drawdown":p["max_drawdown"],
+                    "win_rate":p["win_rate"],
+                    "profit_factor":p["profit_factor"],
+                    "n_trades":p["n_trades"]})
+
+    sweep_results.sort(key=lambda x: -x["annual_return"])
+    print("\n"+"="*68)
+    print("TOP 5 COMBINATIONS (by annual return):")
+    print("="*68)
+    for i,r in enumerate(sweep_results[:5],1):
+        p=r["params"]
+        print(f"#{i}  ATR×{p['atr_mult']:.1f}  TP={p['tp_pct']*100:.0f}%  "
+              f"BuyScore≥{p['buy_score_min']}  →  "
+              f"Ann={r['annual_return']:+.1f}%  Alpha={r['alpha']:+.1f}%  "
+              f"Sharpe={r['sharpe']:.2f}  DD={r['max_drawdown']:.1f}%")
+
+    best = sweep_results[0]["params"]
+    print(f"\n🏆 Best params: ATR×{best['atr_mult']}  "
+          f"TP={best['tp_pct']*100:.0f}%  BuyScore≥{best['buy_score_min']}")
+    print(f"   To apply: edit ATR_MULTIPLIER, TAKE_PROFIT_PCT in set_config.json\n")
+
+    out = os.path.join(SCRIPT_DIR,"set_backtest_sweep.json")
+    with open(out,"w",encoding="utf-8") as f:
+        json.dump({"meta":{"run_date":datetime.date.today().isoformat(),
+                           "years":years,"regime":regime_enabled},
+                   "results":sweep_results},f,indent=2,default=str)
+    print(f"✅ Full sweep saved → set_backtest_sweep.json\n")
+    return sweep_results
 
 
 if __name__=="__main__":
     parser=argparse.ArgumentParser(description="SET Strategy Backtester")
-    parser.add_argument("--years",    type=int,  default=5)
-    parser.add_argument("--no-regime",action="store_true")
+    parser.add_argument("--years",     type=int,  default=5)
+    parser.add_argument("--no-regime", action="store_true")
+    parser.add_argument("--sweep",     action="store_true",
+                        help="Run parameter sweep instead of single backtest")
     args=parser.parse_args()
-    run_backtest(years=args.years, regime_enabled=not args.no_regime)
+    if args.sweep:
+        run_sweep(years=args.years, regime_enabled=not args.no_regime)
+    else:
+        run_backtest(years=args.years, regime_enabled=not args.no_regime)
