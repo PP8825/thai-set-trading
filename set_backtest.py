@@ -78,13 +78,13 @@ LOT_SIZE         = 100
 TX_COST          = 0.0025
 MAX_POSITIONS    = 10
 CASH_FLOOR_PCT   = 0.05
-BUY_SCORE_MIN    = 3
+BUY_SCORE_MIN    = 2     # sweep winner: score=2 beats score=3 across all params
 SELL_SCORE_MAX   = -2
 BUY_PREV_MAX     = 0
 SELL_PREV_MIN    = 0
-TAKE_PROFIT_PCT  = 0.25
+TAKE_PROFIT_PCT  = 0.50   # sweep winner: let winners run further
 ATR_PERIOD       = 14
-ATR_MULTIPLIER   = 2.0
+ATR_MULTIPLIER   = 1.5    # sweep winner: best Sharpe + lowest drawdown
 ATR_FALLBACK_PCT = 0.08
 REGIME_TICKER    = "^SET.BK"
 REGIME_MA_PERIOD = 200
