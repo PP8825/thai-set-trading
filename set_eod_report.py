@@ -743,6 +743,21 @@ def main():
         sys.exit(1)
 
     print(f"\n📁 Excel saved to: {excel_path}")
+
+    # Re-bake PORT/SIGNALS/HISTORY into dashboard HTML so it's up-to-date
+    # even before the browser's auto-sync fires
+    print("\nUpdating dashboard HTML with fresh data...")
+    updater = os.path.join(SCRIPT_DIR, "set_dashboard_update.py")
+    if os.path.exists(updater):
+        import subprocess
+        result = subprocess.run([sys.executable, updater], capture_output=True, text=True)
+        if result.returncode == 0:
+            print(result.stdout.strip())
+        else:
+            print(f"  ⚠️  Dashboard update warning: {result.stderr.strip()}")
+    else:
+        print("  ⚠️  set_dashboard_update.py not found — skipping HTML re-bake")
+
     print("Done.")
 
 if __name__ == "__main__":
