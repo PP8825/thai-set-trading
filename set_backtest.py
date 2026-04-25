@@ -95,6 +95,17 @@ SECTOR_MAX       = _sc.get("max_per_sector", 2)
 MAX_WORKERS      = 12
 _FUND_MAX_RAW    = 19.0
 
+# ── Rotation parameters (mirror set_realtime_monitor.py) ─────────────────────
+ROTATION_ENABLED        = True
+ROTATION_MIN_HOLD_DAYS  = 5
+ROTATION_HELD_SCORE_MAX = 1     # held tech score <= this → eligible out
+ROTATION_MAX_LOSS_PCT   = 0.05  # only rotate out if loss <= 5%
+ROTATION_IN_SCORE_MIN   = 2     # incoming tech score >= this
+ROTATION_IN_COMP_MIN    = 7.0   # incoming composite >= this
+ROTATION_COMP_MIN_GAIN  = 0.8   # incoming comp must beat held comp by this
+ROTATION_COMP_FLOOR     = 6.5   # held comp below this → eligible out
+ROTATION_MAX_PER_DAY    = 2     # max rotations per day
+
 
 # ── Technical indicators (vectorised) ─────────────────────────────────────────
 def calc_rsi(s, n=14):
@@ -304,6 +315,82 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
                     "reason":f"SELL score {sc:+d}",
                     "hold_days":(date.date()-h["entry_date"]).days})
                 del holdings[tk]
+
+        # Rotation (BULL, portfolio full)
+        if (ROTATION_ENABLED and is_bull
+                and len(holdings) >= MAX_POSITIONS):
+            rotations_today = 0
+            # Score all non-held candidates
+            rot_candidates = []
+            for tk,(nm,_) in all_data.items():
+                if tk in holdings or SECTOR_MAP.get(tk)=="INDEX": continue
+                if tk not in sig or date not in sig[tk].index: continue
+                if not fok_map.get(tk,True): continue
+                sc=int(sig[tk].loc[date,"score"]); ps=prev_scores.get(tk,0)
+                if sc>=ROTATION_IN_SCORE_MIN:
+                    cmp=comp_score(sc,fs_map.get(tk,5.0))
+                    if cmp>=ROTATION_IN_COMP_MIN:
+                        atr=float(sig[tk].loc[date,"atr"])
+                        rot_candidates.append({"ticker":tk,"name":nm,"score":sc,"comp":cmp,"atr":atr})
+            rot_candidates.sort(key=lambda x:-x["comp"])
+            for incoming in rot_candidates:
+                if rotations_today >= ROTATION_MAX_PER_DAY: break
+                if len(holdings) < MAX_POSITIONS: break
+                # Find weakest held position eligible for rotation-out
+                out_tk = None; out_score = None; out_comp = 9999
+                for htk,h in holdings.items():
+                    if htk not in sig or date not in sig[htk].index: continue
+                    hsc = int(sig[htk].loc[date,"score"])
+                    if hsc > ROTATION_HELD_SCORE_MAX: continue
+                    hcomp = comp_score(hsc, fs_map.get(htk,5.0))
+                    if hcomp > ROTATION_COMP_FLOOR: continue
+                    held_d = (date.date()-h["entry_date"]).days
+                    if held_d < ROTATION_MIN_HOLD_DAYS: continue
+                    px_h = prices.get(htk, h["avg_cost"])
+                    loss = (h["avg_cost"]-px_h)/h["avg_cost"]
+                    if loss > ROTATION_MAX_LOSS_PCT: continue
+                    gain_in = incoming["comp"] - hcomp
+                    if gain_in < ROTATION_COMP_MIN_GAIN: continue
+                    if hcomp < out_comp:
+                        out_tk=htk; out_score=hsc; out_comp=hcomp
+                if out_tk is None: continue
+                # Execute rotation: sell out, buy in at next-day open
+                h=holdings[out_tk]; px=prices.get(out_tk,h["avg_cost"])
+                proceeds=h["shares"]*px*(1-TX_COST)
+                pnl=proceeds-h["shares"]*h["avg_cost"]*(1+TX_COST)
+                cash+=proceeds
+                trades.append({"date":str(date.date()),"action":"SELL","ticker":out_tk,
+                    "name":h["name"],"shares":h["shares"],"price":round(px,2),
+                    "avg_cost":round(h["avg_cost"],2),"pnl":round(pnl,2),
+                    "reason":f"ROT-OUT score {out_score:+d} comp {out_comp:.1f}→{incoming['comp']:.1f}",
+                    "hold_days":(date.date()-h["entry_date"]).days})
+                del holdings[out_tk]
+                # Buy incoming at next day's open
+                in_tk=incoming["ticker"]
+                next_ds=[d for d in sig[in_tk].index if d>date]
+                if not next_ds: continue
+                nd=next_ds[0]
+                buy_px=float(sig[in_tk].loc[nd,"open"])*(1+SLIPPAGE)
+                if buy_px<=0: continue
+                avail=cash-INITIAL_CAPITAL*CASH_FLOOR_PCT
+                alloc=min(avail, INITIAL_CAPITAL/MAX_POSITIONS*1.5)
+                shares=int(alloc/buy_px/LOT_SIZE)*LOT_SIZE
+                if shares<=0: shares=LOT_SIZE
+                cost=shares*buy_px*(1+TX_COST)
+                if cost>avail: continue
+                atr_v=incoming["atr"]
+                atr_stop=round(buy_px-atr_mult*atr_v,2) if atr_v>0 \
+                         else round(buy_px*(1-ATR_FALLBACK_PCT),2)
+                cash-=cost
+                holdings[in_tk]={"name":incoming["name"],"shares":shares,
+                                  "avg_cost":round(buy_px,2),"entry_date":nd.date(),
+                                  "atr_stop":atr_stop,"atr":round(atr_v,4)}
+                trades.append({"date":str(nd.date()),"action":"BUY","ticker":in_tk,
+                    "name":incoming["name"],"shares":shares,"price":round(buy_px,2),
+                    "avg_cost":round(buy_px,2),"pnl":0,
+                    "reason":f"ROT-IN score {incoming['score']:+d} comp {incoming['comp']:.1f}",
+                    "hold_days":0})
+                rotations_today+=1
 
         # Buys (BULL only)
         if is_bull and len(holdings)<MAX_POSITIONS:

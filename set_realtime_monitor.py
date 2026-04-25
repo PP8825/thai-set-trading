@@ -152,6 +152,11 @@ TAKE_PROFIT_PCT = 0.50   # 50% gain → trigger take-profit sell (sweep: let win
 # on top of a market decline.  Sells and stop-losses still execute normally.
 DRAWDOWN_BRAKE_PCT = 0.12   # 12% drawdown from peak → freeze buys
 
+# ─── Single-position concentration alert ────────────────────────────────────
+# If any one holding grows beyond this fraction of total portfolio value, send
+# a LINE alert once per day.  Does NOT auto-sell — prompts manual review.
+CONCENTRATION_ALERT_PCT = 0.25   # alert when position > 25% of portfolio
+
 # ─── Market regime cache ──────────────────────────────────────────────────────
 # Re-fetch SET Index vs MA200 at most once per hour (saves time, reduces noise).
 REGIME_CACHE_MINS = 60
@@ -1595,6 +1600,43 @@ def build_max_hold_alert(stale_holdings, port, prices):
     return "\n".join(lines)
 
 
+def build_concentration_alert(concentrated, port, prices):
+    """
+    LINE alert when any single holding exceeds CONCENTRATION_ALERT_PCT of
+    total portfolio value.  Sent once per day — does NOT auto-sell.
+    """
+    total = portfolio_value(port, prices)
+    lines = [
+        "⚠️ CONCENTRATION ALERT — {0}".format(
+            datetime.date.today().strftime("%d %b %Y")),
+        "─" * 34,
+        "One or more positions exceed {0:.0f}% of portfolio.".format(
+            CONCENTRATION_ALERT_PCT * 100),
+        "Consider trimming or reviewing.",
+        "",
+    ]
+    for info in concentrated:
+        h     = info["h"]
+        px    = info["px"]
+        mval  = h["shares"] * px
+        pct   = mval / total * 100
+        upct  = (px - h["avg_cost"]) / h["avg_cost"] * 100
+        ps    = "+" if upct >= 0 else ""
+        lines += [
+            "  {0}  {1:.1f}% of portfolio".format(h["name"], pct),
+            "  Market value : ฿{0:,.0f}".format(mval),
+            "  P&L          : {0}{1:.1f}%  (฿{2:,.2f} → ฿{3:,.2f})".format(
+                ps, upct, h["avg_cost"], px),
+            "",
+        ]
+    lines += [
+        "─" * 34,
+        "💼 Portfolio : ฿{0:,.0f}".format(total),
+        "⚠️ Educational only. Not financial advice.",
+    ]
+    return "\n".join(lines)
+
+
 def send_line(message):
     try:
         resp = requests.post(
@@ -2137,6 +2179,29 @@ def main():
             ok_snd = send_line(msg)
             print("  Status update: {0}".format("✅ sent" if ok_snd else "❌ failed"))
             if ok_snd:
+                msgs_sent += 1
+
+    # ── Concentration check (every scan) ─────────────────────────────────────
+    # Alert once per day if any position exceeds CONCENTRATION_ALERT_PCT of
+    # total portfolio value.
+    conc_alerted_date = new_state.get("_conc_alerted_date", "")
+    if conc_alerted_date != today_str:
+        total_val   = portfolio_value(port, prices)
+        concentrated = []
+        for ticker, h in port["holdings"].items():
+            px   = prices.get(ticker, h["avg_cost"])
+            mval = h["shares"] * px
+            if total_val > 0 and mval / total_val >= CONCENTRATION_ALERT_PCT:
+                concentrated.append({"ticker": ticker, "h": h, "px": px})
+        if concentrated:
+            concentrated.sort(key=lambda x: -(x["h"]["shares"] * x["px"]))
+            conc_msg = build_concentration_alert(concentrated, port, prices)
+            ok_conc  = send_line(conc_msg)
+            print("  ⚠️  Concentration alert ({0} stocks >={1:.0f}%): {2}".format(
+                len(concentrated), CONCENTRATION_ALERT_PCT * 100,
+                "✅ sent" if ok_conc else "❌ failed"))
+            if ok_conc:
+                new_state["_conc_alerted_date"] = today_str
                 msgs_sent += 1
 
     # ── Maximum hold period check (once per day, end of session) ─────────────
