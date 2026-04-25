@@ -94,15 +94,21 @@ SELL_PREV_MIN  = 1     # only sell if previous score was >= +1
 # ─── Rotation parameters ──────────────────────────────────────────────────────
 ROTATION_ENABLED        = True
 ROTATION_MIN_HOLD_DAYS  = 5
-ROTATION_MIN_HOLD_FAST  = 3     # fast-track: need score +5 (all agree)
+ROTATION_MIN_HOLD_FAST  = 3     # fast-track: comp >= 8.5 bypasses min-hold
 ROTATION_HELD_SCORE_MAX = 1     # held score <= +1 qualifies for rotation-out
 ROTATION_MAX_LOSS_PCT   = 0.03
 ROTATION_MAX_PER_DAY    = 2
 ROTATION_COOLDOWN_DAYS  = 5
 
-# ─── Composite-score rotation ────────────────────────────────────────────────
-ROTATION_COMP_FLOOR    = 7.2
-ROTATION_COMP_MIN_GAIN = 0.8
+# ─── Composite-score rotation ─────────────────────────────────────────────────
+# Rotation uses a LOWER incoming bar than fresh buys (comp-driven, not score-driven).
+# Fresh buy still requires BUY_SCORE_MIN (+3).  Rotation only requires +2 incoming
+# tech + decent composite — the 0.8 gain requirement prevents churn.
+ROTATION_IN_SCORE_MIN  = 2     # incoming tech score for rotation (fresh buy = +3)
+ROTATION_IN_COMP_MIN   = 7.0   # incoming comp must clear this floor
+ROTATION_COMP_FLOOR    = 6.5   # held comp below this → eligible for rotation-out (was 7.2)
+ROTATION_COMP_MIN_GAIN = 0.8   # incoming comp must beat held comp by at least this
+ROTATION_FAST_COMP     = 8.5   # incoming comp >= this → fast-track (bypass min hold days)
 
 # ─── Dividend timing guard ────────────────────────────────────────────────────
 EX_DIV_HOLD_DAYS = 14
@@ -748,8 +754,9 @@ def find_rotation_pair(port, buy_candidates, prices, state, today_str):
             if not (tech_upgrade or comp_upgrade):
                 continue                          # neither dimension is a real upgrade
 
-            if held["days_held"] < ROTATION_MIN_HOLD_DAYS and buy_r["score"] < 3:
-                continue                          # fast-track only for score +3
+            if (held["days_held"] < ROTATION_MIN_HOLD_DAYS
+                    and buy_r.get("comp_score", 0) < ROTATION_FAST_COMP):
+                continue                          # fast-track only for comp >= 8.5
 
             gain = buy_r.get("comp_score", 0) - held["comp_score"]
             print(f"  🔄 Rotation candidate: sell {held['ticker']} (comp {held['comp_score']:.1f}) "
@@ -1504,13 +1511,28 @@ def main():
             rot_today = 0                        # new day — reset counter
 
         if rot_today < ROTATION_MAX_PER_DAY:
-            # Build buy candidate list: BUY signal, not held, fund OK, not in state alerted
-            rotation_buys = [
-                r for r in ok
-                if r["score"] >= BUY_SCORE_MIN
-                and r["ticker"] not in port["holdings"]
-                and r.get("fund_ok", True)
-            ]
+            # Build rotation candidate list — lower bar than fresh buy:
+            #   • Tech score >= ROTATION_IN_SCORE_MIN (+2, vs +3 for fresh buy)
+            #   • Composite >= ROTATION_IN_COMP_MIN (7.0)
+            #   • Use stored fund_score from state for accurate comp (not fresh-fetch default)
+            rotation_buys = []
+            for r in ok:
+                if r["ticker"] in port["holdings"]:
+                    continue
+                if r["score"] < ROTATION_IN_SCORE_MIN:
+                    continue
+                # Enrich comp_score using stored fund data (more accurate than 5.0 default)
+                stored = new_state.get(r["ticker"], {})
+                if isinstance(stored, dict) and stored.get("fund_score"):
+                    real_fund = stored["fund_score"]
+                    r = dict(r)               # don't mutate the original
+                    r["fund_score"]  = real_fund
+                    r["comp_score"]  = calc_composite_score(r["score"], real_fund)
+                    if stored.get("fund"):
+                        r["fund"] = stored["fund"]
+                if r.get("comp_score", 0) < ROTATION_IN_COMP_MIN:
+                    continue
+                rotation_buys.append(r)
 
             if rotation_buys:
                 held_info, buy_r = find_rotation_pair(
