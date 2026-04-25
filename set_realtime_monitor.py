@@ -1332,6 +1332,87 @@ def build_status_update(results, port, prices):
 
     return "\n".join(lines)
 
+def is_last_scan_of_day():
+    """
+    True if current Bangkok time is 16:15 or later (final market scan window).
+    The afternoon session closes at 16:30 — any scan after 16:15 is the last one.
+    """
+    now = now_bkk()
+    return now.hour * 60 + now.minute >= (16 * 60 + 15)
+
+
+def build_heartbeat_alert(check_count, port, prices, today_trades, regime):
+    """
+    Daily end-of-session LINE message confirming the monitor ran successfully.
+    Sent once per day on the last scan (≥ 16:15 Bangkok).
+
+    Format:
+      📡 Monitor alive — Saturday 25 Apr
+      ─────────────────────────────
+      Scans today : 8  · Last scan: 16:25
+      Trades today: 2  (1 buy, 1 sell)
+      Market regime: 🟢 BULL
+      ─────────────────────────────
+      💼 Portfolio : ฿302,450 (+0.82%)
+         Cash     : ฿45,000
+         Positions: 7/10
+    """
+    now     = now_bkk()
+    n_buy   = sum(1 for t in today_trades if t["action"] == "BUY")
+    n_sell  = sum(1 for t in today_trades if t["action"] == "SELL")
+    n_total = len(today_trades)
+
+    total   = portfolio_value(port, prices)
+    start   = port["capital"]
+    pnl     = total - start
+    ps      = "+" if pnl >= 0 else ""
+    pct     = pnl / start * 100
+
+    regime_icon = "🟢 BULL" if regime == "BULL" else "🔴 BEAR"
+
+    if n_total == 0:
+        trade_line = "No trades today"
+    else:
+        parts = []
+        if n_buy:  parts.append("{0} buy".format(n_buy))
+        if n_sell: parts.append("{0} sell".format(n_sell))
+        trade_line = "{0}  ({1})".format(n_total, " · ".join(parts))
+
+    lines = [
+        "📡 Monitor alive — {0}".format(now.strftime("%A %d %b")),
+        "─" * 34,
+        "",
+        "Scans today : {0}  · Last: {1}".format(check_count, time_str()),
+        "Trades today: {0}".format(trade_line),
+        "Market regime: {0}".format(regime_icon),
+        "",
+        "─" * 34,
+        "💼 Portfolio : ฿{0:,.0f}  ({1}{2:.2f}%)".format(total, ps, pct),
+        "   Cash      : ฿{0:,.0f}".format(port["cash"]),
+        "   Positions : {0}/{1}".format(len(port["holdings"]), MAX_POSITIONS),
+    ]
+
+    if port["holdings"]:
+        lines.append("")
+        lines.append("📈 Holdings:")
+        for ticker, h in sorted(port["holdings"].items(),
+                                key=lambda x: -(x[1]["shares"] *
+                                               prices.get(x[0], x[1]["avg_cost"]))):
+            px    = prices.get(ticker, h["avg_cost"])
+            upct  = (px - h["avg_cost"]) / h["avg_cost"] * 100
+            icon  = "▲" if upct >= 0 else "▼"
+            ps2   = "+" if upct >= 0 else ""
+            lines.append("  {0} {1:8s}  {2}{3:.1f}%  ฿{4:,.2f}".format(
+                icon, h["name"], ps2, upct, px))
+
+    lines += [
+        "",
+        "─" * 34,
+        "⚠️ Educational only. Not financial advice.",
+    ]
+    return "\n".join(lines)
+
+
 def send_line(message):
     try:
         resp = requests.post(
@@ -1750,6 +1831,20 @@ def main():
             print("  Status update: {0}".format("✅ sent" if ok_snd else "❌ failed"))
             if ok_snd:
                 msgs_sent += 1
+
+    # ── End-of-day heartbeat alert ────────────────────────────────────────────
+    # Sends once per day on the last scan (≥ 16:15) confirming monitor is alive.
+    heartbeat_sent_date = new_state.get("_heartbeat_sent_date", "")
+    if is_last_scan_of_day() and heartbeat_sent_date != today_str:
+        today_trades = [t for t in port.get("trades", [])
+                        if t.get("date") == today_str]
+        hb_msg  = build_heartbeat_alert(check_count, port, prices, today_trades, regime)
+        ok_hb   = send_line(hb_msg)
+        print("  📡 Heartbeat alert: {0}".format("✅ sent" if ok_hb else "❌ failed"))
+        if ok_hb:
+            new_state["_heartbeat_sent_date"] = today_str
+            msgs_sent += 1
+        save_signal_state(new_state)   # persist heartbeat flag immediately
 
     print("\nDone. {0} LINE message(s) sent.".format(msgs_sent))
 
