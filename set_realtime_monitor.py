@@ -125,6 +125,16 @@ ATR_PERIOD      = 14
 ATR_MULTIPLIER  = 2.0    # 2 × ATR — standard Wilder / Van Tharp setting
 ATR_FALLBACK_PCT = 0.08  # 8% fallback for holdings that pre-date ATR tracking
 
+# ─── Portfolio drawdown brake ────────────────────────────────────────────────
+# Suspend ALL new buys and rotations when portfolio has dropped more than this
+# fraction from its all-time peak.  Stops you buying into a personal drawdown
+# on top of a market decline.  Sells and stop-losses still execute normally.
+DRAWDOWN_BRAKE_PCT = 0.12   # 12% drawdown from peak → freeze buys
+
+# ─── Market regime cache ──────────────────────────────────────────────────────
+# Re-fetch SET Index vs MA200 at most once per hour (saves time, reduces noise).
+REGIME_CACHE_MINS = 60
+
 # ─── Dividend timing guard ────────────────────────────────────────────────────
 EX_DIV_HOLD_DAYS = 14
 
@@ -178,6 +188,23 @@ def is_market_open():
     hm = now.hour * 60 + now.minute
     morning   = (10 * 60) <= hm <= (12 * 60 + 30)
     afternoon = (14 * 60 + 30) <= hm <= (16 * 60 + 30)
+    return morning or afternoon
+
+def is_trading_window():
+    """
+    True only during the calm mid-session windows — excludes the first and
+    last 15 minutes of each session where spreads widen and gaps are common.
+
+    Trading windows (Bangkok):
+      Morning   10:15 – 12:15   (skip open 10:00-10:15 and close 12:15-12:30)
+      Afternoon 14:45 – 16:15   (skip open 14:30-14:45 and close 16:15-16:30)
+    """
+    now = now_bkk()
+    if now.weekday() >= 5:
+        return False
+    hm = now.hour * 60 + now.minute
+    morning   = (10 * 60 + 15) <= hm <= (12 * 60 + 15)
+    afternoon = (14 * 60 + 45) <= hm <= (16 * 60 + 15)
     return morning or afternoon
 
 # ─── Signal state persistence ─────────────────────────────────────────────────
@@ -494,7 +521,10 @@ def calc_fundamental_score(fund):
       EPS growth  (0–2):  ≥15%→2 | >0%→1 | neg→0    (growing earnings)
       FCF yield   (0–2):  ≥6%→2 | ≥3%→1 | <3%→0    (cash generation quality)
 
-    Missing data → 1 pt (benefit of the doubt). Normalised to 0–10 (÷19 × 10).
+    Missing data for P/E, P/BV, ROE → 1 pt (benefit of the doubt — data often
+    unavailable for Thai stocks).  Missing D/E, EPS growth, FCF yield → 0 pts
+    (quality metrics: absent data shouldn't earn quality credit).
+    Normalised to 0–10 (÷19 × 10).
     """
     if not fund:
         return 5.0
@@ -536,19 +566,19 @@ def calc_fundamental_score(fund):
 
     # ── NEW: Debt/Equity — max 2 pts (low leverage = resilience) ─────────────
     de = fund.get("de_ratio")
-    if de is None:      score += 1      # unknown → neutral
+    if de is None:      score += 0      # unknown → 0 (no benefit of doubt on quality)
     elif de < 0.5:      score += 2      # very low debt — financially strong
     elif de < 1.0:      score += 1      # moderate leverage — acceptable
 
     # ── NEW: Earnings Growth — max 2 pts (momentum in fundamentals) ──────────
     eg = fund.get("eps_growth")
-    if eg is None:      score += 1      # unknown → neutral
+    if eg is None:      score += 0      # unknown → 0
     elif eg >= 0.15:    score += 2      # growing fast (≥15% YoY)
     elif eg > 0.0:      score += 1      # growing, even if slowly
 
     # ── NEW: Free Cash Flow Yield — max 2 pts (quality of earnings) ──────────
     fcf_y = fund.get("fcf_yield")
-    if fcf_y is None:   score += 1      # unknown → neutral
+    if fcf_y is None:   score += 0      # unknown → 0
     elif fcf_y >= 0.06: score += 2      # high FCF yield — real cash generator
     elif fcf_y >= 0.03: score += 1      # decent FCF
 
@@ -1476,17 +1506,40 @@ def main():
 
     print("\n  Market open at {0} — scanning...".format(time_str()))
 
-    # ── Market regime check ───────────────────────────────────────────────────
-    regime, set_px, ma200, gap = get_market_regime()
-    if set_px:
-        gap_str = "{0:+.1f}%".format(gap)
-        print("\n  📊 Market Regime: {0}  SET {1:.0f}  MA200 {2:.0f}  ({3})".format(
-            "🟢 BULL" if regime == "BULL" else "🔴 BEAR", set_px, ma200, gap_str))
-        if regime == "BEAR":
-            print("  ⚠  BEAR REGIME — all BUY orders and rotations SUSPENDED")
-            print("  ⚠  Only stop-losses and signal-based SELLs will execute")
+    # ── Market regime check (with 60-min cache) ───────────────────────────────
+    # Load cached regime from state to avoid fetching SET Index every 15 min.
+    _cached_regime = prev_state.get("_regime", {})
+    _cache_age_ok  = False
+    if _cached_regime and _cached_regime.get("updated"):
+        try:
+            _cached_at = datetime.datetime.fromisoformat(_cached_regime["updated"])
+            _cached_at = _cached_at.replace(tzinfo=BKK_OFFSET)
+            _age_mins  = (now - _cached_at).total_seconds() / 60
+            _cache_age_ok = _age_mins < REGIME_CACHE_MINS
+        except Exception:
+            pass
+
+    if _cache_age_ok:
+        regime = _cached_regime.get("regime", "BULL")
+        set_px = _cached_regime.get("set_px")
+        ma200  = _cached_regime.get("ma200")
+        gap    = _cached_regime.get("gap_pct", 0.0)
+        print("\n  📊 Market Regime (cached): {0}  SET {1}  MA200 {2}  ({3:+.1f}%)".format(
+            "🟢 BULL" if regime == "BULL" else "🔴 BEAR",
+            "{:.0f}".format(set_px) if set_px else "—",
+            "{:.0f}".format(ma200)  if ma200  else "—",
+            gap))
     else:
-        print("\n  📊 Market Regime: could not fetch SET Index — defaulting to BULL")
+        regime, set_px, ma200, gap = get_market_regime()
+        if set_px:
+            gap_str = "{0:+.1f}%".format(gap)
+            print("\n  📊 Market Regime: {0}  SET {1:.0f}  MA200 {2:.0f}  ({3})".format(
+                "🟢 BULL" if regime == "BULL" else "🔴 BEAR", set_px, ma200, gap_str))
+        else:
+            print("\n  📊 Market Regime: could not fetch SET Index — defaulting to BULL")
+    if regime == "BEAR":
+        print("  ⚠  BEAR REGIME — all BUY orders and rotations SUSPENDED")
+        print("  ⚠  Only stop-losses and signal-based SELLs will execute")
 
     # Load state
     port       = load_portfolio()
@@ -1594,6 +1647,41 @@ def main():
                 h["name"], h["atr_stop"]))
     save_portfolio(port)
 
+    # ── Trailing ATR stop update ───────────────────────────────────────────────
+    # Each scan: raise the stop if price has moved higher since entry.
+    # stop = max(highest_close_since_entry, avg_cost) − 2×ATR
+    # The stop only ever moves UP — never back down.
+    trailing_updated = 0
+    for ticker, h in port["holdings"].items():
+        px      = prices.get(ticker, h["avg_cost"])
+        r_data  = sig_map_early.get(ticker)
+        atr_val = r_data.get("atr", 0) if r_data else 0
+        if not atr_val:
+            continue
+
+        # Track highest close seen since entry
+        prev_high = h.get("highest_close", h["avg_cost"])
+        new_high  = max(prev_high, px)
+        h["highest_close"] = round(new_high, 4)
+
+        # New trailing stop based on highest close
+        new_stop = round(new_high - ATR_MULTIPLIER * atr_val, 2)
+        old_stop = h.get("atr_stop", 0)
+
+        # Only raise — never lower (ratchet mechanism)
+        if new_stop > old_stop:
+            h["atr_stop"] = new_stop
+            h["atr"]      = round(atr_val, 4)
+            trailing_updated += 1
+            gain_pct = (new_high - h["avg_cost"]) / h["avg_cost"] * 100
+            print("  📈 Trail stop raised {0}: ฿{1:.2f} → ฿{2:.2f}  "
+                  "(high ฿{3:.2f}, +{4:.1f}% from entry)".format(
+                h["name"], old_stop, new_stop, new_high, gain_pct))
+
+    if trailing_updated:
+        save_portfolio(port)
+        print("  ✅ Trailing stops updated: {0} holdings raised".format(trailing_updated))
+
     # ── ATR stop-loss check ───────────────────────────────────────────────────
     print("\nChecking ATR stop-losses on {0} holdings...".format(
         len(port["holdings"])))
@@ -1675,11 +1763,28 @@ def main():
             new_state[r["ticker"]]["sell_alerted"] = True
             new_state[r["ticker"]]["buy_alerted"]  = False
 
-    # Pass 3: execute buys — gated by regime (BEAR = no buys)
+    # Pass 3: execute buys — gated by regime, drawdown brake, and trading window
     if regime == "BEAR":
         if buy_pending:
             print("\n  🔴 BEAR regime — {0} buy signal(s) suppressed".format(
                 len(buy_pending)))
+        buy_pending = []
+
+    # Drawdown brake: suspend buys if portfolio has fallen > 12% from peak
+    if buy_pending:
+        cur_val  = portfolio_value(port, prices)
+        peak_val = port.get("peak_value", port["capital"])
+        drawdown = (peak_val - cur_val) / peak_val if peak_val else 0.0
+        if drawdown >= DRAWDOWN_BRAKE_PCT:
+            print("\n  🛑 DRAWDOWN BRAKE: portfolio is {0:.1f}% below peak "
+                  "(฿{1:,.0f} vs ฿{2:,.0f}) — {3} buy(s) suppressed".format(
+                drawdown * 100, cur_val, peak_val, len(buy_pending)))
+            buy_pending = []
+
+    # Trading window gate: no buys in first/last 15 min (wide spreads, gap risk)
+    if buy_pending and not is_trading_window():
+        print("\n  ⏰ Outside trading window ({0}) — {1} buy(s) deferred".format(
+            time_str(), len(buy_pending)))
         buy_pending = []
 
     buy_pending.sort(key=lambda x: -x.get("comp_score", 0))
@@ -1701,11 +1806,24 @@ def main():
     if regime == "BEAR" and ROTATION_ENABLED:
         print("\n  🔴 BEAR regime — rotation suspended")
 
-    if (ROTATION_ENABLED
-            and regime == "BULL"                             # no rotation in bear market
-            and len(port["holdings"]) >= MAX_POSITIONS
-            and len(trades_executed) == 0):      # don't rotate on the same scan as a regular trade
+    # Drawdown brake and trading-window gate also apply to rotations
+    _rotation_ok = (
+        ROTATION_ENABLED
+        and regime == "BULL"                        # no rotation in bear market
+        and len(port["holdings"]) >= MAX_POSITIONS
+        and len(trades_executed) == 0               # don't rotate same scan as regular trade
+        and is_trading_window()                     # avoid open/close spreads
+    )
+    if _rotation_ok:
+        cur_val  = portfolio_value(port, prices)
+        peak_val = port.get("peak_value", port["capital"])
+        drawdown = (peak_val - cur_val) / peak_val if peak_val else 0.0
+        if drawdown >= DRAWDOWN_BRAKE_PCT:
+            print("\n  🛑 DRAWDOWN BRAKE: rotation suppressed ({0:.1f}% below peak)".format(
+                drawdown * 100))
+            _rotation_ok = False
 
+    if _rotation_ok:
         rot_date  = new_state.get("_rotation_date", "")
         rot_today = new_state.get("_rotation_count_today", 0)
         if rot_date != today_str:

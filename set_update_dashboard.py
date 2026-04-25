@@ -119,17 +119,17 @@ def calc_fundamental_score(fund):
         else:                  s += 1.0
 
     # D/E ratio — max 2 pts (low leverage = resilience)
-    if de is None:      s += 1
+    if de is None:      s += 0      # unknown → no quality credit
     elif de < 0.5:      s += 2
     elif de < 1.0:      s += 1
 
     # Earnings growth — max 2 pts
-    if eg is None:      s += 1
+    if eg is None:      s += 0      # unknown → no quality credit
     elif eg >= 0.15:    s += 2
     elif eg > 0.0:      s += 1
 
     # FCF yield — max 2 pts (quality of earnings)
-    if fcf_y is None:   s += 1
+    if fcf_y is None:   s += 0      # unknown → no quality credit
     elif fcf_y >= 0.06: s += 2
     elif fcf_y >= 0.03: s += 1
 
