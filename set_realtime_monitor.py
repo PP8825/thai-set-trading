@@ -125,6 +125,11 @@ ATR_PERIOD      = 14
 ATR_MULTIPLIER  = 2.0    # 2 × ATR — standard Wilder / Van Tharp setting
 ATR_FALLBACK_PCT = 0.08  # 8% fallback for holdings that pre-date ATR tracking
 
+# ─── Take-profit ─────────────────────────────────────────────────────────────
+# Sell a position if it has gained more than this % from avg cost.
+# Prevents giving back large gains while waiting for a technical sell signal.
+TAKE_PROFIT_PCT = 0.25   # 25% gain → trigger take-profit sell
+
 # ─── Portfolio drawdown brake ────────────────────────────────────────────────
 # Suspend ALL new buys and rotations when portfolio has dropped more than this
 # fraction from its all-time peak.  Stops you buying into a personal drawdown
@@ -181,9 +186,55 @@ def now_bkk():
 def time_str():
     return now_bkk().strftime("%H:%M")
 
+# ─── Thai SET public holidays ─────────────────────────────────────────────────
+# SET is closed on these dates. Lunar-based holidays vary year-to-year;
+# update this list each December for the coming year using the SET calendar.
+# Source: https://www.set.or.th/en/about/event/holiday
+SET_HOLIDAYS = {
+    # 2025
+    "2025-01-01",  # New Year's Day
+    "2025-02-12",  # Makha Bucha
+    "2025-04-07",  # Substituted Chakri Day
+    "2025-04-13",  # Songkran
+    "2025-04-14",  # Songkran
+    "2025-04-15",  # Songkran
+    "2025-05-01",  # Labour Day
+    "2025-05-05",  # Coronation Day
+    "2025-06-02",  # Visakha Bucha (substituted)
+    "2025-07-10",  # Asanha Bucha
+    "2025-07-11",  # Buddhist Lent Day
+    "2025-08-12",  # H.M. The Queen's Birthday
+    "2025-10-13",  # H.M. King Rama IX Memorial
+    "2025-10-23",  # Chulalongkorn Day
+    "2025-12-05",  # H.M. The King's Birthday
+    "2025-12-10",  # Constitution Day
+    "2025-12-31",  # New Year's Eve
+
+    # 2026  (lunar dates are approximate — check SET calendar in Dec 2025)
+    "2026-01-01",  # New Year's Day
+    "2026-03-03",  # Makha Bucha (estimated)
+    "2026-04-06",  # Chakri Day
+    "2026-04-13",  # Songkran
+    "2026-04-14",  # Songkran
+    "2026-04-15",  # Songkran
+    "2026-05-01",  # Labour Day
+    "2026-05-05",  # Coronation Day
+    "2026-05-22",  # Visakha Bucha (estimated)
+    "2026-07-20",  # Asanha Bucha (estimated)
+    "2026-07-21",  # Buddhist Lent Day (estimated)
+    "2026-08-12",  # H.M. The Queen's Birthday
+    "2026-10-13",  # H.M. King Rama IX Memorial
+    "2026-10-23",  # Chulalongkorn Day
+    "2026-12-05",  # H.M. The King's Birthday
+    "2026-12-10",  # Constitution Day
+    "2026-12-31",  # New Year's Eve
+}
+
 def is_market_open():
     now = now_bkk()
-    if now.weekday() >= 5:          # Sat/Sun
+    if now.weekday() >= 5:                          # Sat/Sun
+        return False
+    if now.date().isoformat() in SET_HOLIDAYS:      # Thai public holiday
         return False
     hm = now.hour * 60 + now.minute
     morning   = (10 * 60) <= hm <= (12 * 60 + 30)
@@ -989,6 +1040,10 @@ def execute_buy(port, r):
         return None
     if len(port["holdings"]) >= MAX_POSITIONS:
         return None
+    # Never buy index tickers (^SET.BK etc.) — they are benchmarks, not stocks
+    if SECTOR_MAP.get(r["ticker"]) == "INDEX":
+        print(f"  ⛔ Skip {r['ticker']} — INDEX ticker, cannot buy")
+        return None
 
     # ── Sector concentration check ────────────────────────────────────────────
     sector = SECTOR_MAP.get(r["ticker"], "OTHER")
@@ -1682,8 +1737,8 @@ def main():
         save_portfolio(port)
         print("  ✅ Trailing stops updated: {0} holdings raised".format(trailing_updated))
 
-    # ── ATR stop-loss check ───────────────────────────────────────────────────
-    print("\nChecking ATR stop-losses on {0} holdings...".format(
+    # ── ATR stop-loss + take-profit check ─────────────────────────────────────
+    print("\nChecking stops and take-profits on {0} holdings...".format(
         len(port["holdings"])))
     for ticker in list(port["holdings"].keys()):
         h  = port["holdings"].get(ticker)
@@ -1691,7 +1746,23 @@ def main():
             continue
         px       = prices.get(ticker, h["avg_cost"])
         atr_stop = h.get("atr_stop") or h["avg_cost"] * (1 - ATR_FALLBACK_PCT)
-        if px <= atr_stop:
+
+        # Take-profit: sell if gain >= TAKE_PROFIT_PCT (25%)
+        gain_pct = (px - h["avg_cost"]) / h["avg_cost"]
+        if gain_pct >= TAKE_PROFIT_PCT and ticker not in alerted:
+            print("  💰 TAKE-PROFIT {0}  ฿{1:.2f}  entry ฿{2:.2f}  (+{3:.1f}%)".format(
+                h["name"], px, h["avg_cost"], gain_pct * 100))
+            trade = execute_sell(
+                port, ticker, px,
+                "Take-profit +{0:.1f}% (target {1:.0f}%)".format(
+                    gain_pct * 100, TAKE_PROFIT_PCT * 100))
+            if trade:
+                trades_executed.append((trade, None))
+                alerted.add(ticker)
+            continue   # don't also check ATR stop for this holding
+
+        # ATR stop-loss: sell if price fell below stop
+        if px <= atr_stop and ticker not in alerted:
             drop = (1 - px / h["avg_cost"]) * 100
             print("  🛑 ATR STOP-LOSS {0}  ฿{1:.2f}  stop ฿{2:.2f}  (-{3:.1f}%)".format(
                 h["name"], px, atr_stop, drop))

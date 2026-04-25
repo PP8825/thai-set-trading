@@ -35,10 +35,6 @@
   "line_user_id": "U8da70dff0f01f21d459d0db0e89349e4",
   "instruments": [
     {
-      "name": "SET Index",
-      "ticker": "^SET.BK"
-    },
-    {
       "name": "PTT",
       "ticker": "PTT.BK"
     },
@@ -279,10 +275,6 @@
       "ticker": "BEM.BK"
     },
     {
-      "name": "BMCL",
-      "ticker": "BEM.BK"
-    },
-    {
       "name": "TPIPP",
       "ticker": "TPIPP.BK"
     },
@@ -293,10 +285,6 @@
     {
       "name": "INTUCH",
       "ticker": "INTUCH.BK"
-    },
-    {
-      "name": "DTAC",
-      "ticker": "DTAC.BK"
     },
     {
       "name": "JMART",
@@ -345,10 +333,6 @@
     {
       "name": "ERW",
       "ticker": "ERW.BK"
-    },
-    {
-      "name": "MINOR",
-      "ticker": "MINT.BK"
     },
     {
       "name": "DUSIT",
@@ -451,10 +435,10 @@
   "fundamental_filter": {
     "_note": "Stocks must pass ALL enabled checks before being bought",
     "enabled": true,
-    "max_pe": 15,
+    "max_pe": 20,
     "max_pbv": 3,
     "min_roe": 0.08,
-    "require_dividend": true
+    "require_dividend": false
   },
   "sector_concentration": {
     "_note": "Max positions allowed per sector. Prevents over-concentration in one industry.",
@@ -477,6 +461,7 @@
   },
   "sector_map": {
     "^SET.BK":    "INDEX",
+    "IVL.BK":     "MATERIALS",
     "PTT.BK":     "ENERGY",    "PTTGC.BK":  "ENERGY",   "PTTEP.BK": "ENERGY",
     "TOP.BK":     "ENERGY",    "IRPC.BK":   "ENERGY",   "BANPU.BK": "ENERGY",
     "RATCH.BK":   "ENERGY",    "EGCO.BK":   "ENERGY",   "GPSC.BK":  "ENERGY",
@@ -493,7 +478,7 @@
     "SC.BK":      "PROPERTY",  "ORI.BK":    "PROPERTY", "SPALI.BK": "PROPERTY",
     "NOBLE.BK":   "PROPERTY",  "PSH.BK":    "PROPERTY", "LALIN.BK": "PROPERTY",
     "ANAN.BK":    "PROPERTY",  "GLAND.BK":  "PROPERTY", "CPN.BK":   "PROPERTY",
-    "SF.BK":      "PROPERTY",  "JASIF.BK":  "PROPERTY",
+    "SF.BK":      "PROPERTY",  "JASIF.BK":  "TECH",
     "WHA.BK":     "INDUSTRIAL","AMATA.BK":  "INDUSTRIAL","CK.BK":   "INDUSTRIAL",
     "STEC.BK":    "INDUSTRIAL","ITD.BK":    "INDUSTRIAL","SCC.BK":  "INDUSTRIAL",
     "PYLON.BK":   "INDUSTRIAL",
@@ -511,6 +496,6 @@
     "DTAC.BK":    "TECH",      "DELTA.BK":  "TECH",     "NTV.BK":   "TECH",
     "VGI.BK":     "TECH",      "WORK.BK":   "TECH",     "PLANB.BK": "TECH",
     "MINT.BK":    "HOTEL",     "ERW.BK":    "HOTEL",    "DUSIT.BK": "HOTEL",
-    "CENTEL.BK":  "HOTEL",     "THG.BK":    "HOTEL",    "IVL.BK":   "ENERGY"
+    "CENTEL.BK":  "HOTEL",     "THG.BK":    "HOTEL"
   }
 }
