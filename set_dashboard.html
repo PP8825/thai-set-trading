@@ -305,9 +305,9 @@ tr:hover td{background:rgba(109,186,127,.04)}
 
       <!-- TECHNICAL SCORE -->
       <div class="box">
-        <div class="box-head"><div class="box-title">⚡ Technical Score (−3 to +3)</div><span class="chip">gate for buy &amp; sell signals</span></div>
+        <div class="box-head"><div class="box-title">⚡ Technical Score (−5 to +5)</div><span class="chip">5 indicators · gate for all trades</span></div>
         <div style="padding:18px">
-          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">Three indicators each vote +1 or −1. The total (−3 to +3) acts as the <strong style="color:var(--text)">gate</strong> — it must cross a threshold before a trade fires. Within the gate, composite score determines priority.</p>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">Five indicators each vote +1 or −1 (ADX/Volume may vote 0 in choppy/quiet markets). The total (−5 to +5) is the <strong style="color:var(--text)">gate</strong> — must clear a threshold before a trade fires. Composite score then ranks priority.</p>
           <div style="display:grid;gap:10px;margin-bottom:14px">
             <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
               <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">① RSI 14-day — Momentum</div>
@@ -318,17 +318,34 @@ tr:hover td{background:rgba(109,186,127,.04)}
               </div>
             </div>
             <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
-              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">② SMA 50-day — Trend</div>
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">② EMA Trend (EMA20 vs EMA50) — Dual trend</div>
               <div style="font-size:11px;color:var(--muted);line-height:1.7">
-                <span style="color:var(--green)">Price &gt; SMA</span> → Uptrend → <strong>+1</strong> &nbsp;·&nbsp;
-                <span style="color:var(--red)">Price &lt; SMA</span> → Downtrend → <strong>−1</strong>
+                <span style="color:var(--green)">Price &gt; EMA50 AND EMA20 &gt; EMA50</span> → Both agree bullish → <strong>+1</strong><br>
+                <span style="color:var(--red)">Price &lt; EMA50 AND EMA20 &lt; EMA50</span> → Both agree bearish → <strong>−1</strong><br>
+                <span style="color:var(--muted)">Mixed signal</span> → <strong>0</strong>
               </div>
             </div>
             <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
               <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">③ MACD 12/26/9 — Momentum shift</div>
               <div style="font-size:11px;color:var(--muted);line-height:1.7">
-                <span style="color:var(--green)">MACD &gt; Signal</span> → Building → <strong>+1</strong> &nbsp;·&nbsp;
+                <span style="color:var(--green)">MACD line &gt; Signal line</span> → Building momentum → <strong>+1</strong> &nbsp;·&nbsp;
                 <span style="color:var(--red)">MACD &lt; Signal</span> → Fading → <strong>−1</strong>
+              </div>
+            </div>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">④ ADX 14-day + Directional Index — Trend strength</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.7">
+                <span style="color:var(--green)">ADX &gt; 20 AND +DI &gt; −DI</span> → Trending upward → <strong>+1</strong><br>
+                <span style="color:var(--red)">ADX &gt; 20 AND −DI &gt; +DI</span> → Trending downward → <strong>−1</strong><br>
+                <span style="color:var(--muted)">ADX ≤ 20</span> → Choppy / no trend → <strong>0</strong> (abstain)
+              </div>
+            </div>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">⑤ Volume Surge — Conviction check</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.7">
+                <span style="color:var(--green)">Volume &gt;1.5× 20-day avg AND price rose</span> → Conviction buy → <strong>+1</strong><br>
+                <span style="color:var(--red)">Volume &gt;1.5× avg AND price fell</span> → Conviction sell → <strong>−1</strong><br>
+                <span style="color:var(--muted)">Normal volume</span> → <strong>0</strong>
               </div>
             </div>
           </div>
@@ -336,12 +353,13 @@ tr:hover td{background:rgba(109,186,127,.04)}
             <table style="width:100%;font-size:11px">
               <thead><tr><th>Score</th><th>Label</th><th>Action</th></tr></thead>
               <tbody>
-                <tr><td style="font-weight:700;color:var(--green)">+3</td><td><span class="pill pill-b">STRONG BUY</span></td><td style="color:var(--muted)">All 3 agree bullish — buy gate open</td></tr>
-                <tr><td style="font-weight:700;color:var(--green)">+2</td><td><span class="pill pill-b">BUY</span></td><td style="color:var(--muted)">2 of 3 bullish — buy gate open</td></tr>
-                <tr><td style="font-weight:700;color:var(--accent)">+1</td><td><span class="pill pill-h">WATCH</span></td><td style="color:var(--muted)">Weak positive — no trade, monitor only</td></tr>
-                <tr><td style="font-weight:700;color:var(--muted)">0</td><td><span class="pill pill-h">HOLD</span></td><td style="color:var(--muted)">Mixed — no action</td></tr>
-                <tr><td style="font-weight:700;color:var(--red)">−1</td><td><span class="pill pill-s">SELL</span></td><td style="color:var(--muted)">2 of 3 bearish — sell gate open</td></tr>
-                <tr><td style="font-weight:700;color:var(--red)">−2 / −3</td><td><span class="pill pill-s">STRONG SELL</span></td><td style="color:var(--muted)">Strong bearish — sell gate open</td></tr>
+                <tr><td style="font-weight:700;color:var(--green)">+5 / +4</td><td><span class="pill pill-b">STRONG BUY</span></td><td style="color:var(--muted)">4–5 of 5 bullish — very strong buy signal</td></tr>
+                <tr><td style="font-weight:700;color:var(--green)">+3</td><td><span class="pill pill-b">BUY</span></td><td style="color:var(--muted)">3 of 5 bullish — <strong style="color:var(--green)">buy gate open</strong></td></tr>
+                <tr><td style="font-weight:700;color:var(--green)">+2</td><td><span class="pill pill-b">BUY</span></td><td style="color:var(--muted)">2 bullish — displayed as BUY but below buy gate (WATCH only)</td></tr>
+                <tr><td style="font-weight:700;color:var(--accent)">+1</td><td><span class="pill pill-h">WATCH</span></td><td style="color:var(--muted)">Weak positive — monitor only, no trade</td></tr>
+                <tr><td style="font-weight:700;color:var(--muted)">0 / −1</td><td><span class="pill pill-h">HOLD</span></td><td style="color:var(--muted)">Mixed or slightly negative — no action</td></tr>
+                <tr><td style="font-weight:700;color:var(--red)">−2</td><td><span class="pill pill-s">SELL</span></td><td style="color:var(--muted)">2 bearish — <strong style="color:var(--red)">sell gate open</strong> for held positions</td></tr>
+                <tr><td style="font-weight:700;color:var(--red)">−3 / −4 / −5</td><td><span class="pill pill-s">STRONG SELL</span></td><td style="color:var(--muted)">Strong bearish consensus — sell gate open</td></tr>
               </tbody>
             </table>
           </div>
@@ -350,34 +368,55 @@ tr:hover td{background:rgba(109,186,127,.04)}
 
       <!-- FUNDAMENTAL SCORE -->
       <div class="box">
-        <div class="box-head"><div class="box-title">📊 Fundamental Score (0–10)</div><span class="chip">40% weight in composite</span></div>
+        <div class="box-head"><div class="box-title">📊 Fundamental Score (0–10)</div><span class="chip">40% weight in composite · 7 factors · max raw 19 pts</span></div>
         <div style="padding:18px">
-          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">Four financial metrics scored on graduated tiers — not just pass/fail. A stock can score high fundamentally even with a neutral tech signal.</p>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">Seven financial metrics scored on graduated tiers (raw 0–19, normalised to 0–10). Covers valuation, profitability, balance sheet quality, earnings momentum, and cash generation.</p>
           <div style="display:grid;gap:10px">
             <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
-              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">P/E Ratio · max 3 pts</div>
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">P/E Ratio · max 3 pts &nbsp;<span style="color:var(--muted);font-weight:400">(valuation)</span></div>
               <div style="font-size:11px;color:var(--muted);line-height:1.7">
-                ≤8 → <strong style="color:var(--green)">3</strong> · 8–12 → <strong style="color:var(--green)">2</strong> · 12–15 → <strong>1</strong> · &gt;15 → <strong style="color:var(--red)">0</strong>
+                ≤8 → <strong style="color:var(--green)">3</strong> · 8–12 → <strong style="color:var(--green)">2</strong> · 12–15 → <strong>1</strong> · &gt;15 or neg → <strong style="color:var(--red)">0</strong> · N/A → 1
               </div>
             </div>
             <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
-              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">P/BV Ratio · max 3 pts</div>
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">P/BV Ratio · max 3 pts &nbsp;<span style="color:var(--muted);font-weight:400">(asset value)</span></div>
               <div style="font-size:11px;color:var(--muted);line-height:1.7">
-                &lt;1.0 → <strong style="color:var(--green)">3</strong> (below book) · 1.0–1.5 → <strong style="color:var(--green)">2</strong> · 1.5–3 → <strong>1</strong> · &gt;3 → <strong style="color:var(--red)">0</strong>
+                &lt;1.0 → <strong style="color:var(--green)">3</strong> (below book) · 1.0–1.5 → <strong style="color:var(--green)">2</strong> · 1.5–3 → <strong>1</strong> · &gt;3 → <strong style="color:var(--red)">0</strong> · N/A → 1
               </div>
             </div>
             <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
-              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">ROE · max 3 pts</div>
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">ROE · max 3 pts &nbsp;<span style="color:var(--muted);font-weight:400">(profitability)</span></div>
               <div style="font-size:11px;color:var(--muted);line-height:1.7">
-                ≥20% → <strong style="color:var(--green)">3</strong> · 12–20% → <strong style="color:var(--green)">2</strong> · 8–12% → <strong>1</strong> · &lt;8% → <strong style="color:var(--red)">0</strong>
+                ≥20% → <strong style="color:var(--green)">3</strong> · 12–20% → <strong style="color:var(--green)">2</strong> · 8–12% → <strong>1</strong> · &lt;8% → <strong style="color:var(--red)">0</strong> · N/A → 1
               </div>
             </div>
             <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
-              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">Dividend Yield · max 4 pts</div>
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">Dividend Yield · max 4 pts &nbsp;<span style="color:var(--muted);font-weight:400">(income)</span></div>
               <div style="font-size:11px;color:var(--muted);line-height:1.7">
                 ≥9% → <strong style="color:var(--green)">4.0</strong> · ≥8% → <strong style="color:var(--green)">3.5</strong> · ≥6.5% → <strong style="color:var(--green)">3.0</strong> · ≥5% → <strong style="color:var(--green)">2.5</strong> · ≥3% → <strong>2.0</strong> · any div → <strong>1.0</strong> · none → <strong style="color:var(--red)">0</strong>
               </div>
             </div>
+            <div style="background:var(--card2);border:1px solid rgba(109,186,127,.3);border-radius:10px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:6px">⚡ NEW: Debt/Equity Ratio · max 2 pts &nbsp;<span style="color:var(--muted);font-weight:400">(balance sheet resilience)</span></div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.7">
+                D/E &lt;0.5× → <strong style="color:var(--green)">2</strong> (very low debt) · 0.5–1.0× → <strong>1</strong> · ≥1.0× → <strong style="color:var(--red)">0</strong> · N/A → 1
+              </div>
+            </div>
+            <div style="background:var(--card2);border:1px solid rgba(109,186,127,.3);border-radius:10px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:6px">⚡ NEW: EPS Growth · max 2 pts &nbsp;<span style="color:var(--muted);font-weight:400">(earnings momentum)</span></div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.7">
+                ≥15% YoY → <strong style="color:var(--green)">2</strong> · &gt;0% → <strong>1</strong> · negative → <strong style="color:var(--red)">0</strong> · N/A → 1
+              </div>
+            </div>
+            <div style="background:var(--card2);border:1px solid rgba(109,186,127,.3);border-radius:10px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:6px">⚡ NEW: FCF Yield · max 2 pts &nbsp;<span style="color:var(--muted);font-weight:400">(cash generation quality)</span></div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.7">
+                FCF/Mkt Cap ≥6% → <strong style="color:var(--green)">2</strong> · ≥3% → <strong>1</strong> · &lt;3% → <strong style="color:var(--red)">0</strong> · N/A → 1
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:12px;background:rgba(109,186,127,.07);border:1px solid rgba(109,186,127,.2);border-radius:8px;padding:10px;font-size:11px;color:var(--muted)">
+            ℹ️ Raw score (0–19) ÷ 19 × 10 = Fund score (0–10). Missing data defaults to 1 pt (benefit of the doubt, not zero).
           </div>
         </div>
       </div>
@@ -388,19 +427,27 @@ tr:hover td{background:rgba(109,186,127,.04)}
         <div style="padding:16px;font-size:12px;line-height:1.8">
 
           <div style="font-weight:700;color:var(--text);margin-bottom:8px">Gate conditions (all must pass)</div>
-          <div style="color:var(--muted);margin-bottom:4px">✅ Tech score crosses to <strong style="color:var(--text)">≥ +2</strong> (was ≤ 0 last scan)</div>
+          <div style="color:var(--muted);margin-bottom:4px">✅ Tech score crosses to <strong style="color:var(--text)">≥ +3</strong> (was ≤ 0 last scan) — at least 3 of 5 indicators bullish</div>
           <div style="color:var(--muted);margin-bottom:4px">✅ Stock not already held</div>
-          <div style="color:var(--muted);margin-bottom:16px">✅ Portfolio has &lt; 10 positions</div>
+          <div style="color:var(--muted);margin-bottom:4px">✅ Portfolio has &lt; 10 positions</div>
+          <div style="color:var(--muted);margin-bottom:4px">✅ <strong style="color:var(--text)">Sector cap</strong>: max 2 stocks per sector (BANKING, FINANCE, ENERGY, PROPERTY, INDUSTRIAL, CONSUMER, FOOD, HEALTHCARE, TRANSPORT, TECH, HOTEL)</div>
+          <div style="color:var(--muted);margin-bottom:16px">✅ <strong style="color:var(--text)">Liquidity</strong>: position size ≤ 10% of stock's average daily trading volume</div>
 
           <div style="font-weight:700;color:var(--text);margin-bottom:8px">Fundamental quality gate</div>
           <div style="color:var(--muted);margin-bottom:4px">✅ P/E &lt; 15 &nbsp;·&nbsp; P/BV &lt; 3 &nbsp;·&nbsp; ROE ≥ 8%</div>
           <div style="color:var(--muted);margin-bottom:16px">✅ Paid dividend in last 3 years</div>
 
+          <div style="font-weight:700;color:var(--text);margin-bottom:8px">Position sizing — volatility-tiered</div>
+          <div style="color:var(--muted);margin-bottom:4px">📐 Base: equal split of available cash ÷ remaining slots</div>
+          <div style="color:var(--muted);margin-bottom:4px">📉 High vol (daily std &gt;3%) → <strong style="color:var(--text)">0.75×</strong> base (smaller position, less risk)</div>
+          <div style="color:var(--muted);margin-bottom:4px">📈 Low vol (daily std &lt;1.5%) → <strong style="color:var(--text)">1.25×</strong> base (larger position, stable stock)</div>
+          <div style="color:var(--muted);margin-bottom:16px">⚖️ Normal vol → <strong style="color:var(--text)">1.0×</strong> base</div>
+
           <div style="font-weight:700;color:var(--text);margin-bottom:8px">Priority — ranked by Composite Score</div>
-          <div style="color:var(--muted);margin-bottom:16px">When multiple stocks qualify, highest composite score buys first. Two stocks both at tech +2 → better fundamentals wins the slot.</div>
+          <div style="color:var(--muted);margin-bottom:16px">When multiple stocks qualify, highest composite score buys first. Same tech score → better fundamentals wins the slot.</div>
 
           <div style="background:rgba(77,205,122,.07);border:1px solid rgba(77,205,122,.2);border-radius:8px;padding:10px;font-size:11px;color:var(--muted)">
-            ℹ️ Only fires when score crosses from neutral (≤0) into buy territory (≥+2) — prevents re-buying the same position repeatedly within one session.
+            ℹ️ Only fires when score crosses from neutral (≤0) into buy territory (≥+3) — prevents re-buying the same position repeatedly within one session.
           </div>
         </div>
       </div>
@@ -411,15 +458,15 @@ tr:hover td{background:rgba(109,186,127,.04)}
         <div style="padding:16px;font-size:12px;line-height:1.8">
 
           <div style="font-weight:700;color:var(--text);margin-bottom:8px">Signal sell — tech reversal</div>
-          <div style="color:var(--muted);margin-bottom:4px">⚠️ Tech score drops to <strong style="color:var(--text)">≤ −1</strong> (was ≥ +1 last scan)</div>
-          <div style="color:var(--muted);margin-bottom:16px">⚠️ RSI overbought + SMA breakdown + MACD fade all confirm exit</div>
+          <div style="color:var(--muted);margin-bottom:4px">⚠️ Tech score drops to <strong style="color:var(--text)">≤ −2</strong> (was ≥ +1 last scan) — at least 2 of 5 indicators bearish</div>
+          <div style="color:var(--muted);margin-bottom:16px">⚠️ Score −1 is a soft warning only — does not trigger a sell</div>
 
           <div style="font-weight:700;color:var(--text);margin-bottom:8px">Stop-loss — price-based, automatic</div>
           <div style="color:var(--muted);margin-bottom:4px">🛑 Price falls <strong style="color:var(--text)">≥ 8%</strong> below average cost</div>
-          <div style="color:var(--muted);margin-bottom:16px">🛑 Fires immediately regardless of score or composite</div>
+          <div style="color:var(--muted);margin-bottom:16px">🛑 Fires immediately regardless of score or composite — overrides ex-div guard</div>
 
           <div style="font-weight:700;color:var(--text);margin-bottom:8px">Rotation — composite score weakness</div>
-          <div style="color:var(--muted);margin-bottom:16px">🔄 Composite score below <strong style="color:var(--text)">7.2</strong> AND a better stock (composite gain ≥ <strong style="color:var(--text)">+0.8</strong>) is waiting — see Rotation section below</div>
+          <div style="color:var(--muted);margin-bottom:16px">🔄 Composite score below <strong style="color:var(--text)">7.2</strong> OR tech score ≤ +1, AND a better stock (composite gain ≥ <strong style="color:var(--text)">+0.8</strong>) is waiting — see Rotation section below</div>
 
           <div style="background:rgba(240,100,100,.07);border:1px solid rgba(240,100,100,.2);border-radius:8px;padding:10px;font-size:11px;color:var(--muted)">
             ℹ️ Stop-loss example: bought at ฿100 → auto-sell at ฿92 regardless of any score.
@@ -432,15 +479,16 @@ tr:hover td{background:rgba(109,186,127,.04)}
         <div class="box-head"><div class="box-title">🔄 Rotation Criteria</div><span class="chip">portfolio full (10/10) · composite score drives selection</span></div>
         <div style="padding:16px;font-size:12px">
 
-          <p style="color:var(--muted);margin-bottom:16px;line-height:1.7">When the portfolio is full, the system checks every scan whether any holding should be swapped for a meaningfully better stock. A holding qualifies to rotate out via <strong style="color:var(--text)">either</strong> trigger below — the composite score then determines which pair makes the best swap.</p>
+          <p style="color:var(--muted);margin-bottom:16px;line-height:1.7">When the portfolio is full, the system checks every scan whether any holding should be swapped for a meaningfully better stock. A holding qualifies to rotate out via <strong style="color:var(--text)">either</strong> trigger below — composite score then determines which pair makes the best swap.</p>
 
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:16px">
 
             <div style="background:var(--card2);border:1px solid rgba(240,100,100,.3);border-radius:10px;padding:14px">
               <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:10px">📉 Trigger 1 — Tech Score Fade</div>
               <div style="font-size:11px;color:var(--muted);line-height:1.8">
-                Held tech score dropped to <strong style="color:var(--text)">≤ +1</strong><br>
-                RSI/SMA/MACD momentum has reversed<br>
+                Held tech score drops to <strong style="color:var(--text)">≤ +1</strong><br>
+                At least 4 of 5 indicators no longer bullish<br>
+                RSI/EMA/MACD/ADX/Volume momentum reversed<br>
                 Held ≥ <strong style="color:var(--text)">3 days</strong>
               </div>
             </div>
@@ -449,8 +497,9 @@ tr:hover td{background:rgba(109,186,127,.04)}
               <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:10px">📊 Trigger 2 — Composite Below Floor</div>
               <div style="font-size:11px;color:var(--muted);line-height:1.8">
                 Held composite score <strong style="color:var(--text)">&lt; 7.2 / 10</strong><br>
-                Fires even if tech score is still +2<br>
-                Catches fundamentally weak positions<br>
+                Fires even if tech score is still +2 or +3<br>
+                Catches positions weak on fundamentals<br>
+                (e.g. high D/E, negative EPS growth, low FCF)<br>
                 Held ≥ <strong style="color:var(--text)">3 days</strong>
               </div>
             </div>
@@ -458,11 +507,12 @@ tr:hover td{background:rgba(109,186,127,.04)}
             <div style="background:var(--card2);border:1px solid rgba(77,205,122,.3);border-radius:10px;padding:14px">
               <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px">✅ Incoming Stock Must Clear</div>
               <div style="font-size:11px;color:var(--muted);line-height:1.8">
-                Tech score <strong style="color:var(--text)">≥ +2</strong> (buy signal)<br>
+                Tech score <strong style="color:var(--text)">≥ +3</strong> (≥ 3 of 5 bullish)<br>
                 Composite gain <strong style="color:var(--text)">≥ +0.8</strong> over held stock<br>
                 Not in 5-day cooldown after prior rotation<br>
-                3–4 days held: incoming must be <strong style="color:var(--green)">+3</strong> only<br>
-                5+ days held: <strong style="color:var(--accent)">+2 or +3</strong> accepted
+                Sector cap: ≤ 2 per sector still satisfied<br>
+                3–4 days held: incoming must be <strong style="color:var(--green)">+5/+4</strong> (Strong Buy)<br>
+                5+ days held: <strong style="color:var(--accent)">+3 or above</strong> accepted
               </div>
             </div>
 
@@ -472,7 +522,7 @@ tr:hover td{background:rgba(109,186,127,.04)}
                 Held loss &gt;3% → protected, no rotation<br>
                 Max <strong style="color:var(--text)">1 rotation per scan</strong><br>
                 Max <strong style="color:var(--text)">2 rotations per day</strong><br>
-                No rotation if buy/sell already fired<br>
+                No rotation if regular buy/sell fired same scan<br>
                 Ex-div within 14 days → skip rotation
               </div>
             </div>
@@ -480,21 +530,62 @@ tr:hover td{background:rgba(109,186,127,.04)}
           </div>
 
           <div style="background:rgba(109,186,127,.07);border:1px solid rgba(109,186,127,.2);border-radius:8px;padding:12px;font-size:11px;color:var(--muted);line-height:1.7">
-            ℹ️ <strong style="color:var(--text)">Selection order:</strong> weakest holding (lowest composite) is targeted first. Strongest incoming (highest composite) is matched in. The swap only fires if the composite gain clears +0.8 — small differences never trigger a rotation.
+            ℹ️ <strong style="color:var(--text)">Selection order:</strong> weakest holding (lowest composite) targeted first. Strongest incoming (highest composite) matched in. Swap fires only if composite gain ≥ +0.8 — small differences never trigger. Sector cap is enforced on incoming stock even during rotation.
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPOSITE SCORE BANDS -->
+      <div class="box" style="grid-column:1/-1">
+        <div class="box-head"><div class="box-title">🎯 Composite Score Bands</div><span class="chip">Tech 60% + Fund 40% · drives all priority &amp; rotation decisions</span></div>
+        <div style="padding:16px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;font-size:11px">
+            <div style="background:rgba(77,205,122,.12);border:1px solid rgba(77,205,122,.35);border-radius:10px;padding:12px;text-align:center">
+              <div style="font-weight:700;color:var(--green);font-size:15px">≥ 8.5</div>
+              <div style="color:var(--green);font-weight:600;margin:4px 0">STRONG BUY</div>
+              <div style="color:var(--muted)">Top-tier pick. All dimensions align.</div>
+            </div>
+            <div style="background:rgba(77,205,122,.07);border:1px solid rgba(77,205,122,.25);border-radius:10px;padding:12px;text-align:center">
+              <div style="font-weight:700;color:var(--green);font-size:15px">7.5 – 8.4</div>
+              <div style="color:var(--green);font-weight:600;margin:4px 0">BUY</div>
+              <div style="color:var(--muted)">Good quality. Buy gate open.</div>
+            </div>
+            <div style="background:rgba(109,186,127,.07);border:1px solid rgba(109,186,127,.25);border-radius:10px;padding:12px;text-align:center">
+              <div style="font-weight:700;color:var(--accent);font-size:15px">7.2 – 7.4</div>
+              <div style="color:var(--accent);font-weight:600;margin:4px 0">WATCH</div>
+              <div style="color:var(--muted)">Just above rotation floor. Monitor closely.</div>
+            </div>
+            <div style="background:rgba(212,170,69,.07);border:1px solid rgba(212,170,69,.25);border-radius:10px;padding:12px;text-align:center">
+              <div style="font-weight:700;color:var(--yellow);font-size:15px">6.5 – 7.1</div>
+              <div style="color:var(--yellow);font-weight:600;margin:4px 0">WEAK</div>
+              <div style="color:var(--muted)">Below floor. Rotation candidate.</div>
+            </div>
+            <div style="background:rgba(240,100,100,.07);border:1px solid rgba(240,100,100,.25);border-radius:10px;padding:12px;text-align:center">
+              <div style="font-weight:700;color:var(--red);font-size:15px">≤ 6.4</div>
+              <div style="color:var(--red);font-weight:600;margin:4px 0">AVOID</div>
+              <div style="color:var(--muted)">Poor quality. Do not buy; rotate out.</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;font-size:11px;color:var(--muted);line-height:1.7">
+            <strong style="color:var(--text)">Formula:</strong> Tech score (−5 to +5) normalised → 0–10, then: <strong style="color:var(--text)">Composite = Tech_norm × 60% + Fund_score × 40%</strong><br>
+            Example: Tech +3 (= 8.0/10 normalised) + Fund 8.0/10 → Comp = 8.0×0.6 + 8.0×0.4 = <strong style="color:var(--green)">8.00 BUY</strong>
           </div>
         </div>
       </div>
 
       <!-- POSITION SIZING & COSTS -->
       <div class="box">
-        <div class="box-head"><div class="box-title">💰 Position Sizing</div></div>
+        <div class="box-head"><div class="box-title">💰 Position Sizing &amp; Risk Controls</div></div>
         <div style="padding:16px;font-size:12px;line-height:1.8">
-          <div style="color:var(--muted);margin-bottom:4px">Capital: <strong style="color:var(--text)">฿300,000</strong></div>
-          <div style="color:var(--muted);margin-bottom:4px">Max positions: <strong style="color:var(--text)">10 stocks</strong></div>
+          <div style="color:var(--muted);margin-bottom:4px">Capital: <strong style="color:var(--text)">฿300,000</strong> &nbsp;·&nbsp; Max positions: <strong style="color:var(--text)">10 stocks</strong></div>
           <div style="color:var(--muted);margin-bottom:4px">Cash floor: <strong style="color:var(--text)">5%</strong> always kept in reserve</div>
-          <div style="color:var(--muted);margin-bottom:4px">Allocation: equal split of available cash across remaining slots</div>
-          <div style="color:var(--muted);margin-bottom:4px">Lot size: <strong style="color:var(--text)">100 shares</strong> minimum</div>
-          <div style="color:var(--muted)">Transaction cost: <strong style="color:var(--text)">0.25%</strong> each way</div>
+          <div style="color:var(--muted);margin-bottom:4px">Lot size: <strong style="color:var(--text)">100 shares</strong> minimum &nbsp;·&nbsp; Transaction cost: <strong style="color:var(--text)">0.25%</strong> each way</div>
+          <div style="color:var(--muted);margin-bottom:4px">Sector cap: <strong style="color:var(--text)">max 2 stocks</strong> per sector — prevents concentration risk</div>
+          <div style="color:var(--muted);margin-bottom:4px">Liquidity cap: position ≤ <strong style="color:var(--text)">10%</strong> of average daily trading volume</div>
+          <div style="margin-top:8px;color:var(--muted)">
+            <strong style="color:var(--text)">Volatility-tiered sizing</strong> (20-day realised vol):<br>
+            &nbsp;&nbsp;High vol &gt;3%/day → 0.75× base &nbsp;·&nbsp; Normal 1.5–3% → 1.0× &nbsp;·&nbsp; Low &lt;1.5% → 1.25× base
+          </div>
         </div>
       </div>
 
