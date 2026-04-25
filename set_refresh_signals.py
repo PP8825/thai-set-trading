@@ -294,6 +294,15 @@ def main():
             f'const SIGNALS = {signals_json};',
             html, flags=re.DOTALL)
 
+        # Also embed regime from state
+        regime_data = existing.get("_regime", {})
+        if regime_data:
+            regime_json = json.dumps(regime_data, ensure_ascii=False, separators=(",", ":"))
+            new_html = re.sub(
+                r'const REGIME\s*=\s*\{.*?\};',
+                f'const REGIME = {regime_json};',
+                new_html, flags=re.DOTALL)
+
         if n == 0:
             print("⚠  Could not find SIGNALS block in HTML")
         else:

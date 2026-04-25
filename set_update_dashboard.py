@@ -296,10 +296,20 @@ def main():
 
     signals_json = json.dumps(embed, ensure_ascii=False, separators=(",", ":"))
 
+    # Embed regime from state if available
+    regime_data = state.get("_regime", {})
+    regime_json = json.dumps(regime_data, ensure_ascii=False, separators=(",", ":"))
+
     # Replace the SIGNALS constant in the HTML
     pattern = r'const SIGNALS\s*=\s*\{.*?\};'
     replacement = f'const SIGNALS = {signals_json};'
     new_html, n = re.subn(pattern, replacement, html, flags=re.DOTALL)
+
+    # Replace the REGIME constant
+    new_html = re.sub(
+        r'const REGIME\s*=\s*\{.*?\};',
+        f'const REGIME = {regime_json};',
+        new_html, flags=re.DOTALL)
 
     if n == 0:
         print("⚠  Could not find SIGNALS constant in HTML — check format")

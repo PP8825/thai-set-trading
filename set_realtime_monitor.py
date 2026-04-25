@@ -110,6 +110,21 @@ ROTATION_COMP_FLOOR    = 6.5   # held comp below this → eligible for rotation-
 ROTATION_COMP_MIN_GAIN = 0.8   # incoming comp must beat held comp by at least this
 ROTATION_FAST_COMP     = 8.5   # incoming comp >= this → fast-track (bypass min hold days)
 
+# ─── Market regime filter ────────────────────────────────────────────────────
+# If SET Index is below its 200-day MA → BEAR regime: all buys & rotations suspended.
+# Only sells and stop-losses execute.  Prevents buying into a falling market.
+REGIME_ENABLED   = True
+REGIME_TICKER    = "^SET.BK"
+REGIME_MA_PERIOD = 200
+
+# ─── ATR-based stop-loss ─────────────────────────────────────────────────────
+# Stop price = entry_price − ATR_MULTIPLIER × ATR(14).
+# Adapts to each stock's own volatility — volatile stocks get wider stops,
+# stable stocks get tighter stops.  Replaces the blunt fixed 8% stop.
+ATR_PERIOD      = 14
+ATR_MULTIPLIER  = 2.0    # 2 × ATR — standard Wilder / Van Tharp setting
+ATR_FALLBACK_PCT = 0.08  # 8% fallback for holdings that pre-date ATR tracking
+
 # ─── Dividend timing guard ────────────────────────────────────────────────────
 EX_DIV_HOLD_DAYS = 14
 
@@ -289,6 +304,23 @@ def calc_vol_20d(close):
     """20-day realised daily volatility (std of daily returns)."""
     ret = close.pct_change().dropna()
     return float(ret.tail(20).std()) if len(ret) >= 20 else 0.02
+
+def calc_atr(df, n=14):
+    """
+    Average True Range — Wilder smoothing.
+    TR = max(High−Low, |High−PrevClose|, |Low−PrevClose|)
+    Returns latest ATR value as a price amount (same unit as the stock price).
+    """
+    high  = df["High"]
+    low   = df["Low"]
+    close = df["Close"]
+    tr = pd.concat([
+        high - low,
+        (high - close.shift()).abs(),
+        (low  - close.shift()).abs(),
+    ], axis=1).max(axis=1)
+    atr = tr.ewm(alpha=1/n, min_periods=n, adjust=False).mean()
+    return float(atr.iloc[-1])
 
 def score_signals(rsi, close, ema_short, ema_long, macd, msig,
                   adx=0, di_plus=0, di_minus=0, vol_score=0):
@@ -862,6 +894,7 @@ def analyze(name, ticker):
         macd_v, msig_v    = calc_macd(c)
         adx_v, dip_v, dim_v = calc_adx(df)
         vol_20d           = calc_vol_20d(c)
+        atr_v             = calc_atr(df, ATR_PERIOD)
         price             = float(c.iloc[-1])
         prev              = float(c.iloc[-2])
         pct               = (price - prev) / prev * 100
@@ -899,6 +932,7 @@ def analyze(name, ticker):
             "macd":      macd_v,       "msig":      msig_v,
             "adx":       adx_v,        "di_plus":   dip_v,       "di_minus":  dim_v,
             "vol_20d":   vol_20d,      "avg_volume": avg_vol,
+            "atr":       atr_v,
             "score":     sc,           "signal":    label,
             "rsi_sig":   rs,           "trend_sig": trend,       "macd_sig":  mc,
             "adx_sig":   ad,           "vol_sig":   vs,
@@ -972,6 +1006,11 @@ def execute_buy(port, r):
     if shares <= 0 or cost > avail:
         return None
 
+    # ATR-based stop price: entry − ATR_MULTIPLIER × ATR(14)
+    atr_val  = r.get("atr", 0) or 0
+    atr_stop = round(price - ATR_MULTIPLIER * atr_val, 2) if atr_val > 0 \
+               else round(price * (1 - ATR_FALLBACK_PCT), 2)
+
     today = datetime.date.today().isoformat()
     port["cash"] -= cost
     port["holdings"][r["ticker"]] = {
@@ -980,6 +1019,8 @@ def execute_buy(port, r):
         "avg_cost":    round(price, 2),
         "entry_date":  today,
         "entry_score": r["score"],
+        "atr":         round(atr_val, 4),
+        "atr_stop":    atr_stop,
     }
     trade = {
         "date":    today,       "action":   "BUY",
@@ -1117,6 +1158,14 @@ def build_trade_alert(trade, port, prices, result=None):
         lines.append("   P&L    : {0}\u0e3f{1:,.0f}".format(ps2, trade["pnl"]))
 
     lines.append("   Signal : {0}".format(trade["reason"]))
+
+    if is_buy and trade.get("ticker") in (port.get("holdings") or {}):
+        h = port["holdings"].get(trade["ticker"], {})
+        atr_stop = h.get("atr_stop")
+        if atr_stop:
+            lines.append("   ATR stop: ฿{0:.2f}  ({1:.1f}% below entry)".format(
+                atr_stop,
+                (1 - atr_stop / trade["price"]) * 100))
 
     if result:
         fs = result.get("fund_score", 5.0)
@@ -1299,6 +1348,38 @@ def send_line(message):
         print("  LINE error: {0}".format(e))
         return False
 
+# ─── Market regime ────────────────────────────────────────────────────────────
+def get_market_regime():
+    """
+    Checks whether SET Index is above or below its 200-day moving average.
+
+    Returns:
+        regime  : "BULL" | "BEAR"
+        price   : latest SET Index close (float or None)
+        ma200   : 200-day MA value (float or None)
+        pct_gap : how far price is above/below MA, as % (positive = above)
+
+    In BEAR regime the caller should suspend all BUY orders and rotations —
+    only sells and stop-losses should execute.
+    """
+    if not REGIME_ENABLED:
+        return "BULL", None, None, 0.0
+    try:
+        df = yf.Ticker(REGIME_TICKER).history(period="14mo", auto_adjust=True)
+        if df.empty or len(df) < REGIME_MA_PERIOD:
+            print("  ⚠  Regime check: not enough SET data — defaulting to BULL")
+            return "BULL", None, None, 0.0
+        c     = df["Close"].dropna()
+        price = float(c.iloc[-1])
+        ma200 = float(c.rolling(REGIME_MA_PERIOD).mean().iloc[-1])
+        gap   = (price - ma200) / ma200 * 100
+        regime = "BULL" if price > ma200 else "BEAR"
+        return regime, price, ma200, gap
+    except Exception as e:
+        print(f"  ⚠  Regime check failed ({e}) — defaulting to BULL")
+        return "BULL", None, None, 0.0
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 def main():
     now = now_bkk()
@@ -1313,6 +1394,18 @@ def main():
         return
 
     print("\n  Market open at {0} — scanning...".format(time_str()))
+
+    # ── Market regime check ───────────────────────────────────────────────────
+    regime, set_px, ma200, gap = get_market_regime()
+    if set_px:
+        gap_str = "{0:+.1f}%".format(gap)
+        print("\n  📊 Market Regime: {0}  SET {1:.0f}  MA200 {2:.0f}  ({3})".format(
+            "🟢 BULL" if regime == "BULL" else "🔴 BEAR", set_px, ma200, gap_str))
+        if regime == "BEAR":
+            print("  ⚠  BEAR REGIME — all BUY orders and rotations SUSPENDED")
+            print("  ⚠  Only stop-losses and signal-based SELLs will execute")
+    else:
+        print("\n  📊 Market Regime: could not fetch SET Index — defaulting to BULL")
 
     # Load state
     port       = load_portfolio()
@@ -1404,21 +1497,38 @@ def main():
         ok_div  = send_line(div_msg)
         print("  LINE dividend alert: {0}".format("✅ sent" if ok_div else "❌ failed"))
 
-    # Stop-loss check on holdings
-    print("\nChecking stop-losses on {0} holdings...".format(
+    # ── ATR stop retroactive migration ───────────────────────────────────────
+    # For holdings entered before ATR tracking, set atr_stop now using current ATR.
+    sig_map_early = {r["ticker"]: r for r in ok}
+    for ticker, h in port["holdings"].items():
+        if "atr_stop" not in h:
+            r = sig_map_early.get(ticker)
+            atr_val = r.get("atr", 0) if r else 0
+            if atr_val and atr_val > 0:
+                h["atr"]      = round(atr_val, 4)
+                h["atr_stop"] = round(h["avg_cost"] - ATR_MULTIPLIER * atr_val, 2)
+            else:
+                h["atr_stop"] = round(h["avg_cost"] * (1 - ATR_FALLBACK_PCT), 2)
+            print("  📐 ATR stop set for {0}: ฿{1:.2f}".format(
+                h["name"], h["atr_stop"]))
+    save_portfolio(port)
+
+    # ── ATR stop-loss check ───────────────────────────────────────────────────
+    print("\nChecking ATR stop-losses on {0} holdings...".format(
         len(port["holdings"])))
     for ticker in list(port["holdings"].keys()):
         h  = port["holdings"].get(ticker)
         if not h:
             continue
-        px = prices.get(ticker, h["avg_cost"])
-        if px <= h["avg_cost"] * (1 - STOP_LOSS_PCT):
+        px       = prices.get(ticker, h["avg_cost"])
+        atr_stop = h.get("atr_stop") or h["avg_cost"] * (1 - ATR_FALLBACK_PCT)
+        if px <= atr_stop:
             drop = (1 - px / h["avg_cost"]) * 100
-            print("  STOP-LOSS {0}  \u0e3f{1:.2f} (avg \u0e3f{2:.2f}, -{3:.1f}%)".format(
-                h["name"], px, h["avg_cost"], drop))
+            print("  🛑 ATR STOP-LOSS {0}  ฿{1:.2f}  stop ฿{2:.2f}  (-{3:.1f}%)".format(
+                h["name"], px, atr_stop, drop))
             trade = execute_sell(
                 port, ticker, px,
-                "Stop-loss -{0:.0f}%".format(STOP_LOSS_PCT * 100))
+                "ATR stop ฿{0:.2f} (-{1:.1f}%)".format(atr_stop, drop))
             if trade:
                 trades_executed.append((trade, None))
                 alerted.add(ticker)
@@ -1484,7 +1594,13 @@ def main():
             new_state[r["ticker"]]["sell_alerted"] = True
             new_state[r["ticker"]]["buy_alerted"]  = False
 
-    # Pass 3: execute buys — ranked by composite score (best quality first)
+    # Pass 3: execute buys — gated by regime (BEAR = no buys)
+    if regime == "BEAR":
+        if buy_pending:
+            print("\n  🔴 BEAR regime — {0} buy signal(s) suppressed".format(
+                len(buy_pending)))
+        buy_pending = []
+
     buy_pending.sort(key=lambda x: -x.get("comp_score", 0))
     for r in buy_pending:
         if r["ticker"] in alerted:
@@ -1501,7 +1617,11 @@ def main():
             new_state[r["ticker"]]["sell_alerted"] = False
 
     # ── Portfolio rotation ────────────────────────────────────────────────────
+    if regime == "BEAR" and ROTATION_ENABLED:
+        print("\n  🔴 BEAR regime — rotation suspended")
+
     if (ROTATION_ENABLED
+            and regime == "BULL"                             # no rotation in bear market
             and len(port["holdings"]) >= MAX_POSITIONS
             and len(trades_executed) == 0):      # don't rotate on the same scan as a regular trade
 
@@ -1572,6 +1692,15 @@ def main():
                             port["cash"] -= sell_trade["shares"] * sell_trade["price"] * (1 - TX_COST)
                             port["holdings"][held_info["ticker"]] = held_info["h"]
                             port["trades"].pop()
+
+    # Save regime info to state (dashboard reads this)
+    new_state["_regime"] = {
+        "regime":  regime,
+        "set_px":  round(set_px, 2) if set_px else None,
+        "ma200":   round(ma200,  2) if ma200  else None,
+        "gap_pct": round(gap, 2)    if gap    else 0.0,
+        "updated": datetime.datetime.now(BKK_OFFSET).strftime("%Y-%m-%d %H:%M"),
+    }
 
     # Save portfolio + state + daily snapshot
     save_portfolio(port, prices)
