@@ -168,6 +168,20 @@ REGIME_CACHE_MINS = 60
 # Rotation already has its own cooldown (ROTATION_COOLDOWN_DAYS = 5).
 REENTRY_COOLDOWN_DAYS = 5
 
+# ─── Data quality thresholds ─────────────────────────────────────────────────
+# Warn if a held stock has more than DATA_GAP_MAX missing trading days in the
+# last DATA_GAP_LOOKBACK calendar days.  Gaps usually mean yfinance returned
+# incomplete history — signals built on gappy data may be unreliable.
+DATA_GAP_LOOKBACK = 30    # calendar days to inspect
+DATA_GAP_MAX      = 3     # alert if more than this many trading days are missing
+
+# ─── Fundamental staleness warning ───────────────────────────────────────────
+# Warn if fundamentals (P/E, ROE, etc.) for a held position haven't been
+# re-fetched in more than this many days.  yfinance refreshes on each BUY
+# scan; held stocks with score < +2 won't be re-fetched automatically.
+# Alert prompts a manual check — the system does NOT auto-sell.
+FUND_STALENESS_DAYS = 90   # warn if fundamentals are older than 90 days
+
 # ─── Dividend timing guard ────────────────────────────────────────────────────
 EX_DIV_HOLD_DAYS = 14
 
@@ -427,6 +441,52 @@ def calc_atr(df, n=14):
     ], axis=1).max(axis=1)
     atr = tr.ewm(alpha=1/n, min_periods=n, adjust=False).mean()
     return float(atr.iloc[-1])
+
+def check_data_gaps(df, lookback=DATA_GAP_LOOKBACK, max_gaps=DATA_GAP_MAX):
+    """
+    Scan the last `lookback` calendar days for missing trading sessions.
+
+    Expected trading days = Mon–Fri that are NOT in SET_HOLIDAYS.
+    Returns (ok, gap_count, gap_dates_str):
+      ok            — True if gap_count <= max_gaps
+      gap_count     — number of missing trading days
+      gap_dates_str — short string listing the most recent missing dates (for logging)
+
+    Typical causes of gaps:
+      • yfinance API hiccup / rate limit
+      • Stock suspension or delisting
+      • Data coverage gaps for small-cap Thai stocks
+    A single gap (1 day) is common and usually harmless; 3+ deserves a warning.
+    """
+    if df is None or df.empty:
+        return False, lookback, "no data"
+
+    # Build set of dates actually present in the dataframe
+    try:
+        actual_dates = set()
+        for idx in df.index:
+            if hasattr(idx, "date"):
+                actual_dates.add(idx.date())
+            else:
+                actual_dates.add(datetime.date.fromisoformat(str(idx)[:10]))
+    except Exception:
+        return True, 0, ""   # can't parse index — skip check
+
+    today  = datetime.date.today()
+    cutoff = today - datetime.timedelta(days=lookback)
+
+    gaps = []
+    d = cutoff
+    while d < today:            # don't test today — data may not be available yet
+        if d.weekday() < 5 and d.isoformat() not in SET_HOLIDAYS:
+            if d not in actual_dates:
+                gaps.append(d.isoformat())
+        d += datetime.timedelta(days=1)
+
+    gap_count = len(gaps)
+    gap_str   = ", ".join(gaps[-5:]) if gaps else ""   # show at most 5 recent gaps
+    return gap_count <= max_gaps, gap_count, gap_str
+
 
 def score_signals(rsi, close, ema_short, ema_long, macd, msig,
                   adx=0, di_plus=0, di_minus=0, vol_score=0):
@@ -1035,6 +1095,9 @@ def analyze(name, ticker):
         if len(c) < max(SMA_LONG + 5, 60):
             return {"ticker": ticker, "name": name, "error": "Not enough data"}
 
+        # ── Data quality: check for missing trading days ───────────────────────
+        gap_ok, gap_count, gap_dates = check_data_gaps(df)
+
         rsi_v             = calc_rsi(c, RSI_PERIOD)
         ema_short_v       = calc_sma(c, SMA_SHORT)       # 20-period EMA (fast trend)
         ema_long_v        = calc_sma(c, SMA_LONG)        # 50-period EMA (slow trend)
@@ -1065,10 +1128,13 @@ def analyze(name, ticker):
         fund_fails   = []
         fund_summary = "N/A"
         fund_score   = 5.0   # neutral default when not fetched
+        fund_fetched = None  # date fundamentals were last fetched (None = not this scan)
         if sc >= BUY_SCORE_MIN and FUND_ENABLED:
             fund = fetch_fundamentals(ticker)
             fund_ok, fund_fails, fund_summary = check_fundamentals(fund)
             fund_score = calc_fundamental_score(fund)
+            if fund:   # only stamp the date if we got real data back
+                fund_fetched = datetime.date.today().isoformat()
 
         comp_score = calc_composite_score(sc, fund_score)
 
@@ -1088,6 +1154,9 @@ def analyze(name, ticker):
             "fund":      fund,         "fund_ok":   fund_ok,
             "fund_fails": fund_fails,  "fund_summary": fund_summary,
             "fund_score": fund_score,  "comp_score":   comp_score,
+            "fund_fetched": fund_fetched,
+            # Data quality
+            "gap_ok":    gap_ok,       "gap_count": gap_count,   "gap_dates": gap_dates,
         }
     except Exception as e:
         return {"ticker": ticker, "name": name, "error": str(e)[:60]}
@@ -1685,6 +1754,78 @@ def build_concentration_alert(concentrated, port, prices):
     return "\n".join(lines)
 
 
+def build_gap_alert(gappy_holdings, port, prices):
+    """
+    LINE alert when held positions have more than DATA_GAP_MAX missing trading days
+    in the last DATA_GAP_LOOKBACK calendar days.
+
+    Signals built on incomplete price history may be unreliable — this alert
+    prompts a manual check.  The monitor continues to run normally.
+    """
+    total = portfolio_value(port, prices)
+    lines = [
+        "⚠️ DATA QUALITY ALERT — {0}".format(
+            datetime.date.today().strftime("%d %b %Y")),
+        "─" * 34,
+        "Held positions have >{0} missing price days".format(DATA_GAP_MAX),
+        "in the last {0} calendar days.".format(DATA_GAP_LOOKBACK),
+        "Signals from incomplete data may be unreliable.",
+        "",
+    ]
+    for info in gappy_holdings:
+        lines += [
+            "  ⚠ {0}  — {1} missing day{2}".format(
+                info["name"], info["gap_count"],
+                "s" if info["gap_count"] != 1 else ""),
+            "    Missing: {0}".format(info["gap_dates"]) if info["gap_dates"] else "",
+        ]
+        lines = [l for l in lines if l != ""]   # remove blank gap_dates line
+    lines += [
+        "",
+        "Check yfinance coverage or verify manually.",
+        "─" * 34,
+        "💼 Portfolio : ฿{0:,.0f}".format(total),
+        "⚠️ Educational only. Not financial advice.",
+    ]
+    return "\n".join(lines)
+
+
+def build_fund_stale_alert(stale_holdings, port, prices):
+    """
+    LINE alert when fundamentals for held positions are older than FUND_STALENESS_DAYS.
+
+    yfinance fundamentals are re-fetched automatically whenever a stock crosses
+    into BUY territory (score ≥ +2).  A held stock with a weak or neutral score
+    won't be re-fetched until it becomes a buy candidate again — this alert
+    surfaces that situation before P/E, ROE, or dividend data goes badly stale.
+    """
+    total = portfolio_value(port, prices)
+    lines = [
+        "⚠️ STALE FUNDAMENTALS — {0}".format(
+            datetime.date.today().strftime("%d %b %Y")),
+        "─" * 34,
+        "Fundamentals not refreshed in >{0} days".format(FUND_STALENESS_DAYS),
+        "for the following held positions.",
+        "P/E, ROE, and dividend data may be outdated.",
+        "",
+    ]
+    for info in stale_holdings:
+        if info["age_days"] is not None:
+            age_str = "{0} days old".format(info["age_days"])
+        else:
+            age_str = "never fetched"
+        lines.append("  ⚠ {0}  — {1}".format(info["name"], age_str))
+    lines += [
+        "",
+        "Fundamentals refresh automatically when",
+        "the stock generates a fresh BUY signal (score ≥ +2).",
+        "─" * 34,
+        "💼 Portfolio : ฿{0:,.0f}".format(total),
+        "⚠️ Educational only. Not financial advice.",
+    ]
+    return "\n".join(lines)
+
+
 def send_line(message):
     try:
         resp = requests.post(
@@ -1855,6 +1996,8 @@ def main():
                 "comp_score":   r.get("comp_score", calc_composite_score(r["score"], 5.0)),
                 "buy_alerted":  r["score"] >= BUY_SCORE_MIN,
                 "sell_alerted": False,
+                # Stamp fund_fetched for stocks that had fundamentals fetched today
+                "fund_fetched": r.get("fund_fetched"),
             }
         new_state["_last_reset_date"] = today_str
         new_state["_check_count"]     = 1
@@ -1993,6 +2136,8 @@ def main():
         prev       = prev_state.get(ticker, {})
         prev_score = prev.get("score", 0) if isinstance(prev, dict) else 0
 
+        # fund_fetched: use today's date if freshly fetched, else carry forward from state
+        _old_fund_fetched = prev.get("fund_fetched") if isinstance(prev, dict) else None
         new_state[ticker] = {
             "score":        score,
             "signal":       r["signal"],
@@ -2004,6 +2149,7 @@ def main():
             "avg_volume":   r.get("avg_volume", 0),
             "buy_alerted":  prev.get("buy_alerted",  False) if isinstance(prev, dict) else False,
             "sell_alerted": prev.get("sell_alerted", False) if isinstance(prev, dict) else False,
+            "fund_fetched": r.get("fund_fetched") or _old_fund_fetched,
         }
 
         fund_ok = r.get("fund_ok", True)
@@ -2281,6 +2427,76 @@ def main():
             if ok_conc:
                 new_state["_conc_alerted_date"] = today_str
                 msgs_sent += 1
+
+    # ── Data gap check for held positions (once per day, end of session) ────────
+    # If a held stock has >DATA_GAP_MAX missing trading days in recent history,
+    # signals built on that data may be unreliable — send a LINE warning.
+    gap_alerted_date = new_state.get("_gap_alerted_date", "")
+    if is_last_scan_of_day() and gap_alerted_date != today_str:
+        gappy = []
+        for ticker, h in port["holdings"].items():
+            r_data = sig_map.get(ticker, {})
+            if not r_data.get("gap_ok", True):
+                gappy.append({
+                    "ticker":    ticker,
+                    "name":      h["name"],
+                    "gap_count": r_data.get("gap_count", 0),
+                    "gap_dates": r_data.get("gap_dates", ""),
+                })
+        if gappy:
+            gappy.sort(key=lambda x: -x["gap_count"])
+            gap_msg = build_gap_alert(gappy, port, prices)
+            ok_gap  = send_line(gap_msg)
+            print("  ⚠️  Data gap alert ({0} stocks): {1}".format(
+                len(gappy), "✅ sent" if ok_gap else "❌ failed"))
+            if ok_gap:
+                new_state["_gap_alerted_date"] = today_str
+                msgs_sent += 1
+        else:
+            print("  ✅ Data quality OK — no gaps in held positions")
+        new_state["_gap_alerted_date"] = today_str
+        save_signal_state(new_state)
+
+    # ── Fundamental staleness check (held positions, once per day, end of session)
+    # Alert when a held stock's fundamentals haven't been refreshed in
+    # FUND_STALENESS_DAYS days.  Fundamentals auto-refresh whenever the stock
+    # becomes a BUY candidate; this alert fires when that hasn't happened.
+    fund_stale_alerted_date = new_state.get("_fund_stale_alerted_date", "")
+    if is_last_scan_of_day() and fund_stale_alerted_date != today_str:
+        today_dt   = datetime.date.today()
+        stale_fund = []
+        for ticker, h in port["holdings"].items():
+            st = new_state.get(ticker, {})
+            fetched_str = st.get("fund_fetched") if isinstance(st, dict) else None
+            if fetched_str:
+                try:
+                    fetched_dt = datetime.date.fromisoformat(fetched_str)
+                    age_days   = (today_dt - fetched_dt).days
+                    if age_days > FUND_STALENESS_DAYS:
+                        stale_fund.append({"ticker": ticker, "name": h["name"],
+                                           "age_days": age_days})
+                except Exception:
+                    pass
+            else:
+                # Fundamentals never fetched for this holding (e.g. pre-dates tracking)
+                entry_dt = datetime.date.fromisoformat(h.get("entry_date", today_str))
+                days_held = (today_dt - entry_dt).days
+                if days_held > FUND_STALENESS_DAYS:
+                    stale_fund.append({"ticker": ticker, "name": h["name"],
+                                       "age_days": None})
+        if stale_fund:
+            stale_fund.sort(key=lambda x: -(x["age_days"] or 9999))
+            sf_msg = build_fund_stale_alert(stale_fund, port, prices)
+            ok_sf  = send_line(sf_msg)
+            print("  ⚠️  Fund staleness alert ({0} stocks): {1}".format(
+                len(stale_fund), "✅ sent" if ok_sf else "❌ failed"))
+            if ok_sf:
+                msgs_sent += 1
+        else:
+            print("  ✅ Fundamentals fresh — all held positions within {0} days".format(
+                FUND_STALENESS_DAYS))
+        new_state["_fund_stale_alerted_date"] = today_str
+        save_signal_state(new_state)
 
     # ── Maximum hold period check (once per day, end of session) ─────────────
     # Alert if any holding has been held > MAX_HOLD_DAYS with no exit signal.
