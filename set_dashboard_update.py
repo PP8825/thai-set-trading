@@ -2,8 +2,8 @@
 """
 set_dashboard_update.py
 ───────────────────────────────────────────────────────────────────────────────
-Re-bakes PORT, SIGNALS, and REMOTE_HISTORY constants into set_dashboard.html
-so the page shows correct data even before the auto-sync fires.
+Re-bakes PORT, SIGNALS, REGIME, and REMOTE_HISTORY constants into
+set_dashboard.html so the page shows correct data even before auto-sync fires.
 
 Run this after set_eod_report.py or set_realtime_monitor.py to keep the
 embedded data in sync with the JSON files.
@@ -32,6 +32,9 @@ port    = load_json(PORTFOLIO_PATH, {})
 signals = load_json(SIGNALS_PATH,   {})
 history = load_json(HISTORY_PATH,   [])
 
+# Extract regime block from signal state
+regime  = signals.get("_regime", {})
+
 if not port:
     print("❌  No portfolio data found. Aborting.")
     sys.exit(1)
@@ -44,6 +47,7 @@ with open(DASHBOARD_PATH, encoding="utf-8") as f:
 port_json    = json.dumps(port,    ensure_ascii=False, separators=(',', ':'))
 signals_json = json.dumps(signals, ensure_ascii=False, separators=(',', ':'))
 history_json = json.dumps(history, ensure_ascii=False, separators=(',', ':'))
+regime_json  = json.dumps(regime,  ensure_ascii=False, separators=(',', ':'))
 
 now_bkk = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
 ts = now_bkk.strftime("%Y-%m-%d %H:%M")
@@ -67,6 +71,22 @@ if sig_pattern.search(html):
     html = sig_pattern.sub(rf'\g<1>{signals_json}\g<3>', html)
 else:
     print("  ⚠️  Could not find 'const SIGNALS = ...' — skipping signals update")
+
+# ── Replace REGIME constant ───────────────────────────────────────────────────
+reg_pattern = re.compile(
+    r'(const REGIME\s*=\s*)(\{.*?\})(;)',
+    re.DOTALL
+)
+if reg_pattern.search(html):
+    html = reg_pattern.sub(rf'\g<1>{regime_json}\g<3>', html)
+    if regime:
+        print(f"  📡 Regime: {regime.get('regime','?')}  "
+              f"SET {regime.get('set_px','?')}  MA200 {regime.get('ma200','?')}  "
+              f"({regime.get('updated','?')})")
+    else:
+        print("  ⚠️  Regime block empty — monitor hasn't run yet today")
+else:
+    print("  ⚠️  Could not find 'const REGIME = ...' — skipping regime update")
 
 # ── Replace REMOTE_HISTORY ─────────────────────────────────────────────────────
 hist_pattern = re.compile(
@@ -105,4 +125,5 @@ val  = port.get('cash', 0) + sum(
     h['shares'] * h.get('last_price', h['avg_cost'])
     for h in port.get('holdings', {}).values()
 )
-print(f"✅  Dashboard updated  —  Day {day}  |  Value ฿{val:,.0f}  |  {len(history)} history entries  |  {ts} BKK")
+reg_str = regime.get('regime', 'unknown') if regime else 'unknown'
+print(f"✅  Dashboard updated  —  Day {day}  |  Value ฿{val:,.0f}  |  Regime {reg_str}  |  {len(history)} history entries  |  {ts} BKK")
