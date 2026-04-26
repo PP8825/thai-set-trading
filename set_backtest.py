@@ -78,7 +78,6 @@ REQ_DIVIDEND     = _ff.get("require_dividend", False)
 MIN_COMPOSITE    = _ff.get("min_composite_score", 6.0)
 INITIAL_CAPITAL  = 300_000.0
 LOT_SIZE         = 100
-TX_COST          = 0.0025
 MAX_POSITIONS    = 10
 CASH_FLOOR_PCT   = 0.05
 BUY_SCORE_MIN    = 2     # sweep winner: score=2 beats score=3 across all params
@@ -95,6 +94,12 @@ REGIME_CONFIRM   = 20   # consecutive days required to flip regime in EITHER dir
                          # symmetric: 20 days below MA200 → BEAR, 20 days above → BULL
                          # eliminates whipsaw — only catches genuine sustained moves
 SLIPPAGE         = 0.003   # 0.3% next-day open slippage
+TRADE_FEE_PCT    = cfg.get("trade_fee_pct", 0.0)   # per-side commission (e.g. 0.0015 = 0.15%)
+                                                     # Thai online brokers: 0.15% + ฿50 min
+TX_COST          = TRADE_FEE_PCT if TRADE_FEE_PCT > 0 else 0.0025
+                   # Per-side fee applied on every BUY and SELL.
+                   # Default 0.25% (conservative) when trade_fee_pct not set in config.
+                   # Thai online brokers: 0.15% -> set trade_fee_pct: 0.0015 in set_config.json
 
 # ── Defensive basket (BEAR regime) ───────────────────────────────────────────
 _db              = cfg.get("defensive_basket", {})
@@ -221,13 +226,16 @@ def calc_fund_score(fund):
     elif roe>=0.20:    s+=3
     elif roe>=0.12:    s+=2
     elif roe>=0.08:    s+=1
-    if has_d:
-        if dyld>=0.09:   s+=4.0
-        elif dyld>=0.08: s+=3.5
-        elif dyld>=0.065:s+=3.0
-        elif dyld>=0.05: s+=2.5
-        elif dyld>=0.03: s+=2.0
-        else:            s+=1.0
+    # Dividend — min 4% yield for any points. Unsustainable payer (DPS>EPS) capped at 1.0.
+    dps=_f(fund.get("dps")) or 0.0; eps_v=_f(fund.get("eps")) or 0.0
+    unsust = (dps>0 and eps_v>0 and dps>eps_v)
+    if has_d and dyld>=0.04:
+        if unsust:           s+=1.0
+        elif dyld>=0.09:     s+=4.0
+        elif dyld>=0.08:     s+=3.5
+        elif dyld>=0.065:    s+=3.0
+        elif dyld>=0.05:     s+=2.5
+        else:                s+=2.0   # 4–5%
     if de is None:     s+=0
     elif de<0.5:       s+=2
     elif de<1.0:       s+=1
@@ -255,6 +263,10 @@ def fund_ok(fund):
     if pbv is not None and pbv>MAX_PBV: return False
     if roe is not None and roe<MIN_ROE: return False
     if REQ_DIVIDEND and not has_d: return False
+    # Dividend sustainability: hard-fail if yield <4% but flagged as dividend-paying
+    # (token payers should not pass as dividend stocks)
+    dyld=_to_float(fund.get("div_yld")) or 0.0
+    if REQ_DIVIDEND and has_d and dyld < 0.04: return False
     return True
 
 
@@ -312,7 +324,9 @@ def _load_siamchart_fast(ticker, years):
 
 # ── Historical fundamental cache (set_fetch_fundamentals.py) ─────────────────
 FUND_CACHE_PATH = os.path.join(SCRIPT_DIR, "set_fundamental_cache.json")
+DIV_CACHE_PATH  = os.path.join(SCRIPT_DIR, "set_dividend_cache.json")
 _FUND_CACHE = None   # loaded once on first use
+_DIV_CACHE  = None   # loaded once on first use
 
 def _load_fund_cache():
     global _FUND_CACHE
@@ -328,6 +342,25 @@ def _load_fund_cache():
         print("  ⚠  set_fundamental_cache.json not found — "
               "run set_fetch_fundamentals.py first for point-in-time fundamentals")
     return _FUND_CACHE
+
+def _load_div_cache():
+    """Load set_dividend_cache.json (built by set_build_dividend_cache.py)."""
+    global _DIV_CACHE
+    if _DIV_CACHE is not None:
+        return _DIV_CACHE
+    if os.path.exists(DIV_CACHE_PATH):
+        with open(DIV_CACHE_PATH, encoding="utf-8") as f:
+            raw = json.load(f)
+        # Strip the _meta entry; keys are tickers, values are {year: dps}
+        _DIV_CACHE = {k: v for k, v in raw.items() if not k.startswith("_")}
+        n_with_data = sum(1 for v in _DIV_CACHE.values() if v)
+        print(f"  💰 Loaded dividend cache: {len(_DIV_CACHE)} tickers "
+              f"({n_with_data} with actual data)  [{DIV_CACHE_PATH}]")
+    else:
+        _DIV_CACHE = {}
+        print("  ⚠  set_dividend_cache.json not found — "
+              "run set_build_dividend_cache.py first to include dividends")
+    return _DIV_CACHE
 
 
 def get_historical_fund(ticker, trade_date):
@@ -416,14 +449,31 @@ def fetch_fund(ticker):
 
 # ── Dividend income helper ────────────────────────────────────────────────────
 def get_annual_dps(ticker, year):
+    """Return annual dividend per share (DPS) for ticker in the given year.
+
+    Lookup order:
+      1. set_dividend_cache.json  (yfinance .dividends — aggregated by year)
+         Built by set_build_dividend_cache.py — most reliable.
+      2. set_fundamental_cache.json  (thaifin yearly.dps)
+         Fallback; often returns None for Thai stocks.
+    Returns 0.0 if not found in either cache.
     """
-    Return annual dividend per share (DPS) for ticker in the given year
-    from the fundamental cache, or 0 if unavailable.
-    """
-    cache  = _load_fund_cache()
-    yearly = cache.get(ticker, {}).get("yearly", {})
-    d      = yearly.get(str(year), {})
-    dps    = d.get("dps")
+    yr = str(year)
+
+    # ── Primary: yfinance dividend cache ──────────────────────────────────────
+    div_cache = _load_div_cache()
+    if div_cache:
+        dps = div_cache.get(ticker, {}).get(yr)
+        if dps is not None:
+            try:
+                return float(dps)
+            except (TypeError, ValueError):
+                pass
+
+    # ── Fallback: thaifin fundamental cache ───────────────────────────────────
+    fund_cache = _load_fund_cache()
+    yearly     = fund_cache.get(ticker, {}).get("yearly", {})
+    dps        = yearly.get(yr, {}).get("dps")
     if dps is None:
         return 0.0
     try:
@@ -446,13 +496,26 @@ def fetch_hist(ticker, years):
 # ── Simulation kernel (fast — reused by sweep) ────────────────────────────────
 def _simulate(all_dates, sig, all_data, fok_map, fs_map,
               regime_bull, set_df, years, regime_enabled, params=None,
-              hist_fund_available=False):
-    """Run the strategy loop and return a performance dict."""
+              hist_fund_available=False, from_date=None, to_date=None):
+    """Run the strategy loop and return a performance dict.
+
+    from_date / to_date (YYYY-MM-DD strings, optional):
+        Restrict simulation to dates within [from_date, to_date].
+        Full historical data is still loaded for indicator warmup (MA200 etc).
+    """
     p = params or {}
     atr_mult      = p.get("atr_mult",      ATR_MULTIPLIER)
     tp_pct        = p.get("tp_pct",        TAKE_PROFIT_PCT)
     buy_score_min = p.get("buy_score_min", BUY_SCORE_MIN)
     comp_min      = p.get("comp_min",      0.0)   # optional composite floor
+
+    # ── Date window filtering ─────────────────────────────────────────────────
+    # Filter which dates are actually *simulated*.  Full data is still loaded
+    # for indicator warmup (MA200 needs 200+ days of history).
+    if from_date or to_date:
+        all_dates = [d for d in all_dates
+                     if (from_date is None or str(d.date()) >= from_date)
+                     and (to_date   is None or str(d.date()) <= to_date)]
 
     cash=INITIAL_CAPITAL; holdings={}; trades=[]; equity_curve=[]
     prev_scores={}
@@ -867,6 +930,8 @@ def _load_data(years, regime_enabled):
     print("SET Strategy Backtester")
     print(f"Period: {years} years  |  Capital: ฿{INITIAL_CAPITAL:,.0f}")
     print(f"Regime filter: {'ON' if regime_enabled else 'OFF'}")
+    print(f"Slippage: {SLIPPAGE*100:.2f}%  |  Fee/side: {TX_COST*100:.2f}%  "
+          f"(round-trip: {TX_COST*200:.2f}%)  ← set trade_fee_pct in set_config.json")
     if DEF_ENABLED:
         n_anchors = len(BEAR_ANCHORS) + 1   # +1 for gold
         print(f"BEAR basket  : Gold {GOLD_WEIGHT*100:.0f}% + {len(BEAR_ANCHORS)} anchors "
@@ -950,8 +1015,9 @@ def _load_data(years, regime_enabled):
     else:
         print("  Could not load SET — regime disabled.")
 
-    print(f"[3/4] Loading historical fundamental cache...")
+    print(f"[3/4] Loading historical fundamental + dividend caches...")
     _load_fund_cache()   # pre-load JSON into memory once
+    _load_div_cache()    # pre-load dividend cache (set_build_dividend_cache.py)
     hist_fund_available = bool(_FUND_CACHE)
     if hist_fund_available:
         # Build an initial fok_map/fs_map from today's data as a pre-filter
@@ -1039,14 +1105,19 @@ def _print_results(perf, all_dates, params=None):
 
 
 # ── Main backtest ─────────────────────────────────────────────────────────────
-def run_backtest(years=5, regime_enabled=True):
+def run_backtest(years=5, regime_enabled=True, from_date=None, to_date=None):
     all_data, sig, fok_map, fs_map, regime_bull, set_df, all_dates, hist_fund = \
         _load_data(years, regime_enabled)
 
-    print(f"Simulating {len(all_dates)} trading days...")
+    sim_days = len([d for d in all_dates
+                    if (from_date is None or str(d.date()) >= from_date)
+                    and (to_date  is None or str(d.date()) <= to_date)])
+    print(f"Simulating {sim_days} trading days"
+          + (f"  [{from_date} → {to_date}]" if from_date or to_date else "") + "...")
     perf = _simulate(all_dates, sig, all_data, fok_map, fs_map,
                      regime_bull, set_df, years, regime_enabled,
-                     hist_fund_available=hist_fund)
+                     hist_fund_available=hist_fund,
+                     from_date=from_date, to_date=to_date)
 
     _print_results(perf, all_dates)
 
@@ -1131,14 +1202,196 @@ def run_sweep(years=5, regime_enabled=True):
     return sweep_results
 
 
+# ── Walk-forward validation ───────────────────────────────────────────────────
+def run_walk_forward(years=6, regime_enabled=True):
+    """Split data into in-sample (2021-2024) and out-of-sample (2025-today).
+
+    Both periods use IDENTICAL parameters (no re-tuning between periods).
+    The comparison shows how much model performance decays on unseen data.
+
+    Data is fetched once with `years` lookback (default 6) so both windows
+    have enough warmup history for MA200 / SMA indicators.
+    """
+    IS_FROM  = "2021-01-01"
+    IS_TO    = "2024-12-31"
+    OOS_FROM = "2025-01-01"
+    OOS_TO   = datetime.date.today().isoformat()
+
+    print("\n" + "="*60)
+    print("WALK-FORWARD VALIDATION")
+    print(f"  In-sample  (IS) : {IS_FROM}  →  {IS_TO}")
+    print(f"  Out-of-sample   : {OOS_FROM}  →  {OOS_TO}")
+    print(f"  Parameters  ← FIXED (no re-tuning between windows)")
+    print("="*60 + "\n")
+
+    # Load full dataset once (shared warmup + both windows)
+    all_data, sig, fok_map, fs_map, regime_bull, set_df, all_dates, hist_fund = \
+        _load_data(years, regime_enabled)
+
+    def _true_annual(total_ret_pct, n_trading_days):
+        """Annualise from total return using actual trading days (252/yr)."""
+        if n_trading_days <= 0:
+            return 0.0
+        factor = 1 + total_ret_pct / 100
+        ann_years = n_trading_days / 252
+        return (factor ** (1 / ann_years) - 1) * 100
+
+    # ── In-sample run ─────────────────────────────────────────────────────────
+    print(f"Running IN-SAMPLE  ({IS_FROM} → {IS_TO})...")
+    is_dates = [d for d in all_dates if IS_FROM <= str(d.date()) <= IS_TO]
+    perf_is = _simulate(all_dates, sig, all_data, fok_map, fs_map,
+                        regime_bull, set_df, years, regime_enabled,
+                        hist_fund_available=hist_fund,
+                        from_date=IS_FROM, to_date=IS_TO)
+    # Correct annualised return for actual window length
+    perf_is["annual_return"] = round(_true_annual(perf_is["total_return"], len(is_dates)), 2)
+    print(f"  → {len(is_dates)} trading days  "
+          f"Return={perf_is['total_return']:+.1f}%  "
+          f"Ann={perf_is['annual_return']:+.1f}%  "
+          f"Alpha={perf_is['alpha']:+.1f}%  "
+          f"Sharpe={perf_is['sharpe']:.2f}")
+
+    # ── Out-of-sample run ─────────────────────────────────────────────────────
+    print(f"Running OUT-OF-SAMPLE ({OOS_FROM} → {OOS_TO})...")
+    oos_dates = [d for d in all_dates if OOS_FROM <= str(d.date()) <= OOS_TO]
+    perf_oos = _simulate(all_dates, sig, all_data, fok_map, fs_map,
+                         regime_bull, set_df, years, regime_enabled,
+                         hist_fund_available=hist_fund,
+                         from_date=OOS_FROM, to_date=OOS_TO)
+    # Correct annualised return for actual window length
+    perf_oos["annual_return"] = round(_true_annual(perf_oos["total_return"], len(oos_dates)), 2)
+    print(f"  → {len(oos_dates)} trading days  "
+          f"Return={perf_oos['total_return']:+.1f}%  "
+          f"Ann={perf_oos['annual_return']:+.1f}%  "
+          f"Alpha={perf_oos['alpha']:+.1f}%  "
+          f"Sharpe={perf_oos['sharpe']:.2f}")
+
+    # ── Side-by-side report ───────────────────────────────────────────────────
+    def _pct_decay(is_val, oos_val):
+        """Decay as percentage-point difference (OOS − IS); negative = worse."""
+        return oos_val - is_val
+
+    print("\n" + "="*68)
+    print("WALK-FORWARD RESULTS")
+    print("="*68)
+    print(f"{'Metric':<26} {'In-Sample (IS)':>18} {'Out-of-Sample (OOS)':>20} {'Δ (OOS−IS)':>12}")
+    print("─"*68)
+
+    rows = [
+        ("Period",        f"{IS_FROM[:7]} → {IS_TO[:7]}",
+                          f"{OOS_FROM[:7]} → {OOS_TO[:7]}",    None),
+        ("Trading days",  str(len(is_dates)),  str(len(oos_dates)),         None),
+        ("Total return",  f"{perf_is['total_return']:+.1f}%",
+                          f"{perf_oos['total_return']:+.1f}%",
+                          _pct_decay(perf_is['total_return'], perf_oos['total_return'])),
+        ("Annual return", f"{perf_is['annual_return']:+.1f}%",
+                          f"{perf_oos['annual_return']:+.1f}%",
+                          _pct_decay(perf_is['annual_return'], perf_oos['annual_return'])),
+        ("Alpha vs SET",  f"{perf_is['alpha']:+.1f}%",
+                          f"{perf_oos['alpha']:+.1f}%",
+                          _pct_decay(perf_is['alpha'], perf_oos['alpha'])),
+        ("Sharpe ratio",  f"{perf_is['sharpe']:.2f}",
+                          f"{perf_oos['sharpe']:.2f}",
+                          _pct_decay(perf_is['sharpe'], perf_oos['sharpe'])),
+        ("Max drawdown",  f"{perf_is['max_drawdown']:.1f}%",
+                          f"{perf_oos['max_drawdown']:.1f}%",
+                          _pct_decay(perf_is['max_drawdown'], perf_oos['max_drawdown'])),
+        ("Win rate",      f"{perf_is['win_rate']:.1f}%",
+                          f"{perf_oos['win_rate']:.1f}%",
+                          _pct_decay(perf_is['win_rate'], perf_oos['win_rate'])),
+        ("Profit factor", f"{perf_is['profit_factor']:.2f}×",
+                          f"{perf_oos['profit_factor']:.2f}×",
+                          _pct_decay(perf_is['profit_factor'], perf_oos['profit_factor'])),
+        ("# Trades",      str(perf_is['n_trades']),
+                          str(perf_oos['n_trades']),           None),
+    ]
+    for label, is_val, oos_val, delta in rows:
+        if delta is None:
+            print(f"  {label:<24} {is_val:>18} {oos_val:>20}")
+        else:
+            arrow = "▲" if delta > 0 else ("▼" if delta < 0 else "─")
+            sign  = "+" if delta > 0 else ""
+            # For drawdown: getting worse means a larger negative number → delta < 0 → ▼
+            print(f"  {label:<24} {is_val:>18} {oos_val:>20}   {arrow} {sign}{delta:+.1f}")
+
+    print("─"*68)
+    # Overall verdict
+    # ann_decay = OOS − IS (positive = OOS better, negative = OOS worse)
+    ann_decay = _pct_decay(perf_is['annual_return'], perf_oos['annual_return'])
+    oos_profitable = perf_oos['annual_return'] > 0
+    oos_alpha      = perf_oos['alpha'] > 0
+
+    if not oos_profitable:
+        verdict = "🔴  OVERFIT — OOS period lost money; model may be curve-fitted"
+    elif not oos_alpha:
+        verdict = "⚠️   MARGINAL — OOS profitable but underperforms SET index"
+    elif ann_decay >= 0:
+        # OOS is better than or equal to IS — definitively not overfit
+        verdict = "✅  ROBUST — model outperforms IS on unseen data (no overfitting)"
+    elif ann_decay >= -5:
+        verdict = "✅  ROBUST — model generalises well to unseen data"
+    elif ann_decay >= -15:
+        verdict = "⚠️   MODERATE — some decay on unseen data, still profitable"
+    else:
+        verdict = "🔴  OVERFIT — significant performance drop on out-of-sample data"
+
+    decay_label = "improvement" if ann_decay >= 0 else "decay"
+    print(f"\n  Verdict: {verdict}")
+    print(f"  Annual return {decay_label}: {ann_decay:+.1f} pp  "
+          f"({'OOS outperformed IS' if ann_decay >= 0 else 'within ±10 pp' if abs(ann_decay) <= 10 else 'exceeds ±10 pp threshold'})")
+    print("="*68 + "\n")
+
+    # ── Save results ──────────────────────────────────────────────────────────
+    wf_results = {
+        "meta": {
+            "run_date":     datetime.date.today().isoformat(),
+            "is_period":    {"from": IS_FROM,  "to": IS_TO},
+            "oos_period":   {"from": OOS_FROM, "to": OOS_TO},
+            "regime":       regime_enabled,
+            "capital":      INITIAL_CAPITAL,
+        },
+        "in_sample":     {k:v for k,v in perf_is.items()
+                          if k not in ("trades","equity_curve")},
+        "out_of_sample": {k:v for k,v in perf_oos.items()
+                          if k not in ("trades","equity_curve")},
+        "decay": {
+            "annual_return_pp": round(ann_decay, 2),
+            "alpha_pp":         round(_pct_decay(perf_is['alpha'],     perf_oos['alpha']),    2),
+            "sharpe":           round(_pct_decay(perf_is['sharpe'],    perf_oos['sharpe']),   2),
+            "max_drawdown_pp":  round(_pct_decay(perf_is['max_drawdown'], perf_oos['max_drawdown']), 2),
+            "win_rate_pp":      round(_pct_decay(perf_is['win_rate'],  perf_oos['win_rate']), 2),
+        },
+        "verdict": verdict,
+        "is_trades":      perf_is["trades"],
+        "oos_trades":     perf_oos["trades"],
+        "is_equity":      perf_is["equity_curve"],
+        "oos_equity":     perf_oos["equity_curve"],
+    }
+    out = os.path.join(SCRIPT_DIR, "set_walkforward_results.json")
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(wf_results, f, indent=2, default=str)
+    print(f"✅  Walk-forward results saved → set_walkforward_results.json\n")
+    return wf_results
+
+
 if __name__=="__main__":
     parser=argparse.ArgumentParser(description="SET Strategy Backtester")
-    parser.add_argument("--years",     type=int,  default=5)
-    parser.add_argument("--no-regime", action="store_true")
-    parser.add_argument("--sweep",     action="store_true",
+    parser.add_argument("--years",          type=int,  default=5)
+    parser.add_argument("--no-regime",      action="store_true")
+    parser.add_argument("--sweep",          action="store_true",
                         help="Run parameter sweep instead of single backtest")
+    parser.add_argument("--walk-forward",   action="store_true",
+                        help="Run walk-forward validation (IS 2021-2024, OOS 2025-today)")
+    parser.add_argument("--from-date",      type=str,  default=None,
+                        help="Start date for single backtest window (YYYY-MM-DD)")
+    parser.add_argument("--to-date",        type=str,  default=None,
+                        help="End date for single backtest window (YYYY-MM-DD)")
     args=parser.parse_args()
-    if args.sweep:
+
+    if args.walk_forward:
+        run_walk_forward(years=max(args.years, 6), regime_enabled=not args.no_regime)
+    elif args.sweep:
         run_sweep(years=args.years, regime_enabled=not args.no_regime)
     else:
-        run_backtest(years=args.years, regime_enabled=not args.no_regime)
+        run_backtest(years=args.years, regime_enabled=not args.no_regime,
+                     from_date=args.from_date, to_date=args.to_date)

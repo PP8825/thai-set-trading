@@ -58,6 +58,7 @@ PORTFOLIO_PATH    = os.path.join(SCRIPT_DIR, "set_portfolio.json")
 STATE_PATH        = os.path.join(SCRIPT_DIR, "set_signal_state.json")
 HISTORY_PATH      = os.path.join(SCRIPT_DIR, "set_history.json")
 FUND_CACHE_PATH   = os.path.join(SCRIPT_DIR, "set_fundamental_cache.json")
+DIV_CACHE_PATH    = os.path.join(SCRIPT_DIR, "set_dividend_cache.json")
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -645,6 +646,12 @@ def check_fundamentals(fund):
         else:
             fails.append("No dividend")
 
+    # Dividend sustainability: warn (not hard-fail) if DPS > EPS
+    dps = fund.get("dps") or 0.0
+    eps = fund.get("eps") or 0.0
+    if dps > 0 and eps > 0 and dps > eps:
+        checks.append("DIV unsustainable DPS>{:.2f}".format(eps))
+
     passes  = len(fails) == 0
     summary = " | ".join(checks + ["❌ " + f for f in fails])
     return passes, fails, summary
@@ -660,7 +667,8 @@ def calc_fundamental_score(fund):
       P/E  (0–3):  ≤8→3 | 8–12→2 | 12–15→1 | >15 or neg→0
       P/BV (0–3):  <1→3 | 1–1.5→2 | 1.5–3→1 | >3→0
       ROE  (0–3):  ≥20%→3 | 12–20%→2 | 8–12%→1 | <8%→0
-      Div  (0–4):  ≥9%→4 | ≥8%→3.5 | ≥6.5%→3 | ≥5%→2.5 | ≥3%→2 | any→1 | none→0
+      Div  (0–4):  ≥9%→4 | ≥8%→3.5 | ≥6.5%→3 | ≥5%→2.5 | ≥4%→2 | <4%→0 | none→0
+                   unsustainable (DPS>EPS) → capped at 1 regardless of yield
 
     New quality factors (0–6 pts):
       D/E ratio   (0–2):  <0.5→2 | <1.0→1 | ≥1.0→0  (low debt = better)
@@ -700,15 +708,23 @@ def calc_fundamental_score(fund):
     elif roe >= 0.08:   score += 1
 
     # ── Dividend — max 4 pts ──────────────────────────────────────────────────
+    # Minimum meaningful yield: 4%. Token payers (<4%) earn 0 dividend points.
+    # Sustainability check: if DPS > EPS the dividend is likely unsustainable
+    # (paying out more than it earns) — cap at 1.0 pt even if yield looks high.
     has_div = fund.get("has_div", False)
     div_yld = fund.get("div_yld") or 0.0
-    if has_div:
-        if div_yld >= 0.09:    score += 4.0
-        elif div_yld >= 0.08:  score += 3.5
-        elif div_yld >= 0.065: score += 3.0
-        elif div_yld >= 0.05:  score += 2.5
-        elif div_yld >= 0.03:  score += 2.0
-        else:                  score += 1.0
+    dps     = fund.get("dps") or 0.0
+    eps     = fund.get("eps") or 0.0
+    # Payout ratio check: flag dividend as unsustainable if DPS > EPS > 0
+    unsustainable_div = (dps > 0 and eps > 0 and dps > eps)
+    if has_div and div_yld >= 0.04:
+        if unsustainable_div:
+            score += 1.0   # yield is high but dividend is not covered by earnings
+        elif div_yld >= 0.09:    score += 4.0
+        elif div_yld >= 0.08:    score += 3.5
+        elif div_yld >= 0.065:   score += 3.0
+        elif div_yld >= 0.05:    score += 2.5
+        else:                    score += 2.0   # 4–5% yield — meaningful but modest
 
     # ── NEW: Debt/Equity — max 2 pts (low leverage = resilience) ─────────────
     de = fund.get("de_ratio")
@@ -1835,6 +1851,7 @@ def build_fund_stale_alert(stale_holdings, port, prices):
 
 # ─── Dividend income tracker ──────────────────────────────────────────────────
 _fund_cache_memo = None   # loaded once per process
+_div_cache_memo  = None   # set_dividend_cache.json — yfinance DPS by year
 
 def _load_fund_cache_memo():
     global _fund_cache_memo
@@ -1847,13 +1864,43 @@ def _load_fund_cache_memo():
         _fund_cache_memo = {}
     return _fund_cache_memo
 
+def _load_div_cache_memo():
+    """Load set_dividend_cache.json (built by set_build_dividend_cache.py)."""
+    global _div_cache_memo
+    if _div_cache_memo is not None:
+        return _div_cache_memo
+    if os.path.exists(DIV_CACHE_PATH):
+        with open(DIV_CACHE_PATH, encoding="utf-8") as f:
+            raw = json.load(f)
+        _div_cache_memo = {k: v for k, v in raw.items() if not k.startswith("_")}
+    else:
+        _div_cache_memo = {}
+    return _div_cache_memo
+
 def get_expected_dps(ticker):
+    """Return the most recent annual DPS (Baht/share) for forward estimates.
+
+    Lookup order:
+      1. set_dividend_cache.json  (yfinance .dividends aggregated by year)
+         Built by set_build_dividend_cache.py — most reliable.
+      2. set_fundamental_cache.json  (thaifin yearly.dps — often None for Thai stocks)
+    Returns 0.0 if not found in either cache.
+    This is used for forward income estimates only, not for backtest accuracy.
     """
-    Return the most recent annual DPS (Baht per share) from set_fundamental_cache.json.
-    Uses the latest available year regardless of publication lag — this is forward
-    guidance only, not used for point-in-time backtest accuracy.
-    Returns 0.0 if no data.
-    """
+    # ── Primary: yfinance dividend cache ─────────────────────────────────────
+    div_cache = _load_div_cache_memo()
+    if div_cache:
+        yr_data = div_cache.get(ticker, {})
+        if yr_data:
+            latest_yr = max(yr_data.keys())
+            dps = yr_data[latest_yr]
+            if dps is not None:
+                try:
+                    return float(dps)
+                except (TypeError, ValueError):
+                    pass
+
+    # ── Fallback: thaifin fundamental cache ───────────────────────────────────
     cache  = _load_fund_cache_memo()
     yearly = cache.get(ticker, {}).get("yearly", {})
     if not yearly:
@@ -1861,7 +1908,6 @@ def get_expected_dps(ticker):
     latest_yr = max(yearly.keys())
     dps = yearly[latest_yr].get("dps")
     if dps is None:
-        # Fall back: estimate from div_yield × current price (rough)
         return 0.0
     try:
         return float(dps)
