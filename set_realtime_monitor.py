@@ -133,7 +133,7 @@ REGIME_MA_PERIOD = 200
 # Adapts to each stock's own volatility — volatile stocks get wider stops,
 # stable stocks get tighter stops.  Replaces the blunt fixed 8% stop.
 ATR_PERIOD      = 14
-ATR_MULTIPLIER  = 1.5    # 1.5 × ATR — sweep winner: best Sharpe (0.38) + lowest drawdown (-14.5%)
+ATR_MULTIPLIER  = cfg.get("atr_multiplier", 2.5)   # read from set_config.json
 ATR_FALLBACK_PCT = 0.08  # 8% fallback for holdings that pre-date ATR tracking
 
 # ─── Maximum hold period ─────────────────────────────────────────────────────
@@ -144,7 +144,7 @@ MAX_HOLD_DAYS = 60   # calendar days
 # ─── Take-profit ─────────────────────────────────────────────────────────────
 # Sell a position if it has gained more than this % from avg cost.
 # Prevents giving back large gains while waiting for a technical sell signal.
-TAKE_PROFIT_PCT = 0.50   # 50% gain → trigger take-profit sell (sweep: let winners run further)
+TAKE_PROFIT_PCT = cfg.get("take_profit_pct", 0.25)  # read from set_config.json
 
 # ─── Portfolio drawdown brake ────────────────────────────────────────────────
 # Suspend ALL new buys and rotations when portfolio has dropped more than this

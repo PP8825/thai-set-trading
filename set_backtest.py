@@ -84,9 +84,9 @@ BUY_SCORE_MIN    = 2     # sweep winner: score=2 beats score=3 across all params
 SELL_SCORE_MAX   = -2
 BUY_PREV_MAX     = 0
 SELL_PREV_MIN    = 0
-TAKE_PROFIT_PCT  = 0.50   # sweep winner: let winners run further
+TAKE_PROFIT_PCT  = cfg.get("take_profit_pct", 0.25)   # from set_config.json
 ATR_PERIOD       = 14
-ATR_MULTIPLIER   = 1.5    # sweep winner: best Sharpe + lowest drawdown
+ATR_MULTIPLIER   = cfg.get("atr_multiplier",  2.5)   # from set_config.json
 ATR_FALLBACK_PCT = 0.08
 REGIME_TICKER    = "^SET.BK"
 REGIME_MA_PERIOD = 200
