@@ -18,7 +18,9 @@ Key simplifications vs live trading:
     * One signal check per day (at daily close)
     * Buys execute at next day's open + 0.3% slippage
     * Stops and take-profits checked at daily close
-    * Fundamentals fetched once at start (current, not point-in-time historical)
+    * Fundamentals: point-in-time from set_fundamental_cache.json if available,
+      otherwise falls back to current yfinance data (look-ahead bias warning shown)
+    * Dividend income credited at year-end using historical DPS from fundamental cache
 """
 
 import sys, os, json, datetime, argparse
@@ -267,17 +269,87 @@ def _load_siamchart_fast(ticker, years):
     return None
 
 
-# ── Data fetching ─────────────────────────────────────────────────────────────
-def fetch_hist(ticker, years):
-    try:
-        df = yf.Ticker(ticker).history(period=f"{years+1}y", auto_adjust=True)
-        if df is None or df.empty: return None
-        df.index = pd.to_datetime(df.index).tz_localize(None)
-        return df[["Open","High","Low","Close","Volume"]].dropna()
-    except Exception as e:
-        return None
+# ── Historical fundamental cache (set_fetch_fundamentals.py) ─────────────────
+FUND_CACHE_PATH = os.path.join(SCRIPT_DIR, "set_fundamental_cache.json")
+_FUND_CACHE = None   # loaded once on first use
 
-def fetch_fund(ticker):
+def _load_fund_cache():
+    global _FUND_CACHE
+    if _FUND_CACHE is not None:
+        return _FUND_CACHE
+    if os.path.exists(FUND_CACHE_PATH):
+        with open(FUND_CACHE_PATH, encoding="utf-8") as f:
+            _FUND_CACHE = json.load(f)
+        print(f"  📚 Loaded fundamental cache: {len(_FUND_CACHE)} stocks "
+              f"({FUND_CACHE_PATH})")
+    else:
+        _FUND_CACHE = {}
+        print("  ⚠  set_fundamental_cache.json not found — "
+              "run set_fetch_fundamentals.py first for point-in-time fundamentals")
+    return _FUND_CACHE
+
+
+def get_historical_fund(ticker, trade_date):
+    """
+    Return the most appropriate point-in-time fundamental snapshot for a
+    given ticker and trade date, using the local cache built by
+    set_fetch_fundamentals.py.
+
+    Lag rule (conservative — avoids look-ahead bias):
+      • Jan–Mar of year Y  → use year Y-2 data
+        (Y-1 annual results not yet published; Thai firms report by ~Mar)
+      • Apr–Dec of year Y  → use year Y-1 data
+        (Y-1 annual results published by ~Mar, so available from Apr)
+
+    Falls back to yfinance if cache is missing or has no data for that year.
+    """
+    cache = _load_fund_cache()
+    entry = cache.get(ticker, {})
+    yearly = entry.get("yearly", {})
+
+    if yearly:
+        year = trade_date.year
+        month = trade_date.month
+        # Conservative publication lag
+        lookup_year = str(year - 2 if month < 4 else year - 1)
+
+        # Find the best available year (exact match or nearest earlier)
+        available = sorted(yearly.keys())
+        chosen_year = None
+        if lookup_year in yearly:
+            chosen_year = lookup_year
+        else:
+            earlier = [y for y in available if y <= lookup_year]
+            if earlier:
+                chosen_year = max(earlier)
+            elif available:
+                chosen_year = min(available)   # best we have
+
+        if chosen_year:
+            d = yearly[chosen_year]
+            # Convert to the format expected by fund_ok() and calc_fund_score()
+            # div_yield from thaifin is a ratio (e.g. 0.062 = 6.2%) — keep as-is
+            div_yield = d.get("div_yield") or 0.0
+            has_div   = (d.get("dps") or 0) > 0 or div_yield > 0
+            return {
+                "pe":         d.get("pe"),
+                "pbv":        d.get("pbv"),
+                "roe":        d.get("roe"),
+                "div_yld":    div_yield,
+                "has_div":    has_div,
+                "de_ratio":   d.get("de_ratio"),
+                "eps_growth": d.get("eps_growth"),
+                "fcf_yield":  None,   # not available from thaifin
+                "_year":      chosen_year,
+                "_dps":       d.get("dps"),
+            }
+
+    # Fallback: current yfinance data (look-ahead, but better than nothing)
+    return fetch_fund_yf(ticker)
+
+
+def fetch_fund_yf(ticker):
+    """Original yfinance fundamental fetch — used as fallback."""
     try:
         tk=yf.Ticker(ticker); info=tk.info
         pe=info.get("trailingPE") or info.get("forwardPE")
@@ -296,10 +368,44 @@ def fetch_fund(ticker):
                 "de_ratio":de,"eps_growth":eg,"fcf_yield":fcfy}
     except: return {}
 
+# Keep old name as alias so any external callers still work
+def fetch_fund(ticker):
+    return fetch_fund_yf(ticker)
+
+
+# ── Dividend income helper ────────────────────────────────────────────────────
+def get_annual_dps(ticker, year):
+    """
+    Return annual dividend per share (DPS) for ticker in the given year
+    from the fundamental cache, or 0 if unavailable.
+    """
+    cache  = _load_fund_cache()
+    yearly = cache.get(ticker, {}).get("yearly", {})
+    d      = yearly.get(str(year), {})
+    dps    = d.get("dps")
+    if dps is None:
+        return 0.0
+    try:
+        return float(dps)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+# ── Data fetching ─────────────────────────────────────────────────────────────
+def fetch_hist(ticker, years):
+    try:
+        df = yf.Ticker(ticker).history(period=f"{years+1}y", auto_adjust=True)
+        if df is None or df.empty: return None
+        df.index = pd.to_datetime(df.index).tz_localize(None)
+        return df[["Open","High","Low","Close","Volume"]].dropna()
+    except Exception as e:
+        return None
+
 
 # ── Simulation kernel (fast — reused by sweep) ────────────────────────────────
 def _simulate(all_dates, sig, all_data, fok_map, fs_map,
-              regime_bull, set_df, years, regime_enabled, params=None):
+              regime_bull, set_df, years, regime_enabled, params=None,
+              hist_fund_available=False):
     """Run the strategy loop and return a performance dict."""
     p = params or {}
     atr_mult      = p.get("atr_mult",      ATR_MULTIPLIER)
@@ -309,11 +415,51 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
 
     cash=INITIAL_CAPITAL; holdings={}; trades=[]; equity_curve=[]
     prev_scores={}
+    dividend_income = 0.0
+    prev_year       = None
+
+    # Per-(ticker, lookup_year) cache for fundamental snapshots.
+    # Fundamentals only change once per year so we cache keyed by
+    # (ticker, lookup_year) to avoid redundant dict lookups across dates.
+    _fund_snap = {}   # (tk, lookup_year) -> (fok: bool, fs: float)
+
+    def _get_fund_snap(tk, date):
+        """Return (fund_ok, fund_score) for ticker at given date with caching.
+        If hist_fund_available, uses point-in-time data from the cache;
+        otherwise falls back to the pre-built static fok_map / fs_map."""
+        if not hist_fund_available:
+            return fok_map.get(tk, True), fs_map.get(tk, 5.0)
+        yr = date.year; mo = date.month
+        ly = yr - 2 if mo < 4 else yr - 1   # conservative publication lag
+        key = (tk, ly)
+        if key not in _fund_snap:
+            fund = get_historical_fund(tk, date)
+            _fund_snap[key] = (fund_ok(fund), calc_fund_score(fund))
+        return _fund_snap[key]
 
     def pval(px): return cash+sum(h["shares"]*px.get(tk,h["avg_cost"])
                                   for tk,h in holdings.items())
 
     for date in all_dates:
+        # ── Year-end dividend crediting ───────────────────────────────────
+        # When we cross into a new calendar year, credit annual DPS × shares
+        # for every position held.  Using the previous year's DPS avoids
+        # look-ahead bias (dividends for year Y are known by early Y+1).
+        if hist_fund_available and prev_year is not None and date.year > prev_year:
+            for htk, h in list(holdings.items()):
+                dps = get_annual_dps(htk, prev_year)
+                if dps > 0:
+                    div_credit = round(dps * h["shares"], 2)
+                    cash += div_credit
+                    dividend_income += div_credit
+                    trades.append({"date":str(date.date()),"action":"DIV",
+                        "ticker":htk,"name":h["name"],"shares":h["shares"],
+                        "price":round(dps,4),"avg_cost":h["avg_cost"],
+                        "pnl":div_credit,
+                        "reason":f"Dividend {prev_year} DPS={dps:.4f}",
+                        "hold_days":0})
+        prev_year = date.year
+
         prices = {tk: float(sig[tk].loc[date,"close"])
                   for tk in sig if date in sig[tk].index}
 
@@ -377,10 +523,11 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
             for tk,(nm,_) in all_data.items():
                 if tk in holdings or SECTOR_MAP.get(tk)=="INDEX": continue
                 if tk not in sig or date not in sig[tk].index: continue
-                if not fok_map.get(tk,True): continue
+                _fok,_fs = _get_fund_snap(tk, date)
+                if not _fok: continue
                 sc=int(sig[tk].loc[date,"score"]); ps=prev_scores.get(tk,0)
                 if sc>=ROTATION_IN_SCORE_MIN:
-                    cmp=comp_score(sc,fs_map.get(tk,5.0))
+                    cmp=comp_score(sc,_fs)
                     if cmp>=ROTATION_IN_COMP_MIN:
                         atr=float(sig[tk].loc[date,"atr"])
                         rot_candidates.append({"ticker":tk,"name":nm,"score":sc,"comp":cmp,"atr":atr})
@@ -394,7 +541,8 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
                     if htk not in sig or date not in sig[htk].index: continue
                     hsc = int(sig[htk].loc[date,"score"])
                     if hsc > ROTATION_HELD_SCORE_MAX: continue
-                    hcomp = comp_score(hsc, fs_map.get(htk,5.0))
+                    _,hfs = _get_fund_snap(htk, date)
+                    hcomp = comp_score(hsc, hfs)
                     if hcomp > ROTATION_COMP_FLOOR: continue
                     held_d = (date.date()-h["entry_date"]).days
                     if held_d < ROTATION_MIN_HOLD_DAYS: continue
@@ -450,11 +598,12 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
             for tk,(nm,_) in all_data.items():
                 if tk in holdings or SECTOR_MAP.get(tk)=="INDEX": continue
                 if tk not in sig or date not in sig[tk].index: continue
-                if not fok_map.get(tk,True): continue
+                _fok,_fs = _get_fund_snap(tk, date)
+                if not _fok: continue
                 sc=int(sig[tk].loc[date,"score"]); ps=prev_scores.get(tk,0)
                 if sc>=buy_score_min and ps<=BUY_PREV_MAX:
                     atr=float(sig[tk].loc[date,"atr"])
-                    cmp=comp_score(sc,fs_map.get(tk,5.0))
+                    cmp=comp_score(sc,_fs)
                     if cmp<comp_min: continue
                     buys.append({"ticker":tk,"name":nm,"score":sc,"comp":cmp,"atr":atr})
             buys.sort(key=lambda x:-x["comp"])
@@ -536,6 +685,7 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
     return {"final_value":round(final_val,2),
             "total_return":round(total_ret,2),
             "annual_return":round(ann_ret,2),
+            "dividend_income":round(dividend_income,2),
             "set_bah_return":round(set_ret,2) if set_ret is not None else None,
             "alpha":round(total_ret-(set_ret or 0),2),
             "sharpe":round(sharpe,2),
@@ -595,15 +745,30 @@ def _load_data(years, regime_enabled):
     else:
         print("  Could not load SET — regime disabled.")
 
-    print(f"[3/4] Fetching fundamentals (takes ~3 min)...")
-    fund_cache = {}
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
-        futs = {ex.submit(fetch_fund,tk):tk for tk in all_data}
-        done=0
-        for future in as_completed(futs):
-            tk=futs[future]; fund_cache[tk]=future.result(); done+=1
-            sys.stdout.write(f"\r  {done}/{len(all_data)} done..."); sys.stdout.flush()
-    print(f"\r  {len(fund_cache)} fundamentals loaded.     ")
+    print(f"[3/4] Loading historical fundamental cache...")
+    _load_fund_cache()   # pre-load JSON into memory once
+    hist_fund_available = bool(_FUND_CACHE)
+    if hist_fund_available:
+        # Build an initial fok_map/fs_map from today's data as a pre-filter
+        # approximation. The simulation itself calls get_historical_fund() per
+        # date for genuine point-in-time correctness.
+        today = datetime.date.today()
+        fund_cache = {tk: get_historical_fund(tk, today) for tk in all_data}
+        print(f"  ✅ Historical cache: {len(_FUND_CACHE)} stocks loaded — "
+              f"point-in-time fundamentals + dividends active")
+    else:
+        print(f"  ⚠  set_fundamental_cache.json not found — "
+              f"falling back to yfinance (look-ahead bias)")
+        print(f"     Fix: python3 set_fetch_fundamentals.py")
+        fund_cache = {}
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
+            futs = {ex.submit(fetch_fund_yf,tk):tk for tk in all_data}
+            done=0
+            for future in as_completed(futs):
+                tk=futs[future]; fund_cache[tk]=future.result(); done+=1
+                sys.stdout.write(f"\r  {done}/{len(all_data)} done...")
+                sys.stdout.flush()
+        print(f"\r  {len(fund_cache)} fundamentals loaded (yfinance fallback).     ")
     fs_map  = {tk: calc_fund_score(f) for tk,f in fund_cache.items()}
     fok_map = {tk: fund_ok(f)         for tk,f in fund_cache.items()}
 
@@ -617,7 +782,7 @@ def _load_data(years, regime_enabled):
     cutoff    = (datetime.date.today()-datetime.timedelta(days=years*365)).isoformat()
     all_dates = sorted({d for tk in sig for d in sig[tk].index
                         if str(d.date())>=cutoff})
-    return all_data, sig, fok_map, fs_map, regime_bull, set_df, all_dates
+    return all_data, sig, fok_map, fs_map, regime_bull, set_df, all_dates, hist_fund_available
 
 
 # ── Print + save helpers ──────────────────────────────────────────────────────
@@ -641,6 +806,8 @@ def _print_results(perf, all_dates, params=None):
     print(f"Final value    : ฿{perf['final_value']:>12,.0f}")
     print(f"Total return   : {perf['total_return']:>+.1f}%")
     print(f"Annual return  : {perf['annual_return']:>+.1f}%")
+    if perf.get("dividend_income", 0) > 0:
+        print(f"Dividend income: ฿{perf['dividend_income']:>12,.0f}")
     if set_ret is not None:
         print(f"SET B&H return : {set_ret:>+.1f}%  (same period)")
         print(f"Alpha vs SET   : {perf['alpha']:>+.1f}%")
@@ -665,12 +832,13 @@ def _print_results(perf, all_dates, params=None):
 
 # ── Main backtest ─────────────────────────────────────────────────────────────
 def run_backtest(years=5, regime_enabled=True):
-    all_data, sig, fok_map, fs_map, regime_bull, set_df, all_dates = \
+    all_data, sig, fok_map, fs_map, regime_bull, set_df, all_dates, hist_fund = \
         _load_data(years, regime_enabled)
 
     print(f"Simulating {len(all_dates)} trading days...")
     perf = _simulate(all_dates, sig, all_data, fok_map, fs_map,
-                     regime_bull, set_df, years, regime_enabled)
+                     regime_bull, set_df, years, regime_enabled,
+                     hist_fund_available=hist_fund)
 
     _print_results(perf, all_dates)
 
@@ -692,7 +860,7 @@ def run_sweep(years=5, regime_enabled=True):
     """Load data once, then simulate every parameter combination.
     Sweeps: ATR multiplier × take-profit % × buy score minimum
     """
-    all_data, sig, fok_map, fs_map, regime_bull, set_df, all_dates = \
+    all_data, sig, fok_map, fs_map, regime_bull, set_df, all_dates, hist_fund = \
         _load_data(years, regime_enabled)
 
     atr_mults      = [1.5, 2.0, 2.5, 3.0]
@@ -713,7 +881,8 @@ def run_sweep(years=5, regime_enabled=True):
             for bs in buy_score_mins:
                 params = {"atr_mult":atr, "tp_pct":tp, "buy_score_min":bs}
                 p = _simulate(all_dates, sig, all_data, fok_map, fs_map,
-                              regime_bull, set_df, years, regime_enabled, params)
+                              regime_bull, set_df, years, regime_enabled, params,
+                              hist_fund_available=hist_fund)
                 n += 1
                 print(f"{atr:>5.1f} {tp*100:>4.0f}% {bs:>6}  "
                       f"{p['annual_return']:>+6.1f} {p['alpha']:>+6.1f} "
