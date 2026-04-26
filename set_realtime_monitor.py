@@ -2072,6 +2072,44 @@ def main():
                 "🟢 BULL" if regime == "BULL" else "🔴 BEAR", set_px, ma200, gap_str))
         else:
             print("\n  📊 Market Regime: could not fetch SET Index — defaulting to BULL")
+    # ── Regime change alert ───────────────────────────────────────────────────
+    prev_regime = prev_state.get("_regime", {}).get("regime", "BULL")
+    if prev_regime and regime != prev_regime:
+        gap_str = "{0:+.1f}%".format(gap) if gap else ""
+        if regime == "BEAR":
+            regime_msg = "\n".join([
+                "🔴 REGIME CHANGE — BULL → BEAR",
+                "─" * 32,
+                "SET Index has confirmed a downtrend.",
+                "SET {0:.0f}  ·  MA200 {1:.0f}  ({2})".format(
+                    set_px or 0, ma200 or 0, gap_str),
+                "",
+                "⚠️  Effective immediately:",
+                "• All new BUY signals suspended",
+                "• Rotations suspended",
+                "• ATR stops tightened to 1.5× ATR",
+                "• Idle cash will be deployed into GLD",
+                "",
+                "Existing positions will exit naturally",
+                "via their own ATR stops — no force-sell.",
+            ])
+        else:
+            regime_msg = "\n".join([
+                "🟢 REGIME CHANGE — BEAR → BULL",
+                "─" * 32,
+                "SET Index has confirmed an uptrend.",
+                "SET {0:.0f}  ·  MA200 {1:.0f}  ({2})".format(
+                    set_px or 0, ma200 or 0, gap_str),
+                "",
+                "✅  Effective immediately:",
+                "• BUY signals and rotations resume",
+                "• ATR stops back to normal 2.5×",
+                "• GLD position will be sold and",
+                "  cash redeployed into momentum stocks",
+            ])
+        send_line(regime_msg)
+        print("  📢 Regime change alert sent via LINE")
+
     if regime == "BEAR":
         print("  ⚠  BEAR REGIME — all BUY orders and rotations SUSPENDED")
         print("  ⚠  Only stop-losses and signal-based SELLs will execute")

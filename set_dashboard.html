@@ -158,6 +158,17 @@ tr:hover td{background:rgba(109,186,127,.04)}
   <!-- ═══════════════════════════ OVERVIEW PAGE ═══════════════════════════ -->
   <div class="page active" id="page-overview">
 
+    <!-- regime card -->
+    <div id="regimeCard" style="border-radius:12px;padding:16px 20px;margin-bottom:14px;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <div id="regimeCardTitle" style="font-size:18px;font-weight:800;letter-spacing:.5px"></div>
+          <div id="regimeCardSub" style="font-size:12px;margin-top:4px;opacity:.8"></div>
+        </div>
+        <div style="text-align:right;font-size:11px;opacity:.7" id="regimeCardMeta"></div>
+      </div>
+    </div>
+
     <!-- summary cards -->
     <div class="cards" id="summaryCards"></div>
 
@@ -1400,20 +1411,55 @@ async function refreshFromGitHub(){
 // ─── RENDER ALL ───────────────────────────────────────────────────────────────
 function renderRegimeBanner(){
   const banner = document.getElementById('regimeBanner');
+  const card   = document.getElementById('regimeCard');
   if(!banner) return;
   const r = REGIME || {};
-  if(!r.regime || r.regime === 'UNKNOWN'){ banner.style.display='none'; return; }
-  const bull = r.regime === 'BULL';
-  const gap  = r.gap_pct != null ? (r.gap_pct > 0 ? '+' : '') + r.gap_pct.toFixed(1) + '%' : '';
-  const setStr = r.set_px ? ' · SET ' + r.set_px.toFixed(0) : '';
-  const maStr  = r.ma200  ? ' · MA200 ' + r.ma200.toFixed(0) : '';
-  const updStr = r.updated ? ' · ' + r.updated : '';
-  banner.style.display = 'block';
-  banner.style.background = bull ? 'rgba(77,205,122,.15)' : 'rgba(240,100,100,.18)';
+  if(!r.regime || r.regime === 'UNKNOWN'){
+    banner.style.display = 'none';
+    if(card) card.style.display = 'none';
+    return;
+  }
+  const bull   = r.regime === 'BULL';
+  const gap    = r.gap_pct != null ? (r.gap_pct > 0 ? '+' : '') + r.gap_pct.toFixed(1) + '%' : '';
+  const setStr = r.set_px ? 'SET ' + r.set_px.toFixed(0) : '';
+  const maStr  = r.ma200  ? 'MA200 ' + r.ma200.toFixed(0) : '';
+  const updStr = r.updated ? 'Updated ' + r.updated : '';
+
+  // ── Top banner (thin strip) ───────────────────────────────────────────────
+  banner.style.display     = 'block';
+  banner.style.background  = bull ? 'rgba(77,205,122,.15)' : 'rgba(240,100,100,.18)';
   banner.style.color       = bull ? 'var(--green)' : 'var(--red)';
   banner.style.borderBottom= bull ? '1px solid rgba(77,205,122,.3)' : '1px solid rgba(240,100,100,.35)';
   banner.innerHTML = (bull ? '🟢 BULL REGIME' : '🔴 BEAR REGIME — Buys & Rotations Suspended')
-    + setStr + maStr + (gap ? ' (' + gap + ' vs MA200)' : '') + updStr;
+    + (setStr ? ' · ' + setStr : '') + (maStr ? ' · ' + maStr : '')
+    + (gap ? ' (' + gap + ' vs MA200)' : '') + (updStr ? ' · ' + updStr : '');
+
+  // ── Overview regime card (large, always visible) ──────────────────────────
+  if(card){
+    card.style.display    = 'block';
+    card.style.background = bull ? 'rgba(77,205,122,.12)' : 'rgba(240,100,100,.12)';
+    card.style.border     = bull ? '2px solid rgba(77,205,122,.4)' : '2px solid rgba(240,100,100,.4)';
+
+    const title = document.getElementById('regimeCardTitle');
+    const sub   = document.getElementById('regimeCardSub');
+    const meta  = document.getElementById('regimeCardMeta');
+
+    if(title) {
+      title.style.color = bull ? 'var(--green)' : 'var(--red)';
+      title.textContent = bull ? '🟢 BULL REGIME — Market in uptrend' : '🔴 BEAR REGIME — Market in downtrend';
+    }
+    if(sub) {
+      sub.style.color = bull ? 'var(--green)' : 'var(--red)';
+      sub.textContent = bull
+        ? 'Buy signals active · Rotations active · ATR stop 2.5×'
+        : 'New buys suspended · Stops tightened to 1.5× ATR · Idle cash → GLD hedge';
+    }
+    if(meta) {
+      meta.style.color = bull ? 'var(--green)' : 'var(--red)';
+      meta.innerHTML = [setStr, maStr, gap ? gap + ' vs MA200' : '', updStr]
+        .filter(Boolean).join('<br>');
+    }
+  }
 }
 
 function renderAll(){
