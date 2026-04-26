@@ -110,22 +110,28 @@ def _pick(row, *candidates):
 # ── Column name maps (try multiple possible names per metric) ─────────────────
 YEARLY_COLS = {
     "eps":        ["earning_per_share",     "EPS",             "eps"],
+    # thaifin has no dividend_per_share column — computed below from div_yield × close
     "dps":        ["dividend_per_share",    "DPS",             "dps",
                    "dividend",              "Dividend"],
     "pe":         ["price_earning_ratio",   "PE",              "pe",
                    "p_e_ratio",             "price_to_earning"],
-    "pbv":        ["price_book_value_ratio","PBV",             "pbv",
+    # thaifin actual column: price_book_value (not price_book_value_ratio)
+    "pbv":        ["price_book_value",      "price_book_value_ratio", "PBV", "pbv",
                    "price_to_book_value",   "p_bv_ratio"],
-    "roe":        ["return_on_equity",      "ROE",             "roe"],
-    "div_yield":  ["dividend_yield",        "DividendYield",   "div_yield"],
-    "bvps":       ["book_value_per_share",  "BookValuePerShare","bvps",
+    "roe":        ["roe",                   "return_on_equity",       "ROE"],
+    "div_yield":  ["dividend_yield",        "DividendYield",          "div_yield"],
+    "bvps":       ["book_value_per_share",  "BookValuePerShare",      "bvps",
                    "book_value"],
     "de_ratio":   ["debt_to_equity",        "DE",              "de_ratio",
                    "d_e_ratio"],
     "eps_growth": ["earning_per_share_yoy", "EPSGrowth",       "eps_growth",
                    "earning_per_share_growth"],
-    "net_margin": ["net_profit_margin",     "NetProfitMargin", "net_margin"],
-    "roa":        ["return_on_asset",       "ROA",             "roa"],
+    # thaifin actual column: npm (net profit margin)
+    "net_margin": ["npm",                   "net_profit_margin","NetProfitMargin",
+                   "net_margin"],
+    "roa":        ["roa",                   "return_on_asset",  "ROA"],
+    # store year-end close for DPS computation
+    "_close":     ["close"],
 }
 
 QUARTER_COLS = {
@@ -145,10 +151,20 @@ def _extract_yearly(df):
                 continue
         except Exception:
             continue
-        result[year] = {
+        metrics = {
             key: _pick(row, *cols)
             for key, cols in YEARLY_COLS.items()
         }
+        # thaifin has no dividend_per_share column — derive from div_yield × close.
+        # dividend_yield in thaifin is a ratio (e.g. 0.05 = 5%), close is the year-end price.
+        if metrics.get("dps") is None:
+            dy    = metrics.get("div_yield")
+            close = metrics.get("_close")
+            if dy and close and dy > 0 and close > 0:
+                metrics["dps"] = round(dy * close, 4)
+        # Drop internal helper key
+        metrics.pop("_close", None)
+        result[year] = metrics
     return result
 
 
