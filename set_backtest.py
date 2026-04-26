@@ -71,10 +71,11 @@ ADX_PERIOD       = cfg.get("adx_period", 14)
 VOL_SURGE_R      = cfg.get("volume_surge_ratio", 1.5)
 _ff              = cfg.get("fundamental_filter", {})
 FUND_ENABLED     = _ff.get("enabled", True)
-MAX_PE           = _ff.get("max_pe", 20)
-MAX_PBV          = _ff.get("max_pbv", 3)
-MIN_ROE          = _ff.get("min_roe", 0.08)
+MAX_PE           = _ff.get("max_pe", 15)
+MAX_PBV          = _ff.get("max_pbv", 2.0)
+MIN_ROE          = _ff.get("min_roe", 0.10)
 REQ_DIVIDEND     = _ff.get("require_dividend", False)
+MIN_COMPOSITE    = _ff.get("min_composite_score", 6.0)
 INITIAL_CAPITAL  = 300_000.0
 LOT_SIZE         = 100
 TX_COST          = 0.0025
@@ -90,7 +91,47 @@ ATR_MULTIPLIER   = cfg.get("atr_multiplier",  2.5)   # from set_config.json
 ATR_FALLBACK_PCT = 0.08
 REGIME_TICKER    = "^SET.BK"
 REGIME_MA_PERIOD = 200
+REGIME_CONFIRM   = 20   # consecutive days required to flip regime in EITHER direction
+                         # symmetric: 20 days below MA200 → BEAR, 20 days above → BULL
+                         # eliminates whipsaw — only catches genuine sustained moves
 SLIPPAGE         = 0.003   # 0.3% next-day open slippage
+
+# ── Defensive basket (BEAR regime) ───────────────────────────────────────────
+_db              = cfg.get("defensive_basket", {})
+DEF_ENABLED      = _db.get("enabled", True)
+DEF_ALLOC_PCT    = _db.get("allocation_pct", 0.70)
+GOLD_TICKER      = _db.get("gold_ticker", "GLD")
+GOLD_WEIGHT      = _db.get("gold_weight",  0.40)   # fixed 40% of deploy to gold
+GOLD_STOP_PCT    = _db.get("gold_stop_loss_pct",   0.15)
+EQUITY_STOP_PCT  = _db.get("equity_stop_loss_pct", 0.10)
+DEF_STOP_OVERRIDES = {GOLD_TICKER: GOLD_STOP_PCT}
+
+# Bear screen rules — applied dynamically at each BULL→BEAR transition
+_bs              = _db.get("bear_screen", {})
+BEAR_MAX_DE      = _bs.get("max_de_ratio",  1.0)
+BEAR_MIN_ROE     = _bs.get("min_roe",       0.10)
+BEAR_MIN_DIV     = _bs.get("min_div_yield", 0.03)
+BEAR_MAX_PE      = _bs.get("max_pe",        18)
+BEAR_BLOCKED_SEC = set(_bs.get("blocked_sectors", ["BANKING","FINANCE","PROPERTY"]))
+BEAR_ANCHORS     = [s["ticker"] for s in _bs.get("anchor_stocks", [])
+                    if s["ticker"] != GOLD_TICKER]
+
+def bear_screen_fund(fund):
+    """
+    Return True if a stock's fundamentals pass the bear-basket screen.
+    Rules are structural (low leverage, dividend income, not credit-sensitive)
+    — NOT chosen by backtest performance.
+    """
+    if not fund:
+        return False
+    de  = fund.get("de_ratio");  roe = fund.get("roe")
+    dy  = fund.get("div_yld");   pe  = fund.get("pe")
+    if de  is not None and de  > BEAR_MAX_DE:  return False
+    if roe is not None and roe < BEAR_MIN_ROE: return False
+    if dy  is not None and dy  < BEAR_MIN_DIV: return False
+    if pe  is not None and pe  <= 0:           return False   # loss-making
+    if pe  is not None and pe  > BEAR_MAX_PE:  return False
+    return True
 _sc              = cfg.get("sector_concentration", {})
 SECTOR_ENABLED   = _sc.get("enabled", True)
 SECTOR_MAX       = _sc.get("max_per_sector", 2)
@@ -417,6 +458,8 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
     prev_scores={}
     dividend_income = 0.0
     prev_year       = None
+    basket_holdings = {}   # {ticker: {name, shares, avg_cost, entry_date}}
+    prev_is_bull    = None  # None until first date processed
 
     # Per-(ticker, lookup_year) cache for fundamental snapshots.
     # Fundamentals only change once per year so we cache keyed by
@@ -437,8 +480,11 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
             _fund_snap[key] = (fund_ok(fund), calc_fund_score(fund))
         return _fund_snap[key]
 
-    def pval(px): return cash+sum(h["shares"]*px.get(tk,h["avg_cost"])
-                                  for tk,h in holdings.items())
+    def pval(px): return (cash
+                          + sum(h["shares"]*px.get(tk,h["avg_cost"])
+                                for tk,h in holdings.items())
+                          + sum(h["shares"]*px.get(tk,h["avg_cost"])
+                                for tk,h in basket_holdings.items()))
 
     for date in all_dates:
         # ── Year-end dividend crediting ───────────────────────────────────
@@ -458,6 +504,19 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
                         "pnl":div_credit,
                         "reason":f"Dividend {prev_year} DPS={dps:.4f}",
                         "hold_days":0})
+            # Also credit dividends for basket holdings
+            for htk, h in list(basket_holdings.items()):
+                dps = get_annual_dps(htk, prev_year)
+                if dps > 0:
+                    div_credit = round(dps * h["shares"], 2)
+                    cash += div_credit
+                    dividend_income += div_credit
+                    trades.append({"date":str(date.date()),"action":"DIV",
+                        "ticker":htk,"name":h["name"],"shares":h["shares"],
+                        "price":round(dps,4),"avg_cost":h["avg_cost"],
+                        "pnl":div_credit,
+                        "reason":f"DEF-Dividend {prev_year} DPS={dps:.4f}",
+                        "hold_days":0})
         prev_year = date.year
 
         prices = {tk: float(sig[tk].loc[date,"close"])
@@ -469,9 +528,90 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
 
         equity_curve.append({"date":str(date.date()),"value":round(pval(prices),2),
                              "cash":round(cash,2),"n":len(holdings),
+                             "n_basket":len(basket_holdings),
                              "regime":"BULL" if is_bull else "BEAR"})
 
+        # ── Gold accumulation in BEAR (gradual rotation, no force-sells) ────────
+        # Strategy: don't sell anything. Let ATR stops handle existing positions.
+        # As cash is freed by natural exits, deploy it into GLD.
+        # On BEAR→BULL: sell GLD, redeploy into momentum stocks.
+
+        if DEF_ENABLED and regime_enabled and GOLD_TICKER in sig:
+
+            if not is_bull:
+                # ── During BEAR: top up GLD with any excess cash ──────────────
+                # "Excess cash" = cash above the floor, not needed for normal holds
+                excess = cash - INITIAL_CAPITAL * CASH_FLOOR_PCT
+                if excess >= 5000:   # min ฿5k to make a worthwhile GLD purchase
+                    next_ds = [d for d in sig[GOLD_TICKER].index if d > date]
+                    if next_ds:
+                        nd     = next_ds[0]
+                        buy_px = float(sig[GOLD_TICKER].loc[nd,"open"]) * (1 + SLIPPAGE)
+                        if buy_px > 0:
+                            # GLD is USD-priced — use LOT_SIZE=1 (no board-lot constraint)
+                            shares = max(1, int(excess * 0.90 / buy_px))
+                            cost   = shares * buy_px * (1 + TX_COST)
+                            if cost <= excess:
+                                cash -= cost
+                                existing = basket_holdings.get(GOLD_TICKER)
+                                if existing:
+                                    # Average into existing GLD position
+                                    total_shares = existing["shares"] + shares
+                                    total_cost   = (existing["shares"] * existing["avg_cost"]
+                                                    + shares * buy_px)
+                                    existing["shares"]   = total_shares
+                                    existing["avg_cost"] = round(total_cost / total_shares, 4)
+                                else:
+                                    basket_holdings[GOLD_TICKER] = {
+                                        "name": "Gold ETF", "shares": shares,
+                                        "avg_cost": round(buy_px, 4),
+                                        "entry_date": nd.date()}
+                                trades.append({"date":str(nd.date()),"action":"BUY-DEF",
+                                    "ticker":GOLD_TICKER,"name":"Gold ETF",
+                                    "shares":shares,"price":round(buy_px,4),
+                                    "avg_cost":round(buy_px,4),"pnl":0,
+                                    "reason":"BEAR: cash→GLD","hold_days":0})
+
+                # GLD stop-loss: 15% hard stop (gold can reverse sharply)
+                if GOLD_TICKER in basket_holdings:
+                    h    = basket_holdings[GOLD_TICKER]
+                    px   = prices.get(GOLD_TICKER, h["avg_cost"])
+                    loss = (h["avg_cost"] - px) / h["avg_cost"]
+                    if loss >= GOLD_STOP_PCT:
+                        proceeds = h["shares"] * px * (1 - TX_COST)
+                        pnl      = proceeds - h["shares"] * h["avg_cost"] * (1 + TX_COST)
+                        cash    += proceeds
+                        trades.append({"date":str(date.date()),"action":"SELL",
+                            "ticker":GOLD_TICKER,"name":"Gold ETF",
+                            "shares":h["shares"],"price":round(px,4),
+                            "avg_cost":round(h["avg_cost"],4),"pnl":round(pnl,2),
+                            "reason":f"GLD stop-loss -{loss*100:.1f}%",
+                            "hold_days":(date.date()-h["entry_date"]).days})
+                        del basket_holdings[GOLD_TICKER]
+
+            elif prev_is_bull is not None and not prev_is_bull and is_bull:
+                # ── BEAR → BULL confirmed: sell GLD, redeploy into stocks ────
+                if GOLD_TICKER in basket_holdings:
+                    h   = basket_holdings[GOLD_TICKER]
+                    px  = prices.get(GOLD_TICKER, h["avg_cost"])
+                    proceeds = h["shares"] * px * (1 - TX_COST)
+                    pnl      = proceeds - h["shares"] * h["avg_cost"] * (1 + TX_COST)
+                    cash    += proceeds
+                    trades.append({"date":str(date.date()),"action":"SELL",
+                        "ticker":GOLD_TICKER,"name":"Gold ETF",
+                        "shares":h["shares"],"price":round(px,4),
+                        "avg_cost":round(h["avg_cost"],4),"pnl":round(pnl,2),
+                        "reason":"BEAR→BULL: exit GLD, redeploy to stocks",
+                        "hold_days":(date.date()-h["entry_date"]).days})
+                    del basket_holdings[GOLD_TICKER]
+
+        # ── Update previous regime flag ───────────────────────────────────────
+        prev_is_bull = is_bull
+
         # Take-profit + ATR stop
+        # In BEAR regime, tighten ATR multiplier to exit faster and cut losses
+        effective_atr_mult = atr_mult * (0.6 if not is_bull else 1.0)
+
         for tk in list(holdings.keys()):
             h=holdings[tk]; px=prices.get(tk,h["avg_cost"])
             gain=(px-h["avg_cost"])/h["avg_cost"]
@@ -485,7 +625,12 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
                     "reason":f"Take-profit +{gain*100:.1f}%",
                     "hold_days":(date.date()-h["entry_date"]).days})
                 del holdings[tk]; continue
-            atr_stop=h.get("atr_stop",h["avg_cost"]*(1-ATR_FALLBACK_PCT))
+            # Recalculate stop using effective multiplier (tighter in BEAR)
+            atr_v = h.get("atr", 0)
+            if atr_v > 0:
+                atr_stop = round(h["avg_cost"] - effective_atr_mult * atr_v, 2)
+            else:
+                atr_stop = h.get("atr_stop", h["avg_cost"] * (1 - ATR_FALLBACK_PCT))
             if px<=atr_stop:
                 drop=(1-px/h["avg_cost"])*100
                 proceeds=h["shares"]*px*(1-TX_COST)
@@ -528,7 +673,7 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
                 sc=int(sig[tk].loc[date,"score"]); ps=prev_scores.get(tk,0)
                 if sc>=ROTATION_IN_SCORE_MIN:
                     cmp=comp_score(sc,_fs)
-                    if cmp>=ROTATION_IN_COMP_MIN:
+                    if cmp>=ROTATION_IN_COMP_MIN and cmp>=MIN_COMPOSITE:
                         atr=float(sig[tk].loc[date,"atr"])
                         rot_candidates.append({"ticker":tk,"name":nm,"score":sc,"comp":cmp,"atr":atr})
             rot_candidates.sort(key=lambda x:-x["comp"])
@@ -605,6 +750,7 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
                     atr=float(sig[tk].loc[date,"atr"])
                     cmp=comp_score(sc,_fs)
                     if cmp<comp_min: continue
+                    if cmp<MIN_COMPOSITE: continue
                     buys.append({"ticker":tk,"name":nm,"score":sc,"comp":cmp,"atr":atr})
             buys.sort(key=lambda x:-x["comp"])
             for bc in buys:
@@ -655,6 +801,16 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
             "shares":h["shares"],"price":round(px,2),"avg_cost":round(h["avg_cost"],2),
             "pnl":round(pnl,2),"reason":"End of backtest",
             "hold_days":(all_dates[-1].date()-h["entry_date"]).days})
+    # Close basket holdings
+    for btk,h in list(basket_holdings.items()):
+        px=last_px.get(btk,h["avg_cost"])
+        proceeds=h["shares"]*px*(1-TX_COST)
+        pnl=proceeds-h["shares"]*h["avg_cost"]*(1+TX_COST)
+        cash+=proceeds
+        trades.append({"date":last_date,"action":"SELL","ticker":btk,"name":h["name"],
+            "shares":h["shares"],"price":round(px,2),"avg_cost":round(h["avg_cost"],2),
+            "pnl":round(pnl,2),"reason":"End of backtest (basket)",
+            "hold_days":(all_dates[-1].date()-h["entry_date"]).days})
 
     # Performance metrics
     final_val = cash
@@ -666,7 +822,7 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
     peak      = np.maximum.accumulate(eq)
     max_dd    = float(((eq-peak)/peak*100).min())
     sells     = [t for t in trades if t["action"]=="SELL"
-                 and t["reason"]!="End of backtest"]
+                 and t["reason"] not in ("End of backtest","End of backtest (basket)")]
     wins      = [t for t in sells if t["pnl"]>0]
     losses    = [t for t in sells if t["pnl"]<=0]
     win_rate  = len(wins)/len(sells)*100 if sells else 0
@@ -682,10 +838,20 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
             set_ret=(float(s_filt["Close"].iloc[-1])-float(s_filt["Close"].iloc[0]))\
                     /float(s_filt["Close"].iloc[0])*100
 
+    # Basket trade stats
+    basket_buy_trades  = [t for t in trades if t["action"]=="BUY-DEF"]
+    basket_sell_trades = [t for t in trades if t["action"]=="SELL"
+                          and "basket" in t.get("reason","").lower()
+                          and t["reason"]!="End of backtest (basket)"]
+    basket_div_income  = sum(t["pnl"] for t in trades
+                             if t["action"]=="DIV" and "DEF-Dividend" in t.get("reason",""))
+
     return {"final_value":round(final_val,2),
             "total_return":round(total_ret,2),
             "annual_return":round(ann_ret,2),
             "dividend_income":round(dividend_income,2),
+            "basket_div_income":round(basket_div_income,2),
+            "basket_entries":len(basket_buy_trades),
             "set_bah_return":round(set_ret,2) if set_ret is not None else None,
             "alpha":round(total_ret-(set_ret or 0),2),
             "sharpe":round(sharpe,2),
@@ -701,6 +867,17 @@ def _load_data(years, regime_enabled):
     print("SET Strategy Backtester")
     print(f"Period: {years} years  |  Capital: ฿{INITIAL_CAPITAL:,.0f}")
     print(f"Regime filter: {'ON' if regime_enabled else 'OFF'}")
+    if DEF_ENABLED:
+        n_anchors = len(BEAR_ANCHORS) + 1   # +1 for gold
+        print(f"BEAR basket  : Gold {GOLD_WEIGHT*100:.0f}% + {len(BEAR_ANCHORS)} anchors "
+              f"+ screened equities  ({DEF_ALLOC_PCT*100:.0f}% deployed, "
+              f"{(1-DEF_ALLOC_PCT)*100:.0f}% cash)")
+        print(f"  {GOLD_TICKER:14s}  {GOLD_WEIGHT*100:4.0f}%  stop {GOLD_STOP_PCT*100:.0f}%  [gold hedge]")
+        for btk in BEAR_ANCHORS:
+            print(f"  {btk:14s}  anchor    stop {EQUITY_STOP_PCT*100:.0f}%  [structural — low beta, regulated revenue]")
+        print(f"  Bear screen : D/E≤{BEAR_MAX_DE}  ROE≥{BEAR_MIN_ROE*100:.0f}%  "
+              f"Yield≥{BEAR_MIN_DIV*100:.0f}%  PE≤{BEAR_MAX_PE}  "
+              f"blocked={','.join(sorted(BEAR_BLOCKED_SEC))}")
     print("="*60)
 
     # Pre-load the Siamchart module once (avoids re-importing inside threads)
@@ -739,9 +916,37 @@ def _load_data(years, regime_enabled):
     set_df = fetch_hist(REGIME_TICKER, years)
     regime_bull = None
     if set_df is not None:
-        sc = set_df["Close"]
-        regime_bull = (sc > sc.rolling(REGIME_MA_PERIOD).mean()).reindex(method="ffill")
+        sc   = set_df["Close"]
+        raw  = sc > sc.rolling(REGIME_MA_PERIOD).mean()   # raw daily signal
+        # Symmetric confirmation: require REGIME_CONFIRM consecutive days in
+        # the same state before flipping.  Applies to BOTH BULL→BEAR and BEAR→BULL.
+        # Eliminates whipsaw — only genuine sustained moves trigger regime changes.
+        confirmed = raw.copy().astype(bool)
+        bear_streak = 0
+        bull_streak = 0
+        confirmed_state = True   # start BULL
+        for i in range(len(raw)):
+            if not raw.iloc[i]:            # below MA200
+                bear_streak += 1
+                bull_streak  = 0
+                if bear_streak >= REGIME_CONFIRM:
+                    confirmed_state = False
+            else:                          # above MA200
+                bull_streak += 1
+                bear_streak  = 0
+                if bull_streak >= REGIME_CONFIRM:
+                    confirmed_state = True
+            confirmed.iloc[i] = confirmed_state
+        regime_bull = confirmed.reindex(method="ffill")
+        bear_raw  = (~raw).sum()
+        bear_conf = (~regime_bull).sum()
+        # Count actual regime transitions
+        n_trans = sum(1 for i in range(1, len(confirmed))
+                      if confirmed.iloc[i] != confirmed.iloc[i-1])
         print(f"  {len(set_df)} days of SET data loaded.")
+        print(f"  Regime confirmation (±{REGIME_CONFIRM}d symmetric): "
+              f"{bear_raw} raw BEAR days → {bear_conf} confirmed  |  "
+              f"{n_trans} transitions")
     else:
         print("  Could not load SET — regime disabled.")
 
@@ -788,7 +993,7 @@ def _load_data(years, regime_enabled):
 # ── Print + save helpers ──────────────────────────────────────────────────────
 def _print_results(perf, all_dates, params=None):
     sells = [t for t in perf["trades"] if t["action"]=="SELL"
-             and t["reason"]!="End of backtest"]
+             and t["reason"] not in ("End of backtest","End of backtest (basket)")]
     wins   = [t for t in sells if t["pnl"]>0]
     losses = [t for t in sells if t["pnl"]<=0]
     avg_win  = sum(t["pnl"] for t in wins)/len(wins)     if wins   else 0
@@ -808,6 +1013,9 @@ def _print_results(perf, all_dates, params=None):
     print(f"Annual return  : {perf['annual_return']:>+.1f}%")
     if perf.get("dividend_income", 0) > 0:
         print(f"Dividend income: ฿{perf['dividend_income']:>12,.0f}")
+        if perf.get("basket_div_income", 0) > 0:
+            print(f"  incl. basket : ฿{perf['basket_div_income']:>12,.0f}  "
+                  f"({perf['basket_entries']} BEAR basket entries)")
     if set_ret is not None:
         print(f"SET B&H return : {set_ret:>+.1f}%  (same period)")
         print(f"Alpha vs SET   : {perf['alpha']:>+.1f}%")

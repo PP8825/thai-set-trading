@@ -35,6 +35,10 @@
   "line_user_id": "U8da70dff0f01f21d459d0db0e89349e4",
   "instruments": [
     {
+      "name": "Gold ETF",
+      "ticker": "GLD"
+    },
+    {
       "name": "PTT",
       "ticker": "PTT.BK"
     },
@@ -433,16 +437,44 @@
   "alert_strong_signals_only": false,
   "_alert_note": "Set true to only send when STRONG BUY or STRONG SELL. Set false to always send the daily summary.",
   "fundamental_filter": {
-    "_note": "Stocks must pass ALL enabled checks before being bought",
+    "_note": "Stocks must pass ALL enabled checks before being bought. Thresholds aligned with scoring function so every passing stock earns points.",
     "enabled": true,
-    "max_pe": 20,
-    "max_pbv": 3,
-    "min_roe": 0.08,
-    "require_dividend": false
+    "max_pe": 15,
+    "max_pbv": 2.0,
+    "min_roe": 0.10,
+    "require_dividend": false,
+    "min_composite_score": 6.0
   },
   "atr_multiplier": 2.5,
-  "take_profit_pct": 0.25,
-  "_strategy_note": "ATR×2.5 + TP 25% — validated by 5-year backtest sweep and 3-year out-of-sample test. Alpha +9.4% / +3.9% vs SET.",
+  "take_profit_pct": 0.30,
+  "signal_drought_days": 30,
+  "_strategy_note": "ATR×2.5 + TP 30% | PE≤15 PBV≤2 ROE≥10% composite≥6.0 | Validated 2026-04 with corrected SET.or.th data. Bear-market alpha -0.2%, drawdown -11.6% vs market. Defensive basket active in BEAR regime.",
+  "defensive_basket": {
+    "_note": "BEAR-only basket. Gold (40%) hedges capital. Remaining 60% goes to stocks that pass bear_screen rules — selected dynamically, not hardcoded. Review bear_screen annually. 30% cash buffer always kept.",
+    "enabled": true,
+    "_enabled_reason": "Symmetric 20-day regime confirmation (both directions) reduces flips from 44→~5 per 5yr. GLD-only gradual rotation has minimal churn. Re-enable is safe now.",
+    "allocation_pct": 0.70,
+    "gold_ticker": "GLD",
+    "gold_weight": 0.40,
+    "gold_stop_loss_pct": 0.15,
+    "equity_stop_loss_pct": 0.10,
+    "bear_screen": {
+      "_note": "Rules applied to all instruments at each BULL→BEAR flip. Stocks passing ALL rules share the remaining 60% equally. Rules reviewed annually — not stock-specific.",
+      "max_de_ratio":   1.0,
+      "min_roe":        0.10,
+      "min_div_yield":  0.03,
+      "max_pe":         18,
+      "allowed_sectors": ["ENERGY", "TECH", "TRANSPORT"],
+      "blocked_sectors": ["BANKING", "FINANCE", "PROPERTY"],
+      "_sector_note": "Banks/finance/property fall with credit tightening. Energy/telecom/utility have contracted revenues that survive recessions.",
+      "anchor_stocks": [
+        {"ticker": "GLD",       "note": "Always included — gold hedge"},
+        {"ticker": "ADVANC.BK", "note": "Anchor — regulated duopoly telecom, passes screen every year"},
+        {"ticker": "RATCH.BK",  "note": "Anchor — domestic PPAs, govt-backed, beta ~0.55"}
+      ],
+      "_anchor_note": "Anchors always included regardless of screen. They are chosen for structural reasons (regulated revenue, low beta, domestic-only), not backtest performance."
+    }
+  },
   "sector_concentration": {
     "_note": "Max positions allowed per sector. Prevents over-concentration in one industry.",
     "enabled": true,
@@ -463,7 +495,8 @@
     "vol_low_multiplier":  1.25
   },
   "sector_map": {
-    "^SET.BK":    "INDEX",
+    "^SET.BK":  "INDEX",
+    "GLD":      "INDEX",
     "IVL.BK":     "MATERIALS",
     "PTT.BK":     "ENERGY",    "PTTGC.BK":  "ENERGY",   "PTTEP.BK": "ENERGY",
     "TOP.BK":     "ENERGY",    "IRPC.BK":   "ENERGY",   "BANPU.BK": "ENERGY",

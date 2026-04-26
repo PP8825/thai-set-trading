@@ -52,11 +52,12 @@ import pandas as pd
 import yfinance as yf
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
-SCRIPT_DIR     = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH    = os.path.join(SCRIPT_DIR, "set_config.json")
-PORTFOLIO_PATH = os.path.join(SCRIPT_DIR, "set_portfolio.json")
-STATE_PATH     = os.path.join(SCRIPT_DIR, "set_signal_state.json")
-HISTORY_PATH   = os.path.join(SCRIPT_DIR, "set_history.json")
+SCRIPT_DIR        = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH       = os.path.join(SCRIPT_DIR, "set_config.json")
+PORTFOLIO_PATH    = os.path.join(SCRIPT_DIR, "set_portfolio.json")
+STATE_PATH        = os.path.join(SCRIPT_DIR, "set_signal_state.json")
+HISTORY_PATH      = os.path.join(SCRIPT_DIR, "set_history.json")
+FUND_CACHE_PATH   = os.path.join(SCRIPT_DIR, "set_fundamental_cache.json")
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -143,8 +144,13 @@ MAX_HOLD_DAYS = 60   # calendar days
 
 # ─── Take-profit ─────────────────────────────────────────────────────────────
 # Sell a position if it has gained more than this % from avg cost.
-# Prevents giving back large gains while waiting for a technical sell signal.
-TAKE_PROFIT_PCT = cfg.get("take_profit_pct", 0.25)  # read from set_config.json
+# 30% gives winners more room to run vs the 25% that cut avg hold at 39 days.
+TAKE_PROFIT_PCT = cfg.get("take_profit_pct", 0.30)  # read from set_config.json
+
+# ─── Signal-drought detection ─────────────────────────────────────────────────
+# If no BUY has executed in this many calendar days, fire a LINE alert.
+# Drought usually means the composite gate (6.0) is too high for current market.
+SIGNAL_DROUGHT_DAYS = cfg.get("signal_drought_days", 30)
 
 # ─── Portfolio drawdown brake ────────────────────────────────────────────────
 # Suspend ALL new buys and rotations when portfolio has dropped more than this
@@ -189,9 +195,10 @@ EX_DIV_HOLD_DAYS = 14
 _ff            = cfg.get("fundamental_filter", {})
 FUND_ENABLED   = _ff.get("enabled", True)
 MAX_PE         = _ff.get("max_pe", 15)
-MAX_PBV        = _ff.get("max_pbv", 3)
-MIN_ROE        = _ff.get("min_roe", 0.08)
-REQ_DIVIDEND   = _ff.get("require_dividend", True)
+MAX_PBV        = _ff.get("max_pbv", 2.0)
+MIN_ROE        = _ff.get("min_roe", 0.10)
+REQ_DIVIDEND   = _ff.get("require_dividend", False)
+MIN_COMPOSITE  = _ff.get("min_composite_score", 6.0)
 
 # ─── Composite scoring weights ────────────────────────────────────────────────
 _sw          = cfg.get("scoring_weights", {})
@@ -1826,6 +1833,151 @@ def build_fund_stale_alert(stale_holdings, port, prices):
     return "\n".join(lines)
 
 
+# ─── Dividend income tracker ──────────────────────────────────────────────────
+_fund_cache_memo = None   # loaded once per process
+
+def _load_fund_cache_memo():
+    global _fund_cache_memo
+    if _fund_cache_memo is not None:
+        return _fund_cache_memo
+    if os.path.exists(FUND_CACHE_PATH):
+        with open(FUND_CACHE_PATH, encoding="utf-8") as f:
+            _fund_cache_memo = json.load(f)
+    else:
+        _fund_cache_memo = {}
+    return _fund_cache_memo
+
+def get_expected_dps(ticker):
+    """
+    Return the most recent annual DPS (Baht per share) from set_fundamental_cache.json.
+    Uses the latest available year regardless of publication lag — this is forward
+    guidance only, not used for point-in-time backtest accuracy.
+    Returns 0.0 if no data.
+    """
+    cache  = _load_fund_cache_memo()
+    yearly = cache.get(ticker, {}).get("yearly", {})
+    if not yearly:
+        return 0.0
+    latest_yr = max(yearly.keys())
+    dps = yearly[latest_yr].get("dps")
+    if dps is None:
+        # Fall back: estimate from div_yield × current price (rough)
+        return 0.0
+    try:
+        return float(dps)
+    except (TypeError, ValueError):
+        return 0.0
+
+def get_expected_div_yield(ticker):
+    """Most recent cached div_yield (stored as ratio, e.g. 0.088 = 8.8%)."""
+    cache  = _load_fund_cache_memo()
+    yearly = cache.get(ticker, {}).get("yearly", {})
+    if not yearly:
+        return None
+    latest_yr = max(yearly.keys())
+    dy = yearly[latest_yr].get("div_yield")
+    try:
+        return float(dy) if dy is not None else None
+    except (TypeError, ValueError):
+        return None
+
+def build_dividend_income_summary(port, prices):
+    """
+    Weekly LINE message showing expected annual dividend income for each
+    held position based on the most recent DPS in set_fundamental_cache.json.
+
+    Reminds the user to log dividends manually since live DPS tracking is
+    not yet fully automated.
+    """
+    total_val = portfolio_value(port, prices)
+    lines = [
+        "📅 Weekly Dividend Income Estimate",
+        "─" * 34,
+        "(Based on most recent DPS in cache)",
+        "",
+    ]
+    total_expected = 0.0
+    rows = []
+    for ticker, h in port.get("holdings", {}).items():
+        dps = get_expected_dps(ticker)
+        dy  = get_expected_div_yield(ticker)
+        ann_income = round(dps * h["shares"], 2) if dps else 0.0
+        px  = prices.get(ticker, h["avg_cost"])
+        # If DPS missing but yield known, estimate from current price
+        if not dps and dy and px:
+            ann_income = round(dy * px * h["shares"], 2)
+        rows.append((h["name"], ticker, dps, dy, h["shares"], ann_income))
+        total_expected += ann_income
+
+    rows.sort(key=lambda x: -x[5])   # highest income first
+    for name, ticker, dps, dy, shares, income in rows:
+        if dps:
+            tag = "฿{0:.2f} DPS × {1:,} sh = ฿{2:,.0f}/yr".format(
+                dps, shares, income)
+        elif dy:
+            tag = "~{0:.1f}% yield × {1:,} sh ≈ ฿{2:,.0f}/yr".format(
+                dy * 100, shares, income)
+        else:
+            tag = "DPS not available"
+        lines.append("  {0}: {1}".format(name, tag))
+
+    lines += [
+        "",
+        "─" * 34,
+        "Total expected: ฿{0:,.0f}/yr".format(total_expected),
+        "Monthly avg   : ฿{0:,.0f}/mo".format(total_expected / 12),
+        "",
+        "⚠ DPS data lags 1 year — log actual",
+        "  dividends received manually.",
+        "💼 Portfolio: ฿{0:,.0f}".format(total_val),
+        "⚠️ Educational only. Not financial advice.",
+    ]
+    return "\n".join(lines)
+
+
+def build_signal_drought_alert(days_since_buy, last_buy_date, regime, port, prices):
+    """
+    LINE alert fired when no BUY has executed in SIGNAL_DROUGHT_DAYS+ days.
+    Suggests loosening the composite gate if the market is in BULL regime.
+    """
+    total_val = portfolio_value(port, prices)
+    lines = [
+        "⚠️ Signal Drought — {0} days without a BUY".format(days_since_buy),
+        "─" * 34,
+        "Last buy: {0}".format(last_buy_date or "never"),
+        "Regime  : {0}".format("🟢 BULL" if regime == "BULL" else "🔴 BEAR"),
+        "",
+    ]
+    if regime == "BEAR":
+        lines += [
+            "Market is in BEAR — buys are correctly",
+            "suppressed. No action needed.",
+            "Defensive basket is active if enabled.",
+        ]
+    else:
+        lines += [
+            "BULL regime but no buys for {0}d.".format(days_since_buy),
+            "Possible causes:",
+            "  • Composite gate (≥{0:.1f}) too high".format(MIN_COMPOSITE),
+            "  • Fundamental filters too strict",
+            "  • Genuine lack of momentum signals",
+            "",
+            "Suggested action:",
+            "  • Check today's scan for near-misses",
+            "  • Lower min_composite_score to",
+            "    {0:.1f} in set_config.json if this".format(max(5.5, MIN_COMPOSITE - 0.5)),
+            "    persists another 2 weeks",
+        ]
+    lines += [
+        "",
+        "─" * 34,
+        "💼 Portfolio: ฿{0:,.0f}".format(total_val),
+        "Positions: {0}/{1}".format(len(port.get("holdings", {})), MAX_POSITIONS),
+        "⚠️ Educational only. Not financial advice.",
+    ]
+    return "\n".join(lines)
+
+
 def send_line(message):
     try:
         resp = requests.post(
@@ -2347,6 +2499,10 @@ def main():
                             port["holdings"][held_info["ticker"]] = held_info["h"]
                             port["trades"].pop()
 
+    # ── Record last BUY date for drought detection ─────────────────────────────
+    if any(t["action"] == "BUY" for t, _ in trades_executed):
+        new_state["_last_buy_date"] = today_str
+
     # Save regime info to state (dashboard reads this)
     new_state["_regime"] = {
         "regime":  regime,
@@ -2526,6 +2682,56 @@ def main():
             if ok_hm:
                 msgs_sent += 1
         new_state["_max_hold_alerted_date"] = today_str
+        save_signal_state(new_state)
+
+    # ── Signal drought check (once per day, EOD) ─────────────────────────────
+    # Fire a LINE alert if no BUY has executed in SIGNAL_DROUGHT_DAYS days.
+    drought_alerted_date = new_state.get("_drought_alerted_date", "")
+    if is_last_scan_of_day() and drought_alerted_date != today_str:
+        last_buy_date = new_state.get("_last_buy_date", "")
+        if last_buy_date:
+            try:
+                lbd       = datetime.date.fromisoformat(last_buy_date)
+                days_dry  = (datetime.date.today() - lbd).days
+            except Exception:
+                days_dry  = 0
+        else:
+            # No buy recorded at all — count from portfolio start
+            try:
+                start = datetime.date.fromisoformat(
+                    port.get("start_date", today_str))
+                days_dry = (datetime.date.today() - start).days
+            except Exception:
+                days_dry = 0
+
+        if days_dry >= SIGNAL_DROUGHT_DAYS:
+            dr_msg = build_signal_drought_alert(
+                days_dry, last_buy_date, regime, port, prices)
+            ok_dr  = send_line(dr_msg)
+            print("  ⚠️  Signal drought alert ({0}d): {1}".format(
+                days_dry, "✅ sent" if ok_dr else "❌ failed"))
+            if ok_dr:
+                new_state["_drought_alerted_date"] = today_str
+                msgs_sent += 1
+        else:
+            print("  ✅ Signal activity OK — last buy {0}d ago".format(days_dry))
+        save_signal_state(new_state)
+
+    # ── Weekly dividend income summary (every Monday EOD) ────────────────────
+    # Reminds you of expected annual income from held positions.
+    # Uses DPS from fundamental cache — manual logging still needed for actuals.
+    div_summary_date = new_state.get("_div_summary_date", "")
+    if (is_last_scan_of_day()
+            and datetime.date.today().weekday() == 0   # Monday
+            and div_summary_date != today_str
+            and port.get("holdings")):
+        dsum_msg = build_dividend_income_summary(port, prices)
+        ok_dsum  = send_line(dsum_msg)
+        print("  📅 Dividend income summary: {0}".format(
+            "✅ sent" if ok_dsum else "❌ failed"))
+        if ok_dsum:
+            new_state["_div_summary_date"] = today_str
+            msgs_sent += 1
         save_signal_state(new_state)
 
     # ── End-of-day heartbeat alert ────────────────────────────────────────────

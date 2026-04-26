@@ -91,6 +91,11 @@ if ts_pattern.search(html):
         html
     )
 
+# ── Bake DASHBOARD_UPDATED constant (shown in top bar with age colouring) ─────
+du_pattern = re.compile(r'(const DASHBOARD_UPDATED\s*=\s*")[^"]*(")')
+if du_pattern.search(html):
+    html = du_pattern.sub(rf'\g<1>{ts} Bangkok\g<2>', html)
+
 # ── Write updated HTML ────────────────────────────────────────────────────────
 with open(DASHBOARD_PATH, "w", encoding="utf-8") as f:
     f.write(html)

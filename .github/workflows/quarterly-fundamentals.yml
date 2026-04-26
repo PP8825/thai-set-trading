@@ -1,0 +1,106 @@
+name: Quarterly Fundamental Refresh
+
+on:
+  schedule:
+    # 1st weekday of Jan, Apr, Jul, Oct — 08:00 Bangkok (01:00 UTC)
+    - cron: '0 1 1-7 1,4,7,10 *'   # runs daily on days 1-7 of those months
+  workflow_dispatch:                 # allow manual trigger from GitHub Actions tab
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install thaifin pandas requests -q
+
+      - name: Check if first weekday of month
+        id: check_day
+        run: |
+          # Only proceed on the first Monday–Friday of the month
+          DAY=$(TZ=Asia/Bangkok date +%u)   # 1=Mon … 7=Sun
+          DOM=$(TZ=Asia/Bangkok date +%d)   # day of month
+          PREV_DOM=$((DOM - 1))
+          # It's the first weekday if: it's Mon–Fri AND (dom==1 OR all prev days were weekend)
+          # Simple rule: first weekday = dom <= 3 and weekday, OR dom==1
+          if [ "$DAY" -le 5 ] && [ "$DOM" -le 3 ]; then
+            echo "run=true" >> $GITHUB_OUTPUT
+          elif [ "$DAY" -le 5 ] && [ "$DOM" -eq 1 ]; then
+            echo "run=true" >> $GITHUB_OUTPUT
+          else
+            echo "run=false" >> $GITHUB_OUTPUT
+            echo "Not the first weekday — skipping."
+          fi
+
+      - name: Refresh fundamental cache
+        if: steps.check_day.outputs.run == 'true'
+        run: python set_fetch_fundamentals.py
+
+      - name: Commit updated cache
+        if: steps.check_day.outputs.run == 'true'
+        run: |
+          git config user.name "SET Trading Bot"
+          git config user.email "bot@set-trading.local"
+          git add set_fundamental_cache.json
+          git diff --staged --quiet || git commit -m "Quarterly fundamental refresh $(date +%Y-%m) [skip ci]"
+          git push
+
+      - name: Send LINE confirmation
+        if: steps.check_day.outputs.run == 'true'
+        env:
+          LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: |
+          python - <<'EOF'
+          import os, requests, json, datetime
+
+          token   = os.environ["LINE_TOKEN"]
+          user_id = os.environ["LINE_USER_ID"]
+
+          # Count tickers refreshed
+          try:
+              with open("set_fundamental_cache.json") as f:
+                  cache = json.load(f)
+              n = len(cache)
+              fetched = list(cache.values())[0].get("fetched", "today") if cache else "today"
+          except Exception:
+              n, fetched = 0, "today"
+
+          month = datetime.date.today().strftime("%B %Y")
+          next_refresh = (datetime.date.today().replace(day=1) +
+                          datetime.timedelta(days=92)).replace(day=1).strftime("%B %Y")
+
+          msg = "\n".join([
+              f"🔄 Fundamental Cache Refreshed — {month}",
+              "─" * 32,
+              f"✅ {n} stocks updated with latest annual data",
+              f"📅 Fetched: {fetched}",
+              "",
+              "Data includes: EPS, DPS, P/E, P/BV, ROE,",
+              "div yield, D/E ratio (from Finnomena/SET)",
+              "",
+              f"⏭  Next auto-refresh: {next_refresh}",
+              "",
+              "⚠️  Dividend yields from yfinance are still",
+              "approximate. Check SET.or.th for exact",
+              "ex-div dates on your current holdings.",
+          ])
+
+          r = requests.post(
+              "https://api.line.me/v2/bot/message/push",
+              headers={"Authorization": f"Bearer {token}",
+                       "Content-Type": "application/json"},
+              json={"to": user_id, "messages": [{"type": "text", "text": msg}]},
+              timeout=10)
+          print("LINE:", r.status_code)
+          EOF
