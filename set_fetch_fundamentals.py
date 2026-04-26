@@ -110,7 +110,6 @@ def _pick(row, *candidates):
 # ── Column name maps (try multiple possible names per metric) ─────────────────
 YEARLY_COLS = {
     "eps":        ["earning_per_share",     "EPS",             "eps"],
-    # thaifin has no dividend_per_share column — computed below from div_yield × close
     "dps":        ["dividend_per_share",    "DPS",             "dps",
                    "dividend",              "Dividend"],
     "pe":         ["price_earning_ratio",   "PE",              "pe",
@@ -130,8 +129,6 @@ YEARLY_COLS = {
     "net_margin": ["npm",                   "net_profit_margin","NetProfitMargin",
                    "net_margin"],
     "roa":        ["roa",                   "return_on_asset",  "ROA"],
-    # store year-end close for DPS computation
-    "_close":     ["close"],
 }
 
 QUARTER_COLS = {
@@ -155,15 +152,11 @@ def _extract_yearly(df):
             key: _pick(row, *cols)
             for key, cols in YEARLY_COLS.items()
         }
-        # thaifin has no dividend_per_share column — derive from div_yield × close.
-        # dividend_yield in thaifin is a ratio (e.g. 0.05 = 5%), close is the year-end price.
-        if metrics.get("dps") is None:
-            dy    = metrics.get("div_yield")
-            close = metrics.get("_close")
-            if dy and close and dy > 0 and close > 0:
-                metrics["dps"] = round(dy * close, 4)
-        # Drop internal helper key
-        metrics.pop("_close", None)
+        # thaifin returns dividend_yield as a percentage (e.g. 4.5 = 4.5%).
+        # Normalise to a ratio (0.045) so fund_ok() / calc_fund_score() thresholds work.
+        dy = metrics.get("div_yield")
+        if dy is not None and dy > 1.0:
+            metrics["div_yield"] = round(dy / 100.0, 6)
         result[year] = metrics
     return result
 
