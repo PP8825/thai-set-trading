@@ -12,7 +12,7 @@
       "atr_stop": 18.77,
       "highest_close": 20.3,
       "atr": 0.6129,
-      "last_price": 20.299999237060547
+      "last_price": 20.399999618530273
     },
     "CK.BK": {
       "name": "CK",
@@ -34,7 +34,7 @@
       "last_div_check": "2026-04-27",
       "atr_stop": 16.01,
       "highest_close": 17.6,
-      "last_price": 17.600000381469727
+      "last_price": 17.5
     },
     "WHA.BK": {
       "name": "WHA",
@@ -46,7 +46,7 @@
       "atr_stop": 4.09,
       "highest_close": 4.38,
       "atr": 0.1177,
-      "last_price": 4.380000114440918
+      "last_price": 4.420000076293945
     },
     "KTC.BK": {
       "name": "KTC",
@@ -58,7 +58,7 @@
       "atr_stop": 27.35,
       "highest_close": 29.5,
       "atr": 0.8601,
-      "last_price": 29.5
+      "last_price": 29.25
     },
     "JASIF.BK": {
       "name": "JASIF",
@@ -154,6 +154,6 @@
     }
   ],
   "start_date": "2026-04-27",
-  "day_count": 1,
-  "peak_value": 299297.8150072098
+  "day_count": 2,
+  "peak_value": 300229.8165025711
 }

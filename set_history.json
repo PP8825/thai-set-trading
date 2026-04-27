@@ -50,13 +50,13 @@
     "trades": 0
   },
   {
-    "day": 6,
+    "day": 2,
     "date": "2026-04-27",
-    "value": 300237.82,
+    "value": 300229.82,
     "cash": 18423.82,
-    "pnl": 237.82,
-    "pnlPct": 0.08,
-    "drawdown": 0.31,
+    "pnl": 229.82,
+    "pnlPct": 0.0766,
+    "drawdown": 0.0,
     "trades": 6
   }
 ]
