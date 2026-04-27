@@ -9,10 +9,7 @@
       "entry_date": "2026-04-27",
       "entry_score": 3,
       "last_div_check": "2026-04-27",
-      "atr_stop": 18.77,
-      "highest_close": 20.3,
-      "atr": 0.6129,
-      "last_price": 20.200000762939453
+      "atr_stop": 18.68
     },
     "CK.BK": {
       "name": "CK",
@@ -21,9 +18,7 @@
       "entry_date": "2026-04-27",
       "entry_score": 3,
       "last_div_check": "2026-04-27",
-      "atr_stop": 15.18,
-      "highest_close": 16.5,
-      "last_price": 16.5
+      "atr_stop": 15.18
     },
     "TIDLOR.BK": {
       "name": "TIDLOR",
@@ -32,9 +27,7 @@
       "entry_date": "2026-04-27",
       "entry_score": 3,
       "last_div_check": "2026-04-27",
-      "atr_stop": 16.01,
-      "highest_close": 17.6,
-      "last_price": 17.600000381469727
+      "atr_stop": 16.01
     },
     "WHA.BK": {
       "name": "WHA",
@@ -43,10 +36,7 @@
       "entry_date": "2026-04-27",
       "entry_score": 3,
       "last_div_check": "2026-04-27",
-      "atr_stop": 4.09,
-      "highest_close": 4.38,
-      "atr": 0.1177,
-      "last_price": 4.380000114440918
+      "atr_stop": 4.03
     },
     "KTC.BK": {
       "name": "KTC",
@@ -55,10 +45,7 @@
       "entry_date": "2026-04-27",
       "entry_score": 2,
       "last_div_check": "2026-04-27",
-      "atr_stop": 27.6,
-      "highest_close": 29.75,
-      "atr": 0.8601,
-      "last_price": 29.75
+      "atr_stop": 26.91
     },
     "JASIF.BK": {
       "name": "JASIF",
@@ -67,10 +54,7 @@
       "entry_date": "2026-04-27",
       "entry_score": 2,
       "last_div_check": "2026-04-27",
-      "atr_stop": 6.51,
-      "highest_close": 6.7,
-      "atr": 0.0757,
-      "last_price": 6.699999809265137
+      "atr_stop": 6.16
     }
   },
   "trades": [

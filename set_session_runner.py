@@ -40,11 +40,19 @@ def hm(dt=None):
     return (t.hour, t.minute)
 
 
-def run_script(script_name):
+def run_script(script_name, timeout=480):
+    """Run a script with a hard timeout (default 8 min) to prevent hangs."""
     path = os.path.join(SCRIPT_DIR, script_name)
     print(f"  → Running {script_name}")
-    result = subprocess.run(["python", path], check=False)
-    return result.returncode == 0
+    try:
+        result = subprocess.run(["python3", path], check=False, timeout=timeout)
+        return result.returncode == 0
+    except subprocess.TimeoutExpired:
+        print(f"  ⚠️  {script_name} timed out after {timeout}s — skipping this scan")
+        return False
+    except FileNotFoundError:
+        result = subprocess.run(["python", path], check=False, timeout=timeout)
+        return result.returncode == 0
 
 
 def send_line(msg):
