@@ -7,42 +7,54 @@
       "shares": 2300,
       "avg_cost": 20.3,
       "entry_date": "2026-04-27",
-      "entry_score": 3
+      "entry_score": 3,
+      "last_div_check": "2026-04-27",
+      "atr_stop": 18.68
     },
     "CK.BK": {
       "name": "CK",
       "shares": 2800,
       "avg_cost": 16.5,
       "entry_date": "2026-04-27",
-      "entry_score": 3
+      "entry_score": 3,
+      "last_div_check": "2026-04-27",
+      "atr_stop": 15.18
     },
     "TIDLOR.BK": {
       "name": "TIDLOR",
       "shares": 2700,
       "avg_cost": 17.4,
       "entry_date": "2026-04-27",
-      "entry_score": 3
+      "entry_score": 3,
+      "last_div_check": "2026-04-27",
+      "atr_stop": 16.01
     },
     "WHA.BK": {
       "name": "WHA",
       "shares": 10800,
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
-      "entry_score": 3
+      "entry_score": 3,
+      "last_div_check": "2026-04-27",
+      "atr_stop": 4.03
     },
     "KTC.BK": {
       "name": "KTC",
       "shares": 1600,
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
-      "entry_score": 2
+      "entry_score": 2,
+      "last_div_check": "2026-04-27",
+      "atr_stop": 26.91
     },
     "JASIF.BK": {
       "name": "JASIF",
       "shares": 7000,
       "avg_cost": 6.7,
       "entry_date": "2026-04-27",
-      "entry_score": 2
+      "entry_score": 2,
+      "last_div_check": "2026-04-27",
+      "atr_stop": 6.16
     }
   },
   "trades": [
