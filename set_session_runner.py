@@ -137,8 +137,12 @@ def git_save(label):
         print(f"  → Git save error: {e}")
 
 
+MARKET_CLOSED  = (17, 30)   # after this, nothing to do today
+
 def detect_session():
     now = hm()
+    if now >= MARKET_CLOSED:
+        return "closed"
     return "morning" if now < AFTERNOON_START else "afternoon"
 
 
@@ -236,7 +240,10 @@ if __name__ == "__main__":
     print(f"\nSET Session Runner — {now_bkk().strftime('%Y-%m-%d %H:%M')} Bangkok")
     print(f"Session: {session.upper()}\n")
 
-    if session == "morning":
+    if session == "closed":
+        print("  Market is closed (past 17:30 Bangkok). Nothing to do. Exiting.")
+        sys.exit(0)
+    elif session == "morning":
         run_morning()
     elif session == "afternoon":
         run_afternoon()

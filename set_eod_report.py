@@ -664,6 +664,13 @@ def main():
         print("⚠️  Portfolio not started yet. Run set_signal_alert.py first.")
         sys.exit(0)
 
+    # Guard: skip if EOD already ran today (prevents duplicate reports from queued runs)
+    last_eod = port.get("last_eod_date", "")
+    today_str = datetime.date.today().strftime("%Y-%m-%d")
+    if last_eod == today_str:
+        print(f"⚠️  EOD report already sent today ({today_str}). Skipping to prevent duplicates.")
+        sys.exit(0)
+
     # Fetch current prices for holdings + any traded-today tickers
     all_tickers = list(port["holdings"].keys())
     today_t = today_trades(port)
@@ -698,8 +705,9 @@ def main():
         except Exception as e:
             print(f"  ⚠️  Could not update signal state: {e}")
 
-    # Increment day count
+    # Increment day count and mark EOD as done today
     port["day_count"] = port.get("day_count", 0) + 1
+    port["last_eod_date"] = today_str
     print(f"  Day count updated to: {port['day_count']}")
 
     # Update peak value
