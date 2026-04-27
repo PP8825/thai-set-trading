@@ -114,18 +114,21 @@ YEARLY_COLS = {
                    "dividend",              "Dividend"],
     "pe":         ["price_earning_ratio",   "PE",              "pe",
                    "p_e_ratio",             "price_to_earning"],
-    "pbv":        ["price_book_value_ratio","PBV",             "pbv",
+    # thaifin actual column: price_book_value (not price_book_value_ratio)
+    "pbv":        ["price_book_value",      "price_book_value_ratio", "PBV", "pbv",
                    "price_to_book_value",   "p_bv_ratio"],
-    "roe":        ["return_on_equity",      "ROE",             "roe"],
-    "div_yield":  ["dividend_yield",        "DividendYield",   "div_yield"],
-    "bvps":       ["book_value_per_share",  "BookValuePerShare","bvps",
+    "roe":        ["roe",                   "return_on_equity",       "ROE"],
+    "div_yield":  ["dividend_yield",        "DividendYield",          "div_yield"],
+    "bvps":       ["book_value_per_share",  "BookValuePerShare",      "bvps",
                    "book_value"],
     "de_ratio":   ["debt_to_equity",        "DE",              "de_ratio",
                    "d_e_ratio"],
     "eps_growth": ["earning_per_share_yoy", "EPSGrowth",       "eps_growth",
                    "earning_per_share_growth"],
-    "net_margin": ["net_profit_margin",     "NetProfitMargin", "net_margin"],
-    "roa":        ["return_on_asset",       "ROA",             "roa"],
+    # thaifin actual column: npm (net profit margin)
+    "net_margin": ["npm",                   "net_profit_margin","NetProfitMargin",
+                   "net_margin"],
+    "roa":        ["roa",                   "return_on_asset",  "ROA"],
 }
 
 QUARTER_COLS = {
@@ -145,10 +148,16 @@ def _extract_yearly(df):
                 continue
         except Exception:
             continue
-        result[year] = {
+        metrics = {
             key: _pick(row, *cols)
             for key, cols in YEARLY_COLS.items()
         }
+        # thaifin returns dividend_yield as a percentage (e.g. 4.5 = 4.5%).
+        # Normalise to a ratio (0.045) so fund_ok() / calc_fund_score() thresholds work.
+        dy = metrics.get("div_yield")
+        if dy is not None and dy > 1.0:
+            metrics["div_yield"] = round(dy / 100.0, 6)
+        result[year] = metrics
     return result
 
 

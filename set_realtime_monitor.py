@@ -90,12 +90,12 @@ LOOKBACK      = cfg.get("lookback_days", 300)
 MAX_WORKERS   = cfg.get("download_threads", 10)
 
 # ─── Portfolio / trading constants ────────────────────────────────────────────
-INITIAL_CAPITAL = 300_000.0
-LOT_SIZE        = 100
-TX_COST         = 0.0025
-STOP_LOSS_PCT   = 0.08
-MAX_POSITIONS   = 10
-CASH_FLOOR_PCT  = 0.05
+INITIAL_CAPITAL    = 300_000.0
+LOT_SIZE           = 100
+TX_COST            = 0.0025
+STOP_LOSS_PCT      = 0.08
+MAX_POSITIONS      = cfg.get("max_positions", 10)          # 15 for DCA setup
+CASH_FLOOR_PCT     = 0.05
 
 # ─── Signal-change thresholds ─────────────────────────────────────────────────
 # Tech score now ranges -5 to +5 (5 indicators).  Buy needs 2+ bullish (≥+2).
@@ -225,6 +225,7 @@ VOL_HIGH_THRESH  = _ps.get("vol_high_threshold", 0.030)   # >3% daily std → hi
 VOL_LOW_THRESH   = _ps.get("vol_low_threshold",  0.015)   # <1.5% daily std → low vol
 VOL_HIGH_MULT    = _ps.get("vol_high_multiplier", 0.75)   # smaller position
 VOL_LOW_MULT     = _ps.get("vol_low_multiplier",  1.25)   # larger position
+MAX_POSITION_SIZE = _ps.get("max_position_size", None)    # ฿ hard cap per position (None = uncapped)
 
 # ─── Bangkok time (UTC+7, no pytz needed) ─────────────────────────────────────
 BKK_OFFSET = datetime.timezone(datetime.timedelta(hours=7))
@@ -1227,7 +1228,8 @@ def execute_buy(port, r):
     else:
         size_mult = 1.0             # normal vol → standard allocation
 
-    alloc  = min(avail / n_free, INITIAL_CAPITAL / MAX_POSITIONS * 1.5) * size_mult
+    base_alloc = MAX_POSITION_SIZE if MAX_POSITION_SIZE else INITIAL_CAPITAL / MAX_POSITIONS * 1.5
+    alloc  = min(avail / n_free, base_alloc) * size_mult
     shares = int(alloc / price / LOT_SIZE) * LOT_SIZE
 
     # ── Liquidity check — cap at 10% of avg daily volume ─────────────────────
@@ -2087,6 +2089,11 @@ def main():
 
     print("\n  Market open at {0} — scanning...".format(time_str()))
 
+    # Load state (needed for regime cache below)
+    port       = load_portfolio()
+    prev_state = load_signal_state()
+    today_str  = datetime.date.today().isoformat()
+
     # ── Market regime check (with 60-min cache) ───────────────────────────────
     # Load cached regime from state to avoid fetching SET Index every 15 min.
     _cached_regime = prev_state.get("_regime", {})
@@ -2159,11 +2166,6 @@ def main():
     if regime == "BEAR":
         print("  ⚠  BEAR REGIME — all BUY orders and rotations SUSPENDED")
         print("  ⚠  Only stop-losses and signal-based SELLs will execute")
-
-    # Load state
-    port       = load_portfolio()
-    prev_state = load_signal_state()
-    today_str  = datetime.date.today().isoformat()
 
     # Fetch all signals
     n_total = len(INSTRUMENTS)

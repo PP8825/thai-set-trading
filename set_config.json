@@ -509,7 +509,8 @@
     "vol_high_threshold": 0.03,
     "vol_low_threshold": 0.015,
     "vol_high_multiplier": 0.75,
-    "vol_low_multiplier": 1.25
+    "vol_low_multiplier": 1.25,
+    "max_position_size": 50000
   },
   "sector_map": {
     "^SET.BK": "INDEX",
@@ -612,5 +613,6 @@
     "THG.BK": "HOTEL"
   },
   "trade_fee_pct": 0.0015,
-  "_trade_fee_note": "Commission per trade side (buy OR sell). Thai online brokers: 0.15% (฿50 minimum). Includes brokerage + SEC levy. Set to 0 to disable."
+  "_trade_fee_note": "Commission per trade side (buy OR sell). Thai online brokers: 0.15% (฿50 minimum). Includes brokerage + SEC levy. Set to 0 to disable.",
+  "max_positions": 15
 }

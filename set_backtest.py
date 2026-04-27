@@ -508,6 +508,9 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
     tp_pct        = p.get("tp_pct",        TAKE_PROFIT_PCT)
     buy_score_min = p.get("buy_score_min", BUY_SCORE_MIN)
     comp_min      = p.get("comp_min",      0.0)   # optional composite floor
+    topup_monthly     = p.get("topup_monthly",    0)       # ฿ added on 1st trading day each month
+    max_pos_size      = p.get("max_pos_size",     None)    # max ฿ per position (None = uncapped)
+    _max_pos          = p.get("max_positions",    MAX_POSITIONS)  # max concurrent holdings
 
     # ── Date window filtering ─────────────────────────────────────────────────
     # Filter which dates are actually *simulated*.  Full data is still loaded
@@ -519,10 +522,12 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
 
     cash=INITIAL_CAPITAL; holdings={}; trades=[]; equity_curve=[]
     prev_scores={}
-    dividend_income = 0.0
-    prev_year       = None
-    basket_holdings = {}   # {ticker: {name, shares, avg_cost, entry_date}}
-    prev_is_bull    = None  # None until first date processed
+    dividend_income  = 0.0
+    total_deposited  = INITIAL_CAPITAL   # tracks capital + all top-ups
+    prev_year        = None
+    prev_month_key   = None              # (year, month) — for monthly top-up trigger
+    basket_holdings  = {}   # {ticker: {name, shares, avg_cost, entry_date}}
+    prev_is_bull     = None  # None until first date processed
 
     # Per-(ticker, lookup_year) cache for fundamental snapshots.
     # Fundamentals only change once per year so we cache keyed by
@@ -550,6 +555,18 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
                                 for tk,h in basket_holdings.items()))
 
     for date in all_dates:
+        # ── Monthly top-up deposit ────────────────────────────────────────
+        month_key = (date.year, date.month)
+        if topup_monthly > 0 and prev_month_key is not None and month_key != prev_month_key:
+            cash            += topup_monthly
+            total_deposited += topup_monthly
+            trades.append({"date": str(date.date()), "action": "DEPOSIT",
+                "ticker": "—", "name": "Monthly Top-up",
+                "shares": 0, "price": 0, "avg_cost": 0,
+                "pnl": topup_monthly,
+                "reason": f"Monthly deposit ฿{topup_monthly:,.0f}", "hold_days": 0})
+        prev_month_key = month_key
+
         # ── Year-end dividend crediting ───────────────────────────────────
         # When we cross into a new calendar year, credit annual DPS × shares
         # for every position held.  Using the previous year's DPS avoids
@@ -724,7 +741,7 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
 
         # Rotation (BULL, portfolio full)
         if (ROTATION_ENABLED and is_bull
-                and len(holdings) >= MAX_POSITIONS):
+                and len(holdings) >= _max_pos):
             rotations_today = 0
             # Score all non-held candidates
             rot_candidates = []
@@ -742,7 +759,7 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
             rot_candidates.sort(key=lambda x:-x["comp"])
             for incoming in rot_candidates:
                 if rotations_today >= ROTATION_MAX_PER_DAY: break
-                if len(holdings) < MAX_POSITIONS: break
+                if len(holdings) < _max_pos: break
                 # Find weakest held position eligible for rotation-out
                 out_tk = None; out_score = None; out_comp = 9999
                 for htk,h in holdings.items():
@@ -781,7 +798,8 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
                 buy_px=float(sig[in_tk].loc[nd,"open"])*(1+SLIPPAGE)
                 if buy_px<=0: continue
                 avail=cash-INITIAL_CAPITAL*CASH_FLOOR_PCT
-                alloc=min(avail, INITIAL_CAPITAL/MAX_POSITIONS*1.5)
+                rot_alloc = max_pos_size if max_pos_size else INITIAL_CAPITAL/_max_pos*1.5
+                alloc=min(avail, rot_alloc)
                 shares=int(alloc/buy_px/LOT_SIZE)*LOT_SIZE
                 if shares<=0: shares=LOT_SIZE
                 cost=shares*buy_px*(1+TX_COST)
@@ -801,7 +819,7 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
                 rotations_today+=1
 
         # Buys (BULL only)
-        if is_bull and len(holdings)<MAX_POSITIONS:
+        if is_bull and len(holdings)<_max_pos:
             buys=[]
             for tk,(nm,_) in all_data.items():
                 if tk in holdings or SECTOR_MAP.get(tk)=="INDEX": continue
@@ -817,7 +835,7 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
                     buys.append({"ticker":tk,"name":nm,"score":sc,"comp":cmp,"atr":atr})
             buys.sort(key=lambda x:-x["comp"])
             for bc in buys:
-                if len(holdings)>=MAX_POSITIONS: break
+                if len(holdings)>=_max_pos: break
                 tk=bc["ticker"]
                 if SECTOR_ENABLED:
                     sec=SECTOR_MAP.get(tk,"OTHER")
@@ -830,8 +848,9 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
                 buy_px=float(sig[tk].loc[nd,"open"])*(1+SLIPPAGE)
                 if buy_px<=0: continue
                 avail=cash-INITIAL_CAPITAL*CASH_FLOOR_PCT
-                n_free=max(1,MAX_POSITIONS-len(holdings))
-                alloc=min(avail/n_free,INITIAL_CAPITAL/MAX_POSITIONS*1.5)
+                n_free=max(1,_max_pos-len(holdings))
+                buy_alloc = max_pos_size if max_pos_size else INITIAL_CAPITAL/_max_pos*1.5
+                alloc=min(avail/n_free, buy_alloc)
                 shares=int(alloc/buy_px/LOT_SIZE)*LOT_SIZE
                 if shares<=0: shares=LOT_SIZE
                 cost=shares*buy_px*(1+TX_COST)
@@ -879,6 +898,8 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
     final_val = cash
     total_ret = (final_val-INITIAL_CAPITAL)/INITIAL_CAPITAL*100
     ann_ret   = ((final_val/INITIAL_CAPITAL)**(1/years)-1)*100
+    # Return on total invested capital (initial + all top-ups)
+    roi_on_deposited = (final_val - total_deposited) / total_deposited * 100 if total_deposited > 0 else 0
     eq        = np.array([e["value"] for e in equity_curve],dtype=float)
     dr        = np.diff(eq)/eq[:-1]
     sharpe    = dr.mean()/dr.std()*np.sqrt(252) if dr.std()>0 else 0
@@ -910,7 +931,9 @@ def _simulate(all_dates, sig, all_data, fok_map, fs_map,
                              if t["action"]=="DIV" and "DEF-Dividend" in t.get("reason",""))
 
     return {"final_value":round(final_val,2),
+            "total_deposited":round(total_deposited,2),
             "total_return":round(total_ret,2),
+            "roi_on_deposited":round(roi_on_deposited,2),
             "annual_return":round(ann_ret,2),
             "dividend_income":round(dividend_income,2),
             "basket_div_income":round(basket_div_income,2),
@@ -1374,6 +1397,134 @@ def run_walk_forward(years=6, regime_enabled=True):
     return wf_results
 
 
+# ── Top-up / DCA scenario comparison ─────────────────────────────────────────
+def run_topup_test(years=5, regime_enabled=True):
+    """Run 3 capital scenarios side-by-side to inform DCA setup decisions.
+
+    Scenario A — Baseline    : ฿300k lump sum, 10 slots, no position cap
+    Scenario B — DCA ฿50k/mo : ฿300k + ฿50k/month, 15 slots, ฿50k position cap
+    Scenario C — ฿500k lump  : ฿500k start, 10 slots, ฿50k position cap
+
+    Prints a clear side-by-side comparison.
+    """
+    global INITIAL_CAPITAL   # temporarily override for each scenario
+
+    all_data, sig, fok_map, fs_map, regime_bull, set_df, all_dates, hist_fund = \
+        _load_data(years, regime_enabled)
+
+    n_months = int(len(all_dates) / 21)   # approx trading months in period
+
+    scenarios = [
+        {
+            "label":       "A — Baseline (฿300k lump sum, 10 slots)",
+            "start":       300_000,
+            "topup":       0,
+            "max_pos_sz":  None,
+            "max_pos":     10,
+        },
+        {
+            "label":       f"B — DCA (฿300k + ฿50k/mo × {n_months} months, 15 slots, ฿50k cap)",
+            "start":       300_000,
+            "topup":       50_000,
+            "max_pos_sz":  50_000,
+            "max_pos":     15,
+        },
+        {
+            "label":       "C — Lump ฿500k (10 slots, ฿50k cap)",
+            "start":       500_000,
+            "topup":       0,
+            "max_pos_sz":  50_000,
+            "max_pos":     10,
+        },
+    ]
+
+    results = []
+    for sc in scenarios:
+        INITIAL_CAPITAL = sc["start"]
+        params = {
+            "topup_monthly":   sc["topup"],
+            "max_pos_size":    sc["max_pos_sz"],
+            "max_positions":   sc["max_pos"],
+        }
+        print(f"\nRunning: {sc['label']} ...")
+        perf = _simulate(all_dates, sig, all_data, fok_map, fs_map,
+                         regime_bull, set_df, years, regime_enabled, params,
+                         hist_fund_available=hist_fund)
+        results.append((sc, perf))
+
+    INITIAL_CAPITAL = 300_000   # restore
+
+    # ── Print comparison table ────────────────────────────────────────────────
+    print("\n" + "="*80)
+    print("CAPITAL SCENARIO COMPARISON")
+    print("="*80)
+    hdr = f"{'Metric':<30} {'A — Baseline':>16} {'B — DCA ฿50k/mo':>18} {'C — ฿500k lump':>16}"
+    print(hdr)
+    print("─"*80)
+
+    def row(label, vals, fmt="{}", highlight=False):
+        cells = [fmt.format(v) for v in vals]
+        print(f"  {label:<28} {cells[0]:>16} {cells[1]:>18} {cells[2]:>16}")
+
+    def fmtb(v):  return f"฿{v:>12,.0f}"
+    def fmtp(v):  return f"{v:>+.1f}%"
+    def fmtn(v):  return f"{v:.2f}"
+
+    scs  = [r[0] for r in results]
+    pfs  = [r[1] for r in results]
+
+    row("Starting capital",      [fmtb(s["start"])          for s in scs])
+    row("Total deposited",       [fmtb(p["total_deposited"]) for p in pfs])
+    row("Final portfolio value", [fmtb(p["final_value"])     for p in pfs])
+    row("Absolute gain (฿)",     [fmtb(p["final_value"] - p["total_deposited"]) for p in pfs])
+    print("  " + "─"*78)
+    row("Return on invested cap",[fmtp(p["roi_on_deposited"]) for p in pfs])
+    row("Total return (vs start)",[fmtp(p["total_return"])   for p in pfs])
+    row("Annual CAGR (vs start)",[fmtp(p["annual_return"])   for p in pfs])
+    row("Dividend income",       [fmtb(p["dividend_income"]) for p in pfs])
+    print("  " + "─"*78)
+    row("Sharpe ratio",          [fmtn(p["sharpe"])          for p in pfs])
+    row("Max drawdown",          [fmtp(p["max_drawdown"])    for p in pfs])
+    row("Win rate",              [f"{p['win_rate']:.1f}%"    for p in pfs])
+    row("Profit factor",         [f"{p['profit_factor']:.2f}×" for p in pfs])
+    row("Avg hold days",         [f"{p['avg_hold_days']:.0f}d" for p in pfs])
+    row("# Trades",              [str(p["n_trades"])         for p in pfs])
+
+    print("="*80)
+    print()
+    print("Notes:")
+    print(f"  • Scenario B total deposited = ฿300k + {n_months} × ฿50k = ฿{300000+n_months*50000:,.0f}")
+    print(f"  • Annual CAGR is vs starting capital only (not total deposits) — use 'ROI on invested' for DCA")
+    print(f"  • Max drawdown = worst peak-to-trough on portfolio value (includes unrealised)")
+    print()
+
+    # Save results — summary for all 3, full trades+equity for Scenario B (DCA)
+    out = os.path.join(SCRIPT_DIR, "set_topup_results.json")
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump([
+            {"scenario": sc["label"],
+             "params":   {k:v for k,v in sc.items() if k != "label"},
+             "performance": {k:v for k,v in pf.items() if k not in ("trades","equity_curve")}}
+            for sc, pf in results
+        ], f, indent=2, default=str)
+    print(f"✅  Scenario results saved → set_topup_results.json")
+
+    # Save full DCA (Scenario B) detail separately for report generation
+    dca_sc, dca_pf = results[1]
+    dca_out = os.path.join(SCRIPT_DIR, "set_topup_dca_detail.json")
+    with open(dca_out, "w", encoding="utf-8") as f:
+        json.dump({
+            "meta": {"run_date": datetime.date.today().isoformat(),
+                     "scenario": dca_sc["label"],
+                     "years": years, "regime": regime_enabled},
+            "performance": {k:v for k,v in dca_pf.items() if k not in ("trades","equity_curve")},
+            "trades":       dca_pf["trades"],
+            "equity_curve": dca_pf["equity_curve"],
+        }, f, indent=2, default=str)
+    print(f"✅  DCA detail saved → set_topup_dca_detail.json\n")
+    return results
+
+
 if __name__=="__main__":
     parser=argparse.ArgumentParser(description="SET Strategy Backtester")
     parser.add_argument("--years",          type=int,  default=5)
@@ -1382,6 +1533,8 @@ if __name__=="__main__":
                         help="Run parameter sweep instead of single backtest")
     parser.add_argument("--walk-forward",   action="store_true",
                         help="Run walk-forward validation (IS 2021-2024, OOS 2025-today)")
+    parser.add_argument("--topup",          action="store_true",
+                        help="Compare 3 capital scenarios: baseline / DCA ฿50k/mo / ฿500k lump")
     parser.add_argument("--from-date",      type=str,  default=None,
                         help="Start date for single backtest window (YYYY-MM-DD)")
     parser.add_argument("--to-date",        type=str,  default=None,
@@ -1390,6 +1543,8 @@ if __name__=="__main__":
 
     if args.walk_forward:
         run_walk_forward(years=max(args.years, 6), regime_enabled=not args.no_regime)
+    elif args.topup:
+        run_topup_test(years=args.years, regime_enabled=not args.no_regime)
     elif args.sweep:
         run_sweep(years=args.years, regime_enabled=not args.no_regime)
     else:
