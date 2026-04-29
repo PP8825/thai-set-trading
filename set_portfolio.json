@@ -8,15 +8,9 @@
       "avg_cost": 20.3,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-<<<<<<< HEAD
-      "last_div_check": "2026-04-27",
-      "atr_stop": 18.68,
-      "last_price": 21.0
-=======
       "last_div_check": "2026-04-29",
       "atr_stop": 18.68,
-      "last_price": 20.3
->>>>>>> ff7d5b3 (Fix 3 notification bugs: session open after market close, /10 hardcoded, backup cron cancellation)
+      "last_price": 21.0
     },
     "CK.BK": {
       "name": "CK",
@@ -24,15 +18,9 @@
       "avg_cost": 16.5,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-<<<<<<< HEAD
-      "last_div_check": "2026-04-27",
-      "atr_stop": 15.18,
-      "last_price": 16.899999618530273
-=======
       "last_div_check": "2026-04-29",
       "atr_stop": 15.18,
-      "last_price": 16.5
->>>>>>> ff7d5b3 (Fix 3 notification bugs: session open after market close, /10 hardcoded, backup cron cancellation)
+      "last_price": 16.899999618530273
     },
     "TIDLOR.BK": {
       "name": "TIDLOR",
@@ -40,15 +28,9 @@
       "avg_cost": 17.4,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-<<<<<<< HEAD
-      "last_div_check": "2026-04-27",
-      "atr_stop": 16.01,
-      "last_price": 17.299999237060547
-=======
       "last_div_check": "2026-04-29",
       "atr_stop": 16.01,
-      "last_price": 17.4
->>>>>>> ff7d5b3 (Fix 3 notification bugs: session open after market close, /10 hardcoded, backup cron cancellation)
+      "last_price": 17.299999237060547
     },
     "WHA.BK": {
       "name": "WHA",
@@ -56,15 +38,9 @@
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-<<<<<<< HEAD
-      "last_div_check": "2026-04-27",
-      "atr_stop": 4.03,
-      "last_price": 4.5
-=======
       "last_div_check": "2026-04-29",
       "atr_stop": 4.03,
-      "last_price": 4.38
->>>>>>> ff7d5b3 (Fix 3 notification bugs: session open after market close, /10 hardcoded, backup cron cancellation)
+      "last_price": 4.5
     },
     "KTC.BK": {
       "name": "KTC",
@@ -72,15 +48,9 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-<<<<<<< HEAD
-      "last_div_check": "2026-04-27",
-      "atr_stop": 26.91,
-      "last_price": 29.5
-=======
       "last_div_check": "2026-04-29",
       "atr_stop": 26.91,
-      "last_price": 29.25
->>>>>>> ff7d5b3 (Fix 3 notification bugs: session open after market close, /10 hardcoded, backup cron cancellation)
+      "last_price": 29.5
     },
     "JASIF.BK": {
       "name": "JASIF",
@@ -88,15 +58,9 @@
       "avg_cost": 6.7,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-<<<<<<< HEAD
-      "last_div_check": "2026-04-27",
-      "atr_stop": 6.16,
-      "last_price": 6.800000190734863
-=======
       "last_div_check": "2026-04-29",
       "atr_stop": 6.16,
-      "last_price": 6.7
->>>>>>> ff7d5b3 (Fix 3 notification bugs: session open after market close, /10 hardcoded, backup cron cancellation)
+      "last_price": 6.800000190734863
     }
   },
   "trades": [
@@ -180,13 +144,7 @@
     }
   ],
   "start_date": "2026-04-27",
-<<<<<<< HEAD
-  "day_count": 2,
-  "last_eod_date": "2026-04-29",
-  "peak_value": 304153.8160982132
-=======
   "day_count": 3,
   "last_eod_date": "2026-04-29",
-  "peak_value": 299297.8178911209
->>>>>>> ff7d5b3 (Fix 3 notification bugs: session open after market close, /10 hardcoded, backup cron cancellation)
+  "peak_value": 304153.8160982132
 }
