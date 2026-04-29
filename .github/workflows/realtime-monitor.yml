@@ -15,15 +15,15 @@ on:
         required: false
         default: ''
 
-# Prevent two sessions running at the same time
+# Cancel any queued run of the same type — prevents pile-up after timeouts
 concurrency:
   group: set-trading-session
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   session:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 180
     permissions:
       contents: write
 
@@ -47,7 +47,11 @@ jobs:
             echo "name=$INPUT" >> $GITHUB_OUTPUT
           else
             HOUR=$(TZ=Asia/Bangkok date +%H)
-            if [ "$HOUR" -lt 14 ]; then
+            MIN=$(TZ=Asia/Bangkok date +%M)
+            HHMM=$((HOUR * 100 + MIN))
+            if [ "$HHMM" -ge 1730 ]; then
+              echo "name=closed" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -lt 14 ]; then
               echo "name=morning" >> $GITHUB_OUTPUT
             else
               echo "name=afternoon" >> $GITHUB_OUTPUT

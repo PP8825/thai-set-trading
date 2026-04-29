@@ -183,6 +183,11 @@ def run_afternoon():
     print(f"  Active: 14:30 – 16:30 Bangkok | EOD at 16:35")
     print("=" * 50)
 
+    # Hard stop — if already past 17:30 market is closed, nothing to do
+    if hm() >= MARKET_CLOSED:
+        print(f"  Market already closed ({now_bkk().strftime('%H:%M')} Bangkok). Exiting.")
+        return
+
     # Wait until 14:30
     while hm() < AFTERNOON_START:
         print(f"  Waiting for afternoon session... {now_bkk().strftime('%H:%M')} Bangkok")
