@@ -1583,6 +1583,42 @@ def build_status_update(results, port, prices):
                 r["name"], "+" if r["pct"] >= 0 else "", r["pct"])
             for r in movers))
 
+    # ── Top BUY candidates (not already held) ────────────────────────────────
+    held_tickers = set(port.get("holdings", {}).keys())
+    buy_candidates = sorted(
+        [r for r in results
+         if r.get("score", 0) >= BUY_SCORE_MIN
+         and r.get("ticker") not in held_tickers
+         and not r.get("error")],
+        key=lambda x: -x.get("comp_score", x.get("score", 0))
+    )[:5]
+    if buy_candidates:
+        lines.append("")
+        lines.append("🟢 BUY signals (watchlist):")
+        for r in buy_candidates:
+            comp = r.get("comp_score", 0)
+            px   = r.get("price", 0)
+            sc   = r.get("score", 0)
+            lines.append("   {0:<8s}  score:{1:+d}  comp:{2:.1f}  ฿{3:,.2f}".format(
+                r.get("name", r.get("ticker","")), sc, comp, px))
+
+    # ── Holdings showing SELL signal ─────────────────────────────────────────
+    sell_signals = sorted(
+        [r for r in results
+         if r.get("score", 0) <= SELL_SCORE_MAX
+         and r.get("ticker") in held_tickers
+         and not r.get("error")],
+        key=lambda x: x.get("score", 0)
+    )
+    if sell_signals:
+        lines.append("")
+        lines.append("🔴 SELL signals (held):")
+        for r in sell_signals:
+            px  = r.get("price", 0)
+            sc  = r.get("score", 0)
+            lines.append("   {0:<8s}  score:{1:+d}  ฿{2:,.2f}".format(
+                r.get("name", r.get("ticker","")), sc, px))
+
     return "\n".join(lines)
 
 def is_last_scan_of_day():
