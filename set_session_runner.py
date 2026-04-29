@@ -89,6 +89,15 @@ def send_session_open(session):
         capital   = port.get("capital", 300000)
         day_count = port.get("day_count", 0)
 
+        # Read max_positions from config (default 10 if not set)
+        try:
+            cfg_path = os.path.join(SCRIPT_DIR, "set_config.json")
+            with open(cfg_path) as f:
+                cfg = json.load(f)
+            max_pos = cfg.get("max_positions", 10)
+        except Exception:
+            max_pos = 10
+
         if session == "morning":
             icon  = "🌅"
             label = "MORNING SESSION OPEN"
@@ -102,7 +111,7 @@ def send_session_open(session):
             f"{icon} {label} — {now_bkk().strftime('%d %b %Y %H:%M')}",
             f"{'─' * 32}",
             f"📅 Day {day_count}  |  Market hours: {hours}",
-            f"💼 Holdings : {holdings}/10",
+            f"💼 Holdings : {holdings}/{max_pos}",
             f"💵 Cash     : ฿{cash:,.0f}",
             f"🔍 Scanning every 15 min — will alert on trades only",
         ]
@@ -157,8 +166,11 @@ def run_morning():
         print(f"  Waiting for market open... {now_bkk().strftime('%H:%M')} Bangkok")
         time.sleep(WAIT_INTERVAL)
 
-    # Send session open LINE message
-    send_session_open("morning")
+    # Only send session open if morning session is still active (before 12:30)
+    if hm() <= MORNING_END:
+        send_session_open("morning")
+    else:
+        print(f"  Morning session already ended ({now_bkk().strftime('%H:%M')} Bangkok). Skipping session open.")
 
     # Scan loop
     while True:
@@ -193,8 +205,11 @@ def run_afternoon():
         print(f"  Waiting for afternoon session... {now_bkk().strftime('%H:%M')} Bangkok")
         time.sleep(WAIT_INTERVAL)
 
-    # Send session open LINE message
-    send_session_open("afternoon")
+    # Only send session open if afternoon session is still active (before 16:30)
+    if hm() <= AFTERNOON_END:
+        send_session_open("afternoon")
+    else:
+        print(f"  Afternoon session already ended ({now_bkk().strftime('%H:%M')} Bangkok). Skipping session open.")
 
     # Scan loop
     while True:

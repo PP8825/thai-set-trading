@@ -2,12 +2,10 @@ name: SET Realtime Monitor
 
 on:
   schedule:
-    # Morning session — 2 triggers (backup at 11:00 if 09:55 is skipped by GitHub)
-    - cron: '55 2 * * 1-5'   # 09:55 Bangkok (primary)
-    - cron: '0  4 * * 1-5'   # 11:00 Bangkok (backup)
-    # Afternoon session — 2 triggers (backup at 15:30 if 14:25 is skipped by GitHub)
-    - cron: '25 7 * * 1-5'   # 14:25 Bangkok (primary)
-    - cron: '30 8 * * 1-5'   # 15:30 Bangkok (backup)
+    # Morning session — single trigger at 09:55 Bangkok (02:55 UTC)
+    - cron: '55 2 * * 1-5'   # 09:55 Bangkok
+    # Afternoon session — single trigger at 14:25 Bangkok (07:25 UTC)
+    - cron: '25 7 * * 1-5'   # 14:25 Bangkok
   workflow_dispatch:
     inputs:
       session:
@@ -15,9 +13,10 @@ on:
         required: false
         default: ''
 
-# Cancel any queued run of the same type — prevents pile-up after timeouts
+# Cancel any queued run of the SAME session type — prevents pile-up.
+# Uses the cron schedule string so morning and afternoon don't cancel each other.
 concurrency:
-  group: set-trading-session
+  group: set-trading-${{ github.event.inputs.session || github.event.schedule || 'manual' }}
   cancel-in-progress: true
 
 jobs:
