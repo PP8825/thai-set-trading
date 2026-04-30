@@ -144,7 +144,7 @@
     }
   ],
   "start_date": "2026-04-27",
-  "day_count": 4,
-  "last_eod_date": "2026-04-30",
+  "day_count": 3,
+  "last_eod_date": "2026-04-29",
   "peak_value": 304153.8160982132
 }
