@@ -2,7 +2,7 @@
   "GLD": {
     "score": 0,
     "signal": "HOLD",
-    "price": 417.4100036621094,
+    "price": 423.6600036621094,
     "fund_score": 1.6,
     "comp_score": 3.64,
     "buy_alerted": false,
@@ -10,7 +10,7 @@
     "fund_fetched": null,
     "fund": {
       "pe": null,
-      "pbv": 2.4551075,
+      "pbv": 2.4918685,
       "roe": null,
       "div_yld": 0.0,
       "has_div": false,
@@ -18,7 +18,7 @@
       "de_ratio": null,
       "eps_growth": null,
       "fcf_yield": null,
-      "avg_volume": 13181575
+      "avg_volume": 13077493
     }
   },
   "SCB.BK": {
@@ -40,7 +40,7 @@
       "de_ratio": null,
       "eps_growth": -0.184,
       "fcf_yield": null,
-      "avg_volume": 18049224
+      "avg_volume": 17927123
     }
   },
   "TRUE.BK": {
@@ -62,7 +62,7 @@
       "de_ratio": 5.77067,
       "eps_growth": null,
       "fcf_yield": 0.03216291162588178,
-      "avg_volume": 216907191
+      "avg_volume": 215361477
     }
   },
   "PTT.BK": {
@@ -84,7 +84,7 @@
       "de_ratio": 0.59656,
       "eps_growth": 1.735,
       "fcf_yield": 0.1288250475422314,
-      "avg_volume": 104240155
+      "avg_volume": 104414733
     }
   },
   "CPALL.BK": {
@@ -106,7 +106,7 @@
       "de_ratio": 1.3341800000000001,
       "eps_growth": 0.018,
       "fcf_yield": 0.06701675477617644,
-      "avg_volume": 44675912
+      "avg_volume": 44556338
     }
   },
   "DELTA.BK": {
@@ -128,7 +128,7 @@
       "de_ratio": 0.012669999999999999,
       "eps_growth": 0.655,
       "fcf_yield": 0.0006977001425440616,
-      "avg_volume": 17356643
+      "avg_volume": 17227406
     }
   },
   "KBANK.BK": {
@@ -141,7 +141,7 @@
     "sell_alerted": false,
     "fund_fetched": null,
     "fund": {
-      "pe": 9.403781,
+      "pe": 9.408341,
       "pbv": 0.77748656,
       "roe": 0.085310005,
       "div_yld": 6.15,
@@ -150,7 +150,7 @@
       "de_ratio": null,
       "eps_growth": 0.1,
       "fcf_yield": null,
-      "avg_volume": 21102712
+      "avg_volume": 21082738
     }
   },
   "BH.BK": {
@@ -163,7 +163,7 @@
     "sell_alerted": false,
     "fund_fetched": null,
     "fund": {
-      "pe": 20.818916,
+      "pe": 20.842957,
       "pbv": 4.3936515,
       "roe": 0.24379,
       "div_yld": 2.81,
@@ -172,7 +172,7 @@
       "de_ratio": 0.00314,
       "eps_growth": 0.03,
       "fcf_yield": 0.022142717709497026,
-      "avg_volume": 6284960
+      "avg_volume": 6307886
     }
   },
   "ADVANC.BK": {
@@ -185,7 +185,7 @@
     "sell_alerted": false,
     "fund_fetched": null,
     "fund": {
-      "pe": 21.104902,
+      "pe": 21.09181,
       "pbv": 9.435271,
       "roe": 0.46813,
       "div_yld": 4.83,
@@ -194,7 +194,7 @@
       "de_ratio": 1.7922900000000002,
       "eps_growth": 0.543,
       "fcf_yield": 0.0462897685287378,
-      "avg_volume": 8228772
+      "avg_volume": 8278877
     }
   },
   "GULF.BK": {
@@ -216,7 +216,7 @@
       "de_ratio": 0.9949899999999999,
       "eps_growth": 1.858,
       "fcf_yield": -0.010433295051770227,
-      "avg_volume": 54517658
+      "avg_volume": 54065801
     }
   },
   "BBL.BK": {
@@ -238,7 +238,7 @@
       "de_ratio": null,
       "eps_growth": -0.129,
       "fcf_yield": null,
-      "avg_volume": 12195537
+      "avg_volume": 12117720
     }
   },
   "MINT.BK": {
@@ -260,7 +260,7 @@
       "de_ratio": 1.91425,
       "eps_growth": 1.877,
       "fcf_yield": 0.18624525390946708,
-      "avg_volume": 28307177
+      "avg_volume": 28263179
     }
   },
   "IVL.BK": {
@@ -282,7 +282,7 @@
       "de_ratio": 2.04844,
       "eps_growth": null,
       "fcf_yield": 0.11155083526553296,
-      "avg_volume": 37413843
+      "avg_volume": 37126925
     }
   },
   "PTTGC.BK": {
@@ -304,29 +304,29 @@
       "de_ratio": 0.60892,
       "eps_growth": null,
       "fcf_yield": 0.12481726640757003,
-      "avg_volume": 33611877
+      "avg_volume": 33681493
     }
   },
   "PTTEP.BK": {
     "score": -1,
     "signal": "WATCH",
     "price": 154.0,
-    "fund_score": 6.3,
-    "comp_score": 4.92,
+    "fund_score": 5.8,
+    "comp_score": 4.72,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": null,
     "fund": {
-      "pe": 10.144927,
+      "pe": 11.015738,
       "pbv": 1.1618782,
-      "roe": 0.11359999,
+      "roe": 0.10782,
       "div_yld": 5.78,
       "has_div": true,
       "ex_div_date": "2026-02-23",
-      "de_ratio": 0.244,
-      "eps_growth": 0.077,
-      "fcf_yield": 0.0015419548333367099,
-      "avg_volume": 24808725
+      "de_ratio": 0.243,
+      "eps_growth": -0.229,
+      "fcf_yield": 0.0006375817065846247,
+      "avg_volume": 24919472
     }
   },
   "TOP.BK": {
@@ -348,7 +348,7 @@
       "de_ratio": 0.69274,
       "eps_growth": -0.112,
       "fcf_yield": 0.36543783730922735,
-      "avg_volume": 20611865
+      "avg_volume": 20632452
     }
   },
   "IRPC.BK": {
@@ -370,7 +370,7 @@
       "de_ratio": 1.03442,
       "eps_growth": null,
       "fcf_yield": 0.5317399299039434,
-      "avg_volume": 178859550
+      "avg_volume": 182178732
     }
   },
   "RATCH.BK": {
@@ -392,7 +392,7 @@
       "de_ratio": 1.0680100000000001,
       "eps_growth": 0.208,
       "fcf_yield": -0.06823721668115879,
-      "avg_volume": 3591587
+      "avg_volume": 3559413
     }
   },
   "BANPU.BK": {
@@ -414,7 +414,7 @@
       "de_ratio": 1.5324700000000002,
       "eps_growth": null,
       "fcf_yield": -0.001560315275650683,
-      "avg_volume": 82897398
+      "avg_volume": 82644210
     }
   },
   "BPP.BK": {
@@ -436,7 +436,7 @@
       "de_ratio": 0.71489,
       "eps_growth": null,
       "fcf_yield": 0.0046337738391657385,
-      "avg_volume": 255565
+      "avg_volume": 254537
     }
   },
   "GPSC.BK": {
@@ -458,7 +458,7 @@
       "de_ratio": 0.98943,
       "eps_growth": 0.514,
       "fcf_yield": 0.1385301888650673,
-      "avg_volume": 12038427
+      "avg_volume": 11926552
     }
   },
   "BGRIM.BK": {
@@ -480,7 +480,7 @@
       "de_ratio": 2.4568600000000003,
       "eps_growth": -0.331,
       "fcf_yield": 0.3449520822069407,
-      "avg_volume": 22173184
+      "avg_volume": 21971759
     }
   },
   "EGCO.BK": {
@@ -502,7 +502,7 @@
       "de_ratio": 1.0893300000000001,
       "eps_growth": null,
       "fcf_yield": 0.01367675828761864,
-      "avg_volume": 1120813
+      "avg_volume": 1118433
     }
   },
   "GLOBAL.BK": {
@@ -524,7 +524,7 @@
       "de_ratio": 0.43398000000000003,
       "eps_growth": -0.18,
       "fcf_yield": 0.015473560984730246,
-      "avg_volume": 14712858
+      "avg_volume": 14637125
     }
   },
   "HMPRO.BK": {
@@ -546,7 +546,7 @@
       "de_ratio": 0.9803700000000001,
       "eps_growth": -0.06,
       "fcf_yield": 0.04483005894792601,
-      "avg_volume": 48869082
+      "avg_volume": 48320462
     }
   },
   "CRC.BK": {
@@ -568,7 +568,7 @@
       "de_ratio": 1.54054,
       "eps_growth": null,
       "fcf_yield": 0.08995257586340245,
-      "avg_volume": 19645479
+      "avg_volume": 19488854
     }
   },
   "COM7.BK": {
@@ -590,7 +590,7 @@
       "de_ratio": 1.09545,
       "eps_growth": 0.139,
       "fcf_yield": 0.07792968733629592,
-      "avg_volume": 18021408
+      "avg_volume": 18095581
     }
   },
   "OSP.BK": {
@@ -612,7 +612,7 @@
       "de_ratio": 0.03553,
       "eps_growth": 0.221,
       "fcf_yield": 0.10811220047869778,
-      "avg_volume": 11704662
+      "avg_volume": 11680491
     }
   },
   "BJC.BK": {
@@ -634,7 +634,7 @@
       "de_ratio": 1.26383,
       "eps_growth": -0.214,
       "fcf_yield": 0.2720609825583844,
-      "avg_volume": 10345591
+      "avg_volume": 10237259
     }
   },
   "TU.BK": {
@@ -656,7 +656,7 @@
       "de_ratio": 1.49423,
       "eps_growth": -0.009,
       "fcf_yield": -0.03492154502168774,
-      "avg_volume": 15995275
+      "avg_volume": 15908547
     }
   },
   "CBG.BK": {
@@ -678,7 +678,7 @@
       "de_ratio": 0.17888,
       "eps_growth": -0.818,
       "fcf_yield": 0.055031004317692304,
-      "avg_volume": 4320003
+      "avg_volume": 4269935
     }
   },
   "GFPT.BK": {
@@ -700,7 +700,7 @@
       "de_ratio": 0.1924,
       "eps_growth": 0.158,
       "fcf_yield": 0.13360344723863166,
-      "avg_volume": 3111629
+      "avg_volume": 3073806
     }
   },
   "MTC.BK": {
@@ -722,7 +722,7 @@
       "de_ratio": 3.38889,
       "eps_growth": 0.155,
       "fcf_yield": null,
-      "avg_volume": 15409512
+      "avg_volume": 15301523
     }
   },
   "CPF.BK": {
@@ -744,7 +744,7 @@
       "de_ratio": 2.0518799999999997,
       "eps_growth": -0.79,
       "fcf_yield": 0.2826528840467075,
-      "avg_volume": 32673358
+      "avg_volume": 32697793
     }
   },
   "SAWAD.BK": {
@@ -766,7 +766,7 @@
       "de_ratio": 1.57476,
       "eps_growth": 0.083,
       "fcf_yield": null,
-      "avg_volume": 14496058
+      "avg_volume": 14459232
     }
   },
   "BAM.BK": {
@@ -788,7 +788,7 @@
       "de_ratio": 1.96118,
       "eps_growth": -0.784,
       "fcf_yield": null,
-      "avg_volume": 20564418
+      "avg_volume": 20677328
     }
   },
   "KTB.BK": {
@@ -810,7 +810,7 @@
       "de_ratio": null,
       "eps_growth": 0.06,
       "fcf_yield": null,
-      "avg_volume": 71032303
+      "avg_volume": 70565096
     }
   },
   "TTB.BK": {
@@ -832,7 +832,7 @@
       "de_ratio": null,
       "eps_growth": 0.2,
       "fcf_yield": null,
-      "avg_volume": 396947665
+      "avg_volume": 394093384
     }
   },
   "TISCO.BK": {
@@ -854,7 +854,7 @@
       "de_ratio": null,
       "eps_growth": 0.059,
       "fcf_yield": null,
-      "avg_volume": 4875381
+      "avg_volume": 4910955
     }
   },
   "AOT.BK": {
@@ -876,7 +876,7 @@
       "de_ratio": 0.32854,
       "eps_growth": -0.108,
       "fcf_yield": 0.015976563835696976,
-      "avg_volume": 41068008
+      "avg_volume": 40690871
     }
   },
   "THRE.BK": {
@@ -898,7 +898,7 @@
       "de_ratio": 0.0034999999999999996,
       "eps_growth": null,
       "fcf_yield": -0.593915589564354,
-      "avg_volume": 1572158
+      "avg_volume": 1575005
     }
   },
   "BLA.BK": {
@@ -920,7 +920,7 @@
       "de_ratio": null,
       "eps_growth": 0.297,
       "fcf_yield": 0.11559432514482369,
-      "avg_volume": 1965986
+      "avg_volume": 1968450
     }
   },
   "TIDLOR.BK": {
@@ -942,29 +942,29 @@
       "de_ratio": 2.16375,
       "eps_growth": -0.14,
       "fcf_yield": null,
-      "avg_volume": 23425489
+      "avg_volume": 23339623
     }
   },
   "SCC.BK": {
     "score": 3,
     "signal": "BUY",
     "price": 240.0,
-    "fund_score": 4.2,
-    "comp_score": 6.48,
+    "fund_score": 5.3,
+    "comp_score": 6.92,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-04-27",
     "fund": {
-      "pe": 20.477816,
+      "pe": 20.44293,
       "pbv": 0.8528209,
-      "roe": 0.02586,
+      "roe": 0.03845,
       "div_yld": 2.19,
       "has_div": true,
       "ex_div_date": "2026-04-01",
-      "de_ratio": 0.8383799999999999,
-      "eps_growth": null,
-      "fcf_yield": -0.015967766241721814,
-      "avg_volume": 6162362
+      "de_ratio": 0.8404600000000001,
+      "eps_growth": 4.641,
+      "fcf_yield": -0.026114453041177772,
+      "avg_volume": 6393086
     }
   },
   "KTC.BK": {
@@ -986,7 +986,7 @@
       "de_ratio": 1.1153,
       "eps_growth": 0.167,
       "fcf_yield": null,
-      "avg_volume": 20855982
+      "avg_volume": 20628652
     }
   },
   "AAV.BK": {
@@ -1008,7 +1008,7 @@
       "de_ratio": 3.1719600000000003,
       "eps_growth": 3.514,
       "fcf_yield": 0.42453331541088896,
-      "avg_volume": 136428287
+      "avg_volume": 135286713
     }
   },
   "ITD.BK": {
@@ -1030,7 +1030,7 @@
       "de_ratio": 11.512360000000001,
       "eps_growth": null,
       "fcf_yield": 3.2870141552119985,
-      "avg_volume": 10677715
+      "avg_volume": 10596232
     }
   },
   "THAI.BK": {
@@ -1052,7 +1052,7 @@
       "de_ratio": 1.55013,
       "eps_growth": null,
       "fcf_yield": 0.08192485992489128,
-      "avg_volume": 65136229
+      "avg_volume": 64253713
     }
   },
   "BAY.BK": {
@@ -1074,7 +1074,7 @@
       "de_ratio": null,
       "eps_growth": 0.144,
       "fcf_yield": null,
-      "avg_volume": 682462
+      "avg_volume": 705522
     }
   },
   "BA.BK": {
@@ -1096,7 +1096,7 @@
       "de_ratio": 1.93448,
       "eps_growth": -0.182,
       "fcf_yield": 0.09931039099083444,
-      "avg_volume": 9645850
+      "avg_volume": 9538567
     }
   },
   "BEM.BK": {
@@ -1118,7 +1118,7 @@
       "de_ratio": 3.03834,
       "eps_growth": -0.101,
       "fcf_yield": -0.2845752500160728,
-      "avg_volume": 44669320
+      "avg_volume": 44245469
     }
   },
   "BTS.BK": {
@@ -1140,7 +1140,7 @@
       "de_ratio": 1.9356499999999999,
       "eps_growth": null,
       "fcf_yield": -0.17881129701811577,
-      "avg_volume": 66945048
+      "avg_volume": 66107025
     }
   },
   "JMART.BK": {
@@ -1162,7 +1162,7 @@
       "de_ratio": 0.6588299999999999,
       "eps_growth": null,
       "fcf_yield": -0.022828569884003554,
-      "avg_volume": 12094991
+      "avg_volume": 12010111
     }
   },
   "TQM.BK": {
@@ -1184,7 +1184,7 @@
       "de_ratio": 0.48252,
       "eps_growth": 0.037,
       "fcf_yield": 0.05716295888318295,
-      "avg_volume": 1078048
+      "avg_volume": 1073006
     }
   },
   "SINGER.BK": {
@@ -1206,7 +1206,7 @@
       "de_ratio": 0.08525,
       "eps_growth": null,
       "fcf_yield": -0.3738861571431683,
-      "avg_volume": 3570248
+      "avg_volume": 3563408
     }
   },
   "CK.BK": {
@@ -1228,7 +1228,7 @@
       "de_ratio": 1.66538,
       "eps_growth": null,
       "fcf_yield": 0.13829376807796526,
-      "avg_volume": 9811232
+      "avg_volume": 9879961
     }
   },
   "SC.BK": {
@@ -1250,7 +1250,7 @@
       "de_ratio": 1.30433,
       "eps_growth": 0.259,
       "fcf_yield": 0.5857747099304168,
-      "avg_volume": 10739846
+      "avg_volume": 10719345
     }
   },
   "SIRI.BK": {
@@ -1272,7 +1272,7 @@
       "de_ratio": 1.51517,
       "eps_growth": 0.206,
       "fcf_yield": 0.6984203108573726,
-      "avg_volume": 76194322
+      "avg_volume": 75472437
     }
   },
   "LH.BK": {
@@ -1294,7 +1294,7 @@
       "de_ratio": 1.51037,
       "eps_growth": -0.729,
       "fcf_yield": null,
-      "avg_volume": 38617481
+      "avg_volume": 38540510
     }
   },
   "AP.BK": {
@@ -1316,7 +1316,7 @@
       "de_ratio": 0.68035,
       "eps_growth": -0.001,
       "fcf_yield": 0.04050973193611268,
-      "avg_volume": 10398018
+      "avg_volume": 10403435
     }
   },
   "ORI.BK": {
@@ -1338,7 +1338,7 @@
       "de_ratio": 1.52382,
       "eps_growth": null,
       "fcf_yield": -0.05780351982305532,
-      "avg_volume": 3657494
+      "avg_volume": 3627076
     }
   },
   "WHA.BK": {
@@ -1360,7 +1360,7 @@
       "de_ratio": 1.22675,
       "eps_growth": 0.158,
       "fcf_yield": -0.035266303882408354,
-      "avg_volume": 136708360
+      "avg_volume": 135842249
     }
   },
   "TPIPP.BK": {
@@ -1382,7 +1382,7 @@
       "de_ratio": 0.81379,
       "eps_growth": -0.633,
       "fcf_yield": -0.024802299603174604,
-      "avg_volume": 3749627
+      "avg_volume": 3733889
     }
   },
   "AMATA.BK": {
@@ -1404,7 +1404,7 @@
       "de_ratio": 0.67062,
       "eps_growth": 0.034,
       "fcf_yield": -0.25364146756444395,
-      "avg_volume": 18712163
+      "avg_volume": 18699088
     }
   },
   "SHR.BK": {
@@ -1426,7 +1426,7 @@
       "de_ratio": 1.2156399999999998,
       "eps_growth": null,
       "fcf_yield": -0.10111624062035475,
-      "avg_volume": 5203834
+      "avg_volume": 5147649
     }
   },
   "THG.BK": {
@@ -1448,7 +1448,7 @@
       "de_ratio": 0.26002,
       "eps_growth": null,
       "fcf_yield": 0.008876959775852105,
-      "avg_volume": 2112853
+      "avg_volume": 2085471
     }
   },
   "DUSIT.BK": {
@@ -1470,7 +1470,7 @@
       "de_ratio": 2.30136,
       "eps_growth": -0.489,
       "fcf_yield": 0.19937233156505163,
-      "avg_volume": 307663
+      "avg_volume": 304188
     }
   },
   "CENTEL.BK": {
@@ -1492,7 +1492,7 @@
       "de_ratio": 1.40611,
       "eps_growth": 0.461,
       "fcf_yield": 0.04067912243810366,
-      "avg_volume": 6352591
+      "avg_volume": 6293601
     }
   },
   "NOBLE.BK": {
@@ -1514,7 +1514,7 @@
       "de_ratio": 2.07869,
       "eps_growth": null,
       "fcf_yield": 0.8184911926531667,
-      "avg_volume": 1106086
+      "avg_volume": 1094530
     }
   },
   "SPALI.BK": {
@@ -1536,7 +1536,7 @@
       "de_ratio": 0.69339,
       "eps_growth": -0.304,
       "fcf_yield": -0.03823989096609952,
-      "avg_volume": 4667515
+      "avg_volume": 4786066
     }
   },
   "ERW.BK": {
@@ -1558,7 +1558,7 @@
       "de_ratio": 1.49369,
       "eps_growth": -0.012,
       "fcf_yield": 0.05539861930977475,
-      "avg_volume": 34677898
+      "avg_volume": 34508625
     }
   },
   "BCH.BK": {
@@ -1580,7 +1580,7 @@
       "de_ratio": 0.0613,
       "eps_growth": 0.145,
       "fcf_yield": 0.0569922792873884,
-      "avg_volume": 14509896
+      "avg_volume": 14426066
     }
   },
   "PR9.BK": {
@@ -1602,7 +1602,7 @@
       "de_ratio": 0.00272,
       "eps_growth": 0.05,
       "fcf_yield": 0.018693557376402114,
-      "avg_volume": 3799550
+      "avg_volume": 3782096
     }
   },
   "BDMS.BK": {
@@ -1624,7 +1624,7 @@
       "de_ratio": 0.15896000000000002,
       "eps_growth": -0.148,
       "fcf_yield": 0.022442752348022864,
-      "avg_volume": 75865162
+      "avg_volume": 75246116
     }
   },
   "NTV.BK": {
@@ -1646,7 +1646,7 @@
       "de_ratio": null,
       "eps_growth": -0.051,
       "fcf_yield": 0.04253751583710407,
-      "avg_volume": 18087
+      "avg_volume": 17832
     }
   },
   "VGI.BK": {
@@ -1668,7 +1668,7 @@
       "de_ratio": 0.022010000000000002,
       "eps_growth": -0.812,
       "fcf_yield": -0.004439059724116389,
-      "avg_volume": 150440629
+      "avg_volume": 148367008
     }
   },
   "WORK.BK": {
@@ -1690,7 +1690,7 @@
       "de_ratio": 0.03468,
       "eps_growth": null,
       "fcf_yield": 0.03128141844416879,
-      "avg_volume": 230125
+      "avg_volume": 226605
     }
   },
   "PSH.BK": {
@@ -1712,7 +1712,7 @@
       "de_ratio": 0.33176,
       "eps_growth": null,
       "fcf_yield": -0.04845314014549466,
-      "avg_volume": 811491
+      "avg_volume": 801754
     }
   },
   "ANAN.BK": {
@@ -1734,7 +1734,7 @@
       "de_ratio": 1.15801,
       "eps_growth": -0.247,
       "fcf_yield": -0.9189735276293124,
-      "avg_volume": 2030003
+      "avg_volume": 2002110
     }
   },
   "JASIF.BK": {
@@ -1778,7 +1778,7 @@
       "de_ratio": 0.64495,
       "eps_growth": -0.077,
       "fcf_yield": -0.03339846461265018,
-      "avg_volume": 55229
+      "avg_volume": 54476
     }
   },
   "MEGA.BK": {
@@ -1800,7 +1800,7 @@
       "de_ratio": 0.06691,
       "eps_growth": -0.1,
       "fcf_yield": 0.06677461358205795,
-      "avg_volume": 1131289
+      "avg_volume": 1125716
     }
   },
   "JMT.BK": {
@@ -1822,7 +1822,7 @@
       "de_ratio": 0.33013,
       "eps_growth": -0.446,
       "fcf_yield": 0.0021427176651254774,
-      "avg_volume": 19397996
+      "avg_volume": 19309083
     }
   },
   "GLAND.BK": {
@@ -1866,7 +1866,7 @@
       "de_ratio": 0.97834,
       "eps_growth": 0.256,
       "fcf_yield": 0.12253024983575136,
-      "avg_volume": 9114265
+      "avg_volume": 9065511
     }
   },
   "PYLON.BK": {
@@ -1888,7 +1888,7 @@
       "de_ratio": 0.07566,
       "eps_growth": null,
       "fcf_yield": 0.09583738053070859,
-      "avg_volume": 1085386
+      "avg_volume": 1073623
     }
   },
   "PLANB.BK": {
@@ -1910,7 +1910,7 @@
       "de_ratio": 0.27684000000000003,
       "eps_growth": 0.023,
       "fcf_yield": 0.16132747870274425,
-      "avg_volume": 30616524
+      "avg_volume": 30492859
     }
   },
   "SPRC.BK": {
@@ -1932,7 +1932,7 @@
       "de_ratio": 0.14714,
       "eps_growth": 5.245,
       "fcf_yield": 0.18856288715033767,
-      "avg_volume": 29565331
+      "avg_volume": 29736898
     }
   },
   "_last_reset_date": "2026-04-29",
