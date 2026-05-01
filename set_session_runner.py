@@ -22,6 +22,21 @@ import subprocess, time, datetime, sys, os, json
 BKK        = datetime.timezone(datetime.timedelta(hours=7))
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# ─── Thai SET public holidays ─────────────────────────────────────────────────
+# Keep in sync with SET_HOLIDAYS in set_realtime_monitor.py
+SET_HOLIDAYS = {
+    # 2025
+    "2025-01-01", "2025-02-12", "2025-04-07", "2025-04-14", "2025-04-15",
+    "2025-05-01", "2025-05-05", "2025-06-02", "2025-07-10", "2025-07-28",
+    "2025-08-12", "2025-10-13", "2025-10-23", "2025-12-05", "2025-12-10",
+    "2025-12-31",
+    # 2026
+    "2026-01-01", "2026-02-02", "2026-04-06", "2026-04-14", "2026-04-15",
+    "2026-05-01", "2026-05-05", "2026-05-22", "2026-06-01", "2026-07-29",
+    "2026-08-12", "2026-10-13", "2026-10-23", "2026-12-07", "2026-12-10",
+    "2026-12-31",
+}
+
 MORNING_START   = (10,  0)
 MORNING_END     = (12, 30)
 AFTERNOON_START = (14, 30)
@@ -256,6 +271,12 @@ def run_afternoon():
 
 # ─── Entry point ──────────────────────────────────────────────────────────────
 if __name__ == "__main__":
+    today_str = now_bkk().date().isoformat()
+    if today_str in SET_HOLIDAYS:
+        print(f"\nSET Session Runner — {now_bkk().strftime('%Y-%m-%d %H:%M')} Bangkok")
+        print(f"  Today ({today_str}) is a Thai public holiday — SET is closed. Exiting.")
+        sys.exit(0)
+
     session = sys.argv[1] if len(sys.argv) > 1 else detect_session()
     print(f"\nSET Session Runner — {now_bkk().strftime('%Y-%m-%d %H:%M')} Bangkok")
     print(f"Session: {session.upper()}\n")
