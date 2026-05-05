@@ -417,6 +417,34 @@
     {
       "name": "PYLON",
       "ticker": "PYLON.BK"
+    },
+    {
+      "name": "ASP",
+      "ticker": "ASP.BK"
+    },
+    {
+      "name": "KGI",
+      "ticker": "KGI.BK"
+    },
+    {
+      "name": "FM",
+      "ticker": "FM.BK"
+    },
+    {
+      "name": "JAS",
+      "ticker": "JAS.BK"
+    },
+    {
+      "name": "LHFG",
+      "ticker": "LHFG.BK"
+    },
+    {
+      "name": "MST",
+      "ticker": "MST.BK"
+    },
+    {
+      "name": "BTSGIF",
+      "ticker": "BTSGIF.BK"
     }
   ],
   "scoring_weights": {
