@@ -10,7 +10,7 @@
       "entry_score": 3,
       "last_div_check": "2026-04-29",
       "atr_stop": 18.68,
-      "last_price": 20.600000381469727
+      "last_price": 19.850000381469727
     },
     "CK.BK": {
       "name": "CK",
@@ -144,7 +144,7 @@
     }
   ],
   "start_date": "2026-04-27",
-  "day_count": 6,
-  "last_eod_date": "2026-05-04",
+  "day_count": 7,
+  "last_eod_date": "2026-05-05",
   "peak_value": 304153.8160982132
 }
