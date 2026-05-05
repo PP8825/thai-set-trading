@@ -6,19 +6,25 @@
 
 const REPO = "PP8825/thai-set-trading";
 
-const ACTIONS = {
-  signal:   "signal-on-demand.yml",
-  signals:  "signal-on-demand.yml",
-  scan:     "signal-on-demand.yml",
-  สัญญาณ:   "signal-on-demand.yml",
-  dividend: "dividend-on-demand.yml",
-  dividends:"dividend-on-demand.yml",
-  ปันผล:    "dividend-on-demand.yml",
-  report:   "report-on-demand.yml",
-  รายงาน:   "report-on-demand.yml",
+// Known command keywords
+const COMMANDS = {
+  signal:    { workflow: "signal-on-demand.yml",   reply: "🔍 Scanning signals… results in ~1 min" },
+  signals:   { workflow: "signal-on-demand.yml",   reply: "🔍 Scanning signals… results in ~1 min" },
+  scan:      { workflow: "signal-on-demand.yml",   reply: "🔍 Scanning signals… results in ~1 min" },
+  สัญญาณ:    { workflow: "signal-on-demand.yml",   reply: "🔍 Scanning signals… results in ~1 min" },
+  dividend:  { workflow: "dividend-on-demand.yml",  reply: "💰 Fetching top dividend stocks… ~1 min" },
+  dividends: { workflow: "dividend-on-demand.yml",  reply: "💰 Fetching top dividend stocks… ~1 min" },
+  ปันผล:     { workflow: "dividend-on-demand.yml",  reply: "💰 Fetching top dividend stocks… ~1 min" },
+  report:    { workflow: "report-on-demand.yml",    reply: "📋 Generating portfolio report… ~1 min" },
+  รายงาน:    { workflow: "report-on-demand.yml",    reply: "📋 Generating portfolio report… ~1 min" },
 };
 
-async function triggerGitHub(pat, workflow) {
+// Looks like a stock name: 2-10 chars, letters/digits only, no spaces
+function looksLikeStock(text) {
+  return /^[a-zA-Z0-9]{2,10}$/.test(text);
+}
+
+async function triggerGitHub(pat, workflow, inputs = {}) {
   const res = await fetch(
     `https://api.github.com/repos/${REPO}/actions/workflows/${workflow}/dispatches`,
     {
@@ -30,7 +36,7 @@ async function triggerGitHub(pat, workflow) {
         "User-Agent": "SET-Trading-Bot",
         "X-GitHub-Api-Version": "2022-11-28",
       },
-      body: JSON.stringify({ ref: "main" }),
+      body: JSON.stringify({ ref: "main", inputs }),
     }
   );
   return res.status; // 204 = success
@@ -50,12 +56,6 @@ async function lineReply(replyToken, text, lineToken) {
     }),
   });
 }
-
-const REPLIES = {
-  "signal-on-demand.yml":   "🔍 Scanning signals… results in ~1 min",
-  "dividend-on-demand.yml": "💰 Fetching top dividend stocks… results in ~1 min",
-  "report-on-demand.yml":   "📋 Generating portfolio report… results in ~1 min",
-};
 
 export default {
   async fetch(request, env) {
@@ -86,19 +86,31 @@ export default {
 
     for (const event of payload.events || []) {
       if (event.type !== "message") continue;
-      const text     = (event.message?.text || "").trim().toLowerCase();
-      const workflow = ACTIONS[text];
-      if (!workflow) continue;
+      const raw  = (event.message?.text || "").trim();
+      const text = raw.toLowerCase();
 
-      let reply;
+      let reply, workflow, inputs = {};
+
+      if (COMMANDS[text]) {
+        // Known command
+        workflow = COMMANDS[text].workflow;
+        reply    = COMMANDS[text].reply;
+      } else if (looksLikeStock(raw)) {
+        // Stock name lookup
+        workflow = "stock-lookup.yml";
+        inputs   = { stock: raw.toUpperCase() };
+        reply    = `🔍 Looking up ${raw.toUpperCase()}… results in ~1 min`;
+      } else {
+        continue; // ignore everything else
+      }
+
       try {
-        const status = await triggerGitHub(env.GITHUB_PAT, workflow);
-        reply = status === 204
-          ? REPLIES[workflow]
-          : `⚠️ GitHub returned ${status}`;
+        const status = await triggerGitHub(env.GITHUB_PAT, workflow, inputs);
+        if (status !== 204) reply = `⚠️ GitHub returned ${status}`;
       } catch (e) {
         reply = `❌ Error: ${String(e).slice(0, 80)}`;
       }
+
       await lineReply(event.replyToken, reply, env.LINE_TOKEN);
     }
 
