@@ -38,8 +38,8 @@ with open(CONFIG_PATH) as f:
 LINE_TOKEN   = os.environ.get("LINE_TOKEN",   cfg.get("line_channel_access_token", ""))
 LINE_USER_ID = os.environ.get("LINE_USER_ID", cfg.get("line_user_id", ""))
 
-# ── Menu image dimensions (LINE requirement: width=2500, height≥843) ──────────
-W, H = 2500, 843
+# ── Menu image dimensions — full height for 2×2 grid ─────────────────────────
+W, H = 2500, 1686
 
 # ── Colors ─────────────────────────────────────────────────────────────────────
 BG_COLOR     = (13,  17,  27)   # deep dark navy
@@ -50,6 +50,7 @@ BUTTONS = [
     ("📊", "Signal",   "signal"),
     ("💰", "Dividend", "dividend"),
     ("📋", "Report",   "report"),
+    ("⭐", "Watchlist","watchlist"),
 ]
 
 
@@ -70,40 +71,54 @@ def load_font(size):
 
 
 def make_image():
-    # Pastel panel backgrounds + darker accent text
-    PANELS   = [(209, 236, 220),  # mint
-                (207, 226, 255),  # sky blue
-                (226, 215, 245)]  # lavender
-    ACCENTS  = [(39,  110,  70),  # deep green
-                (30,   80, 180),  # deep blue
-                (90,   50, 160)]  # deep purple
-    BG       = (240, 242, 247)    # very light grey background
+    # 2×2 grid — pastel panels
+    PANELS  = [
+        (209, 236, 220),  # mint        — Signal
+        (207, 226, 255),  # sky blue    — Dividend
+        (255, 230, 210),  # peach       — Report
+        (226, 215, 245),  # lavender    — Watchlist
+    ]
+    ACCENTS = [
+        (39,  110,  70),  # deep green
+        (30,   80, 180),  # deep blue
+        (180,  80,  20),  # deep orange
+        (90,   50, 160),  # deep purple
+    ]
+    SUBTITLES = [
+        "Buy · Sell signals",
+        "Top dividend yield",
+        "Portfolio snapshot",
+        "My stock watchlist",
+    ]
+    BG = (235, 237, 243)
 
-    img  = Image.new("RGB", (W, H), BG)
-    draw = ImageDraw.Draw(img)
-
-    btn_w     = W // 3
-    font_main = load_font(130)   # main label — readable, not huge
-    font_sub  = load_font(58)    # subtitle
+    img       = Image.new("RGB", (W, H), BG)
+    draw      = ImageDraw.Draw(img)
+    font_main = load_font(140)
+    font_sub  = load_font(62)
     GAP       = 10
-    RADIUS    = 28               # rounded feel via inset
-
-    SUBTITLES = ["Buy · Sell signals", "Top dividend yield", "Portfolio snapshot"]
+    COLS, ROWS = 2, 2
+    btn_w     = W // COLS
+    btn_h     = H // ROWS
 
     for i, (_, label, _) in enumerate(BUTTONS):
-        x0  = i * btn_w + GAP
-        x1  = (i + 1) * btn_w - GAP
+        col = i % COLS
+        row = i // COLS
+        x0  = col * btn_w + GAP
+        x1  = (col + 1) * btn_w - GAP
+        y0  = row * btn_h + GAP
+        y1  = (row + 1) * btn_h - GAP
         cx  = (x0 + x1) // 2
-        cy  = H // 2
+        cy  = (y0 + y1) // 2
 
         # Pastel panel
-        draw.rectangle([x0, GAP, x1, H - GAP], fill=PANELS[i])
+        draw.rectangle([x0, y0, x1, y1], fill=PANELS[i])
 
-        # Accent left edge stripe
-        draw.rectangle([x0, GAP, x0 + 10, H - GAP], fill=ACCENTS[i])
+        # Accent top stripe
+        draw.rectangle([x0, y0, x1, y0 + 12], fill=ACCENTS[i])
 
         # Main label
-        draw.text((cx, cy - 50), label.upper(),
+        draw.text((cx, cy - 45), label.upper(),
                   font=font_main, fill=ACCENTS[i], anchor="mm")
 
         # Subtitle
@@ -117,15 +132,23 @@ def make_image():
 
 
 def create_rich_menu():
+    COLS, ROWS = 2, 2
+    btn_w = W // COLS
+    btn_h = H // ROWS
+
     menu = {
-        "size":       {"width": W, "height": H},
-        "selected":   True,
-        "name":       "SET Trading Bot Menu",
-        "chatBarText":"📊 Trading Menu",
+        "size":        {"width": W, "height": H},
+        "selected":    True,
+        "name":        "SET Trading Bot Menu",
+        "chatBarText": "📊 Trading Menu",
         "areas": [
             {
-                "bounds": {"x": i * (W // 3), "y": 0,
-                           "width": W // 3, "height": H},
+                "bounds": {
+                    "x":      (i % COLS) * btn_w,
+                    "y":      (i // COLS) * btn_h,
+                    "width":  btn_w,
+                    "height": btn_h,
+                },
                 "action": {"type": "message", "text": kw}
             }
             for i, (_, _, kw) in enumerate(BUTTONS)

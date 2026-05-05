@@ -1,0 +1,29 @@
+name: Watchlist Manage
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'add or remove'
+        required: true
+      stock:
+        description: 'Stock name or ticker'
+        required: true
+
+concurrency:
+  group: watchlist-manage
+  cancel-in-progress: false   # don't cancel — each add/remove must complete
+
+jobs:
+  manage-watchlist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Manage watchlist
+        env:
+          LINE_TOKEN:   ${{ secrets.LINE_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: python set_watchlist_manage.py "${{ github.event.inputs.action }}" "${{ github.event.inputs.stock }}"

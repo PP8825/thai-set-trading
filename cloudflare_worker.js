@@ -8,20 +8,29 @@ const REPO = "PP8825/thai-set-trading";
 
 // Known command keywords
 const COMMANDS = {
-  signal:    { workflow: "signal-on-demand.yml",   reply: "🔍 Scanning signals… results in ~1 min" },
-  signals:   { workflow: "signal-on-demand.yml",   reply: "🔍 Scanning signals… results in ~1 min" },
-  scan:      { workflow: "signal-on-demand.yml",   reply: "🔍 Scanning signals… results in ~1 min" },
-  สัญญาณ:    { workflow: "signal-on-demand.yml",   reply: "🔍 Scanning signals… results in ~1 min" },
+  signal:    { workflow: "signal-on-demand.yml",    reply: "🔍 Scanning signals… results in ~1 min" },
+  signals:   { workflow: "signal-on-demand.yml",    reply: "🔍 Scanning signals… results in ~1 min" },
+  scan:      { workflow: "signal-on-demand.yml",    reply: "🔍 Scanning signals… results in ~1 min" },
+  สัญญาณ:    { workflow: "signal-on-demand.yml",    reply: "🔍 Scanning signals… results in ~1 min" },
   dividend:  { workflow: "dividend-on-demand.yml",  reply: "💰 Fetching top dividend stocks… ~1 min" },
   dividends: { workflow: "dividend-on-demand.yml",  reply: "💰 Fetching top dividend stocks… ~1 min" },
   ปันผล:     { workflow: "dividend-on-demand.yml",  reply: "💰 Fetching top dividend stocks… ~1 min" },
   report:    { workflow: "report-on-demand.yml",    reply: "📋 Generating portfolio report… ~1 min" },
   รายงาน:    { workflow: "report-on-demand.yml",    reply: "📋 Generating portfolio report… ~1 min" },
+  watchlist: { workflow: "watchlist-on-demand.yml", reply: "📋 Loading your watchlist… ~1 min" },
+  วอชลิสต์:  { workflow: "watchlist-on-demand.yml", reply: "📋 Loading your watchlist… ~1 min" },
 };
 
 // Looks like a stock name: 2-10 chars, letters/digits only, no spaces
 function looksLikeStock(text) {
   return /^[a-zA-Z0-9]{2,10}$/.test(text);
+}
+
+// Looks like add/remove command: "add PTT" or "remove AMATA"
+function parseWatchlistCmd(text) {
+  const m = text.match(/^(add|remove)\s+([a-zA-Z0-9]{2,10})$/i);
+  if (m) return { action: m[1].toLowerCase(), stock: m[2].toUpperCase() };
+  return null;
 }
 
 async function triggerGitHub(pat, workflow, inputs = {}) {
@@ -91,10 +100,19 @@ export default {
 
       let reply, workflow, inputs = {};
 
+      const wlCmd = parseWatchlistCmd(text);
+
       if (COMMANDS[text]) {
         // Known command
         workflow = COMMANDS[text].workflow;
         reply    = COMMANDS[text].reply;
+      } else if (wlCmd) {
+        // add / remove watchlist command
+        workflow = "watchlist-manage.yml";
+        inputs   = { action: wlCmd.action, stock: wlCmd.stock };
+        reply    = wlCmd.action === "add"
+          ? `➕ Adding ${wlCmd.stock} to watchlist…`
+          : `➖ Removing ${wlCmd.stock} from watchlist…`;
       } else if (looksLikeStock(raw)) {
         // Stock name lookup
         workflow = "stock-lookup.yml";

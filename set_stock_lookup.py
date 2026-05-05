@@ -227,30 +227,53 @@ def main():
         lines.append(f"  {'Ex-div':<12s}: {ex_div}")
 
     # ── Historical financials (last 3 years) ──────────────────────────────────
-    hist_lines = []
     if os.path.exists(FUND_CACHE):
         try:
             with open(FUND_CACHE) as f:
                 fc = json.load(f)
-            entry = fc.get(ticker, {})
+            entry  = fc.get(ticker, {})
             yearly = entry.get("yearly", {})
-            years  = sorted(yearly.keys())[-3:]   # last 3 years
-            if years:
+            all_years = sorted(yearly.keys())
+
+            # Split into full years (have EPS/ROE) and valuation-only years
+            full_years = [y for y in all_years
+                          if yearly[y].get("eps") is not None
+                          or yearly[y].get("roe") is not None]
+            val_years  = [y for y in all_years if y not in full_years]
+
+            # Show last 3 full years as table
+            show_years = full_years[-3:]
+            if show_years:
                 lines.append("")
                 lines.append("📅 3-Year History")
                 lines.append("─" * 32)
                 lines.append(f"  {'Year':<6s} {'EPS':>6s} {'ROE':>7s} {'Marg':>7s} {'D/E':>6s}")
-                for yr in years:
-                    d    = yearly[yr]
-                    eps  = d.get("eps")
-                    roe_ = d.get("roe")
-                    marg = d.get("net_margin")
-                    de_  = d.get("de_ratio")
-                    eps_s  = f"{eps:5.2f}"  if eps  is not None else "  n/a"
-                    roe_s  = f"{roe_:5.1f}%" if roe_ is not None else "  n/a "
-                    marg_s = f"{marg:5.1f}%" if marg is not None else "  n/a "
-                    de_s   = f"{de_:5.2f}x"  if de_  is not None else "  n/a"
+                for yr in show_years:
+                    d      = yearly[yr]
+                    eps    = d.get("eps")
+                    roe_   = d.get("roe")
+                    marg   = d.get("net_margin")
+                    de_    = d.get("de_ratio")
+                    eps_s  = f"{eps:5.2f}"       if eps  is not None else "   n/a"
+                    roe_s  = f"{roe_:5.1f}%"     if roe_ is not None else "   n/a"
+                    marg_s = f"{marg:5.1f}%"     if marg is not None else "   n/a"
+                    de_s   = f"{de_:5.2f}x"      if de_  is not None else "   n/a"
                     lines.append(f"  {yr:<6s} {eps_s:>6s} {roe_s:>7s} {marg_s:>7s} {de_s:>6s}")
+
+            # Show valuation-only years (e.g. latest year partial data)
+            for yr in val_years[-1:]:
+                d   = yearly[yr]
+                pe_ = d.get("pe")
+                pb_ = d.get("pbv")
+                dy_ = d.get("div_yield")
+                parts = []
+                if pe_: parts.append(f"P/E {pe_:.1f}x")
+                if pb_: parts.append(f"P/BV {pb_:.2f}x")
+                if dy_: parts.append(f"Div {dy_*100:.1f}%")
+                if parts:
+                    lines.append("")
+                    lines.append(f"  {yr} (partial): {' · '.join(parts)}")
+
         except Exception as e:
             print(f"  Fund cache error: {e}")
 
