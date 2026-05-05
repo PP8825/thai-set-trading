@@ -1,0 +1,27 @@
+name: Dividend On-Demand
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Who triggered this'
+        required: false
+        default: 'manual'
+
+concurrency:
+  group: dividend-on-demand
+  cancel-in-progress: true
+
+jobs:
+  send-dividend-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Send dividend report
+        env:
+          LINE_TOKEN:   ${{ secrets.LINE_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: python set_dividend_report.py

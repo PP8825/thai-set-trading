@@ -1,0 +1,27 @@
+name: Report On-Demand
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Who triggered this'
+        required: false
+        default: 'manual'
+
+concurrency:
+  group: report-on-demand
+  cancel-in-progress: true
+
+jobs:
+  send-portfolio-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Send portfolio report
+        env:
+          LINE_TOKEN:   ${{ secrets.LINE_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: python set_signal_report.py
