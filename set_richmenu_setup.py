@@ -42,15 +42,9 @@ LINE_USER_ID = os.environ.get("LINE_USER_ID", cfg.get("line_user_id", ""))
 W, H = 2500, 843
 
 # ── Colors ─────────────────────────────────────────────────────────────────────
-BG_COLOR     = (15,  23,  42)   # dark navy
-BTN_COLORS   = [
-    (34, 139,  87),   # green  — Signal
-    (37, 99,  235),   # blue   — Dividend
-    (124, 58, 237),   # purple — Report
-]
-TEXT_COLOR   = (255, 255, 255)
+BG_COLOR     = (13,  17,  27)   # deep dark navy
+TEXT_COLOR   = (240, 245, 255)  # near-white
 BORDER_COLOR = (255, 255, 255)
-DIVIDER      = (50,  65,  90)
 
 BUTTONS = [
     ("📊", "Signal",   "signal"),
@@ -59,42 +53,62 @@ BUTTONS = [
 ]
 
 
+def load_font(size):
+    paths = [
+        "/System/Library/Fonts/Helvetica.ttc",
+        "/Library/Fonts/Arial Bold.ttf",
+        "/Library/Fonts/Arial.ttf",
+        "/System/Library/Fonts/SFNSDisplay.ttf",
+        "/System/Library/Fonts/Geneva.ttf",
+    ]
+    for p in paths:
+        try:
+            return ImageFont.truetype(p, size)
+        except Exception:
+            continue
+    return ImageFont.load_default()
+
+
 def make_image():
-    img  = Image.new("RGB", (W, H), BG_COLOR)
+    # Pastel panel backgrounds + darker accent text
+    PANELS   = [(209, 236, 220),  # mint
+                (207, 226, 255),  # sky blue
+                (226, 215, 245)]  # lavender
+    ACCENTS  = [(39,  110,  70),  # deep green
+                (30,   80, 180),  # deep blue
+                (90,   50, 160)]  # deep purple
+    BG       = (240, 242, 247)    # very light grey background
+
+    img  = Image.new("RGB", (W, H), BG)
     draw = ImageDraw.Draw(img)
 
-    btn_w = W // 3
+    btn_w     = W // 3
+    font_main = load_font(130)   # main label — readable, not huge
+    font_sub  = load_font(58)    # subtitle
+    GAP       = 10
+    RADIUS    = 28               # rounded feel via inset
 
-    # Try to load a font, fall back to default
-    try:
-        font_big   = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 120)
-        font_small = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc",  80)
-        font_emoji = ImageFont.truetype("/System/Library/Fonts/Apple Color Emoji.ttc", 100)
-    except Exception:
-        font_big   = ImageFont.load_default()
-        font_small = ImageFont.load_default()
-        font_emoji = font_big
+    SUBTITLES = ["Buy · Sell signals", "Top dividend yield", "Portfolio snapshot"]
 
-    for i, (emoji, label, _) in enumerate(BUTTONS):
-        x0 = i * btn_w
-        x1 = x0 + btn_w
+    for i, (_, label, _) in enumerate(BUTTONS):
+        x0  = i * btn_w + GAP
+        x1  = (i + 1) * btn_w - GAP
+        cx  = (x0 + x1) // 2
+        cy  = H // 2
 
-        # Button background
-        draw.rectangle([x0 + 10, 10, x1 - 10, H - 10],
-                       fill=BTN_COLORS[i], outline=BORDER_COLOR, width=3)
+        # Pastel panel
+        draw.rectangle([x0, GAP, x1, H - GAP], fill=PANELS[i])
 
-        # Emoji
-        ex = x0 + btn_w // 2
-        draw.text((ex, H // 2 - 120), emoji, font=font_emoji,
-                  fill=TEXT_COLOR, anchor="mm")
+        # Accent left edge stripe
+        draw.rectangle([x0, GAP, x0 + 10, H - GAP], fill=ACCENTS[i])
 
-        # Label
-        draw.text((ex, H // 2 + 60), label, font=font_big,
-                  fill=TEXT_COLOR, anchor="mm")
+        # Main label
+        draw.text((cx, cy - 50), label.upper(),
+                  font=font_main, fill=ACCENTS[i], anchor="mm")
 
-        # Divider
-        if i < 2:
-            draw.line([(x1, 20), (x1, H - 20)], fill=DIVIDER, width=4)
+        # Subtitle
+        draw.text((cx, cy + 80), SUBTITLES[i],
+                  font=font_sub, fill=(100, 100, 120), anchor="mm")
 
     buf = io.BytesIO()
     img.save(buf, format="PNG")
