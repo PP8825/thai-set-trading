@@ -45,35 +45,34 @@ def send_line(msg):
 
 
 def resolve_name(query):
-    """Return the display name for a ticker if found in signal state."""
-    if not os.path.exists(STATE_PATH):
-        return query.upper(), None
-    with open(STATE_PATH) as f:
-        state = json.load(f)
+    """Return (display_name, ticker) — checks signal state first, then set_config.json."""
     q = query.upper()
-    if q + ".BK" in state:
-        return state[q + ".BK"].get("name", q), q + ".BK"
-    if q in state:
-        return state[q].get("name", q), q
-    for t, s in state.items():
-        if t.startswith("_"): continue
-        if s.get("name", "").upper() == q:
-            return s.get("name", q), t
+
+    # 1. Signal state (has live data)
+    if os.path.exists(STATE_PATH):
+        with open(STATE_PATH) as f:
+            state = json.load(f)
+        if q + ".BK" in state:
+            return state[q + ".BK"].get("name", q), q + ".BK"
+        if q in state:
+            return state[q].get("name", q), q
+        for t, s in state.items():
+            if t.startswith("_"): continue
+            if s.get("name", "").upper() == q:
+                return s.get("name", q), t
+
+    # 2. Fallback: instruments list in set_config.json
+    for inst in cfg.get("instruments", []):
+        ticker = inst.get("ticker", "") if isinstance(inst, dict) else inst
+        name   = inst.get("name",   ticker) if isinstance(inst, dict) else inst
+        if ticker.upper() == q or ticker.upper() == q + ".BK" or name.upper() == q:
+            return name, ticker
+
     return q, None
 
 
 def git_commit(msg):
-    try:
-        subprocess.run(["git", "config", "user.name",  "SET Trading Bot"], check=False, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "bot@set-trading.local"], check=False, capture_output=True)
-        subprocess.run(["git", "add", "set_watchlist.json"], check=False, capture_output=True)
-        diff = subprocess.run(["git", "diff", "--staged", "--quiet"])
-        if diff.returncode != 0:
-            subprocess.run(["git", "commit", "-m", f"{msg} [skip ci]"], check=False, capture_output=True)
-            subprocess.run(["git", "push"], check=False, capture_output=True)
-            print("  → Watchlist saved to GitHub")
-    except Exception as e:
-        print(f"  → Git error: {e}")
+    pass  # git operations handled by watchlist-manage.yml workflow step
 
 
 def main():
