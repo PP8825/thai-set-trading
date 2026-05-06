@@ -69,10 +69,17 @@ def main():
         sys.exit(0)
 
     # Load signal state and portfolio
-    with open(STATE_PATH) as f:
-        state = json.load(f)
-    with open(PORT_PATH) as f:
-        port = json.load(f)
+    try:
+        with open(STATE_PATH) as f:
+            state = json.load(f)
+    except Exception as e:
+        send_line(f"❌ Could not load signal state: {e}")
+        sys.exit(1)
+    try:
+        with open(PORT_PATH) as f:
+            port = json.load(f)
+    except Exception as e:
+        port = {"holdings": {}}
 
     held_tickers = set(port.get("holdings", {}).keys())
     regime_info  = state.get("_regime", {})
