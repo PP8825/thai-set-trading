@@ -111,7 +111,8 @@ def main():
                     break
 
         if entry is None:
-            notfound.append(name)
+            # Show placeholder — stock is in watchlist but not yet scanned
+            lines.append(f"⬜ {name:<8s}  (pending next scan)")
             continue
 
         score   = entry.get("score", 0)
@@ -129,10 +130,6 @@ def main():
             f"{icon} {disp:<8s}  ฿{px:,.2f}  score:{score:+d}  comp:{comp:.1f}{div_str}{status}"
         )
         found.append(name)
-
-    if notfound:
-        lines.append("")
-        lines.append(f"⚠️ Not found: {', '.join(notfound)}")
 
     lines += [
         "",
