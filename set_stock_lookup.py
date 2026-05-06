@@ -97,6 +97,15 @@ def find_ticker(query):
         matches.sort(key=lambda x: len(x[1].get("name", x[0])))
         return matches[0]
 
+    # Fallback: check instruments list in set_config.json
+    for inst in cfg.get("instruments", []):
+        ticker = inst.get("ticker", "") if isinstance(inst, dict) else inst
+        name   = inst.get("name",   ticker) if isinstance(inst, dict) else inst
+        if ticker.upper() == query or ticker.upper() == query + ".BK" or name.upper() == query:
+            # Return a minimal stub so live price fetch can still work
+            return ticker, {"name": name, "score": 0, "comp_score": 0.0,
+                            "signal": "—", "fund": {}, "_stub": True}
+
     return None, None
 
 
@@ -150,7 +159,7 @@ def main():
     ticker, s = find_ticker(query)
 
     if ticker is None:
-        send_line(f"❌ '{query}' not found in watchlist.\nTry the exact name e.g. PTT, AMATA, SCB")
+        send_line(f"❌ '{query}' not found.\nTry the ticker e.g. PTT, KBANK, ADVANC")
         sys.exit(0)
 
     name  = s.get("name", ticker.replace(".BK", ""))
