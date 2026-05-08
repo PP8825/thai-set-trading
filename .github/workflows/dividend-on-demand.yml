@@ -3,13 +3,17 @@ name: Dividend On-Demand
 on:
   workflow_dispatch:
     inputs:
+      user_id:
+        description: 'LINE user ID to reply to'
+        required: false
+        default: ''
       source:
         description: 'Who triggered this'
         required: false
         default: 'manual'
 
 concurrency:
-  group: dividend-on-demand
+  group: dividend-on-demand-${{ github.event.inputs.user_id }}
   cancel-in-progress: true
 
 jobs:
@@ -24,4 +28,5 @@ jobs:
         env:
           LINE_TOKEN:   ${{ secrets.LINE_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          USER_ID:      ${{ github.event.inputs.user_id }}
         run: python set_dividend_report.py

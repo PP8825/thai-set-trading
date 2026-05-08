@@ -12,7 +12,11 @@ SCRIPT_DIR     = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH    = os.path.join(SCRIPT_DIR, "set_config.json")
 STATE_PATH     = os.path.join(SCRIPT_DIR, "set_signal_state.json")
 PORT_PATH      = os.path.join(SCRIPT_DIR, "set_portfolio.json")
-WATCHLIST_PATH = os.path.join(SCRIPT_DIR, "set_watchlist.json")
+# Per-user watchlist: set_watchlist_<userid>.json, fallback to set_watchlist.json
+def get_watchlist_path(user_id):
+    if user_id and user_id != cfg.get("line_user_id", ""):
+        return os.path.join(SCRIPT_DIR, f"set_watchlist_{user_id}.json")
+    return os.path.join(SCRIPT_DIR, "set_watchlist.json")
 
 BKK = datetime.timezone(datetime.timedelta(hours=7))
 def now_bkk():
@@ -22,7 +26,7 @@ with open(CONFIG_PATH) as f:
     cfg = json.load(f)
 
 LINE_TOKEN   = os.environ.get("LINE_TOKEN",   cfg.get("line_channel_access_token", ""))
-LINE_USER_ID = os.environ.get("LINE_USER_ID", cfg.get("line_user_id", ""))
+LINE_USER_ID = os.environ.get("USER_ID") or os.environ.get("LINE_USER_ID") or cfg.get("line_user_id", "")
 
 
 def send_line(msg):
@@ -52,7 +56,10 @@ def signal_icon(score):
     return "🔴"
 
 
+
 def main():
+    global WATCHLIST_PATH
+    WATCHLIST_PATH = get_watchlist_path(LINE_USER_ID)
     now = now_bkk()
 
     # Load watchlist

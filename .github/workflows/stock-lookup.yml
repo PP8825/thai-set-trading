@@ -7,9 +7,13 @@ on:
         description: 'Stock name or ticker to look up'
         required: true
         default: ''
+      user_id:
+        description: 'LINE user ID to reply to'
+        required: false
+        default: ''
 
 concurrency:
-  group: stock-lookup-${{ github.event.inputs.stock }}
+  group: stock-lookup-${{ github.event.inputs.stock }}-${{ github.event.inputs.user_id }}
   cancel-in-progress: true
 
 jobs:
@@ -24,4 +28,5 @@ jobs:
         env:
           LINE_TOKEN:   ${{ secrets.LINE_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          USER_ID:      ${{ github.event.inputs.user_id }}
         run: python set_stock_lookup.py "${{ github.event.inputs.stock }}"

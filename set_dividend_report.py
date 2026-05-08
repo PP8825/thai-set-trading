@@ -22,7 +22,7 @@ with open(CONFIG_PATH) as f:
     cfg = json.load(f)
 
 LINE_TOKEN   = os.environ.get("LINE_TOKEN",   cfg.get("line_channel_access_token", ""))
-LINE_USER_ID = os.environ.get("LINE_USER_ID", cfg.get("line_user_id", ""))
+LINE_USER_ID = os.environ.get("USER_ID") or os.environ.get("LINE_USER_ID") or cfg.get("line_user_id", "")
 
 MIN_DIV_YIELD = 3.0   # only show stocks with yield >= 3%
 TOP_N         = 10    # max stocks to show

@@ -3,32 +3,32 @@ name: Signal On-Demand
 on:
   workflow_dispatch:
     inputs:
+      user_id:
+        description: 'LINE user ID to reply to'
+        required: false
+        default: ''
       source:
         description: 'Who triggered this (LINE / manual)'
         required: false
         default: 'manual'
 
 concurrency:
-  group: signal-on-demand
-  cancel-in-progress: true   # if user sends "Signal" twice quickly, only run once
+  group: signal-on-demand-${{ github.event.inputs.user_id }}
+  cancel-in-progress: true
 
 jobs:
   send-signal-report:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Install dependencies
         run: pip install requests -q
-
       - name: Send signal report
         env:
           LINE_TOKEN:   ${{ secrets.LINE_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          USER_ID:      ${{ github.event.inputs.user_id }}
         run: python set_signal_report.py

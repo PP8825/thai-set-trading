@@ -3,11 +3,12 @@
 //   LINE_CHANNEL_SECRET  — LINE Developer Console → Basic settings
 //   LINE_TOKEN           — channel access token
 //   GITHUB_PAT           — GitHub fine-grained PAT with Actions read+write
+//   OWNER_USER_ID        — your personal LINE user ID (for private commands)
 
 const REPO = "PP8825/thai-set-trading";
 
-// Known command keywords
-const COMMANDS = {
+// Commands available to ALL users
+const PUBLIC_COMMANDS = {
   signal:    { workflow: "signal-on-demand.yml",    reply: "🔍 Scanning signals… results in ~1 min" },
   signals:   { workflow: "signal-on-demand.yml",    reply: "🔍 Scanning signals… results in ~1 min" },
   scan:      { workflow: "signal-on-demand.yml",    reply: "🔍 Scanning signals… results in ~1 min" },
@@ -15,10 +16,14 @@ const COMMANDS = {
   dividend:  { workflow: "dividend-on-demand.yml",  reply: "💰 Fetching top dividend stocks… ~1 min" },
   dividends: { workflow: "dividend-on-demand.yml",  reply: "💰 Fetching top dividend stocks… ~1 min" },
   ปันผล:     { workflow: "dividend-on-demand.yml",  reply: "💰 Fetching top dividend stocks… ~1 min" },
-  report:    { workflow: "report-on-demand.yml",    reply: "📋 Generating portfolio report… ~1 min" },
-  รายงาน:    { workflow: "report-on-demand.yml",    reply: "📋 Generating portfolio report… ~1 min" },
   watchlist: { workflow: "watchlist-on-demand.yml", reply: "📋 Loading your watchlist… ~1 min" },
   วอชลิสต์:  { workflow: "watchlist-on-demand.yml", reply: "📋 Loading your watchlist… ~1 min" },
+};
+
+// Commands restricted to owner only
+const OWNER_COMMANDS = {
+  report:  { workflow: "report-on-demand.yml", reply: "📋 Generating portfolio report… ~1 min" },
+  รายงาน:  { workflow: "report-on-demand.yml", reply: "📋 Generating portfolio report… ~1 min" },
 };
 
 // Looks like a stock name: 2-10 chars, letters/digits only, no spaces
@@ -95,29 +100,45 @@ export default {
 
     for (const event of payload.events || []) {
       if (event.type !== "message") continue;
-      const raw  = (event.message?.text || "").trim();
-      const text = raw.toLowerCase();
+      const raw    = (event.message?.text || "").trim();
+      const text   = raw.toLowerCase();
+      const userId = event.source?.userId || "";
+      const isOwner = env.OWNER_USER_ID ? userId === env.OWNER_USER_ID : true;
 
       let reply, workflow, inputs = {};
 
       const wlCmd = parseWatchlistCmd(text);
 
-      if (COMMANDS[text]) {
-        // Known command
-        workflow = COMMANDS[text].workflow;
-        reply    = COMMANDS[text].reply;
+      if (PUBLIC_COMMANDS[text]) {
+        // Public command — any user
+        workflow = PUBLIC_COMMANDS[text].workflow;
+        reply    = PUBLIC_COMMANDS[text].reply;
+        inputs   = { user_id: userId };
+
+      } else if (OWNER_COMMANDS[text]) {
+        // Owner-only command
+        if (!isOwner) {
+          await lineReply(event.replyToken, "⛔ This command is private.", env.LINE_TOKEN);
+          continue;
+        }
+        workflow = OWNER_COMMANDS[text].workflow;
+        reply    = OWNER_COMMANDS[text].reply;
+        inputs   = { user_id: userId };
+
       } else if (wlCmd) {
-        // add / remove watchlist command
+        // add / remove watchlist — per user
         workflow = "watchlist-manage.yml";
-        inputs   = { action: wlCmd.action, stock: wlCmd.stock };
+        inputs   = { action: wlCmd.action, stock: wlCmd.stock, user_id: userId };
         reply    = wlCmd.action === "add"
-          ? `➕ Adding ${wlCmd.stock} to watchlist…`
-          : `➖ Removing ${wlCmd.stock} from watchlist…`;
+          ? `➕ Adding ${wlCmd.stock} to your watchlist…`
+          : `➖ Removing ${wlCmd.stock} from your watchlist…`;
+
       } else if (looksLikeStock(raw)) {
-        // Stock name lookup
+        // Stock lookup — any user
         workflow = "stock-lookup.yml";
-        inputs   = { stock: raw.toUpperCase() };
+        inputs   = { stock: raw.toUpperCase(), user_id: userId };
         reply    = `🔍 Looking up ${raw.toUpperCase()}… results in ~1 min`;
+
       } else {
         continue; // ignore everything else
       }

@@ -25,7 +25,7 @@ with open(CONFIG_PATH) as f:
     cfg = json.load(f)
 
 LINE_TOKEN   = os.environ.get("LINE_TOKEN",   cfg.get("line_channel_access_token", ""))
-LINE_USER_ID = os.environ.get("LINE_USER_ID", cfg.get("line_user_id", ""))
+LINE_USER_ID = os.environ.get("USER_ID") or os.environ.get("LINE_USER_ID") or cfg.get("line_user_id", "")
 
 BUY_SCORE_MIN  = 2
 SELL_SCORE_MAX = -2
