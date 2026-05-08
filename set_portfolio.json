@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 18423.81789112091,
+  "cash": 48730.17694747448,
   "holdings": {
     "AMATA.BK": {
       "name": "AMATA",
@@ -8,9 +8,11 @@
       "avg_cost": 20.3,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-04-29",
-      "atr_stop": 18.68,
-      "last_price": 20.700000762939453
+      "last_div_check": "2026-05-08",
+      "atr_stop": 19.45,
+      "last_price": 20.799999237060547,
+      "highest_close": 20.8,
+      "atr": 0.5413
     },
     "CK.BK": {
       "name": "CK",
@@ -18,9 +20,11 @@
       "avg_cost": 16.5,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-04-29",
-      "atr_stop": 15.18,
-      "last_price": 18.600000381469727
+      "last_div_check": "2026-05-08",
+      "atr_stop": 17.59,
+      "last_price": 19.0,
+      "highest_close": 19.0,
+      "atr": 0.5625
     },
     "TIDLOR.BK": {
       "name": "TIDLOR",
@@ -28,9 +32,10 @@
       "avg_cost": 17.4,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-04-29",
+      "last_div_check": "2026-05-08",
       "atr_stop": 16.01,
-      "last_price": 17.4
+      "last_price": 17.100000381469727,
+      "highest_close": 17.4
     },
     "WHA.BK": {
       "name": "WHA",
@@ -38,9 +43,11 @@
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-04-29",
-      "atr_stop": 4.03,
-      "last_price": 4.679999828338623
+      "last_div_check": "2026-05-08",
+      "atr_stop": 4.38,
+      "last_price": 4.659999847412109,
+      "highest_close": 4.66,
+      "atr": 0.1117
     },
     "KTC.BK": {
       "name": "KTC",
@@ -48,19 +55,41 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-      "last_div_check": "2026-04-29",
-      "atr_stop": 26.91,
-      "last_price": 30.0
+      "last_div_check": "2026-05-08",
+      "atr_stop": 28.06,
+      "last_price": 29.75,
+      "highest_close": 29.75,
+      "atr": 0.6779
     },
-    "JASIF.BK": {
-      "name": "JASIF",
-      "shares": 7000,
-      "avg_cost": 6.7,
-      "entry_date": "2026-04-27",
+    "KGI.BK": {
+      "name": "KGI",
+      "shares": 1500,
+      "avg_cost": 4.22,
+      "entry_date": "2026-05-08",
       "entry_score": 2,
-      "last_div_check": "2026-04-29",
-      "atr_stop": 6.16,
-      "last_price": 6.849999904632568
+      "atr": 0.0533,
+      "atr_stop": 4.09,
+      "last_price": 4.21999979019165
+    },
+    "TU.BK": {
+      "name": "TU",
+      "shares": 500,
+      "avg_cost": 11.6,
+      "entry_date": "2026-05-08",
+      "entry_score": 2,
+      "atr": 0.2764,
+      "atr_stop": 10.91,
+      "last_price": 11.600000381469727
+    },
+    "BTSGIF.BK": {
+      "name": "BTSGIF",
+      "shares": 2300,
+      "avg_cost": 2.62,
+      "entry_date": "2026-05-08",
+      "entry_score": 3,
+      "atr": 0.0286,
+      "atr_stop": 2.55,
+      "last_price": 2.619999885559082
     }
   },
   "trades": [
@@ -141,6 +170,71 @@
       "pnl": 0,
       "reason": "BUY (Day 1)",
       "time": "10:05"
+    },
+    {
+      "date": "2026-05-05",
+      "action": "DIVIDEND",
+      "ticker": "AMATA.BK",
+      "name": "AMATA",
+      "shares": 2300,
+      "price": 0.75,
+      "value": 1725.0,
+      "avg_cost": 20.3,
+      "pnl": 1725.0,
+      "reason": "Dividend ฿0.7500/share",
+      "time": "15:14"
+    },
+    {
+      "date": "2026-05-08",
+      "action": "SELL",
+      "ticker": "JASIF.BK",
+      "name": "JASIF",
+      "shares": 7000,
+      "price": 6.7,
+      "value": 46900.0,
+      "avg_cost": 6.7,
+      "pnl": -234.5,
+      "reason": "SELL",
+      "time": "15:14"
+    },
+    {
+      "date": "2026-05-08",
+      "action": "BUY",
+      "ticker": "KGI.BK",
+      "name": "KGI",
+      "shares": 1500,
+      "price": 4.22,
+      "value": 6330.0,
+      "avg_cost": 4.22,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "15:14"
+    },
+    {
+      "date": "2026-05-08",
+      "action": "BUY",
+      "ticker": "TU.BK",
+      "name": "TU",
+      "shares": 500,
+      "price": 11.6,
+      "value": 5800.0,
+      "avg_cost": 11.6,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "15:14"
+    },
+    {
+      "date": "2026-05-08",
+      "action": "BUY",
+      "ticker": "BTSGIF.BK",
+      "name": "BTSGIF",
+      "shares": 2300,
+      "price": 2.62,
+      "value": 6026.0,
+      "avg_cost": 2.62,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "15:14"
     }
   ],
   "start_date": "2026-04-27",
