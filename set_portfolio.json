@@ -22,7 +22,7 @@
       "entry_score": 3,
       "last_div_check": "2026-05-08",
       "atr_stop": 17.59,
-      "last_price": 19.0,
+      "last_price": 18.899999618530273,
       "highest_close": 19.0,
       "atr": 0.5625
     },
@@ -44,9 +44,9 @@
       "entry_date": "2026-04-27",
       "entry_score": 3,
       "last_div_check": "2026-05-08",
-      "atr_stop": 4.38,
-      "last_price": 4.659999847412109,
-      "highest_close": 4.66,
+      "atr_stop": 4.42,
+      "last_price": 4.699999809265137,
+      "highest_close": 4.7,
       "atr": 0.1117
     },
     "KTC.BK": {
@@ -68,10 +68,10 @@
       "entry_date": "2026-05-08",
       "entry_score": 2,
       "atr": 0.0533,
-      "atr_stop": 4.11,
-      "last_price": 4.239999771118164,
+      "atr_stop": 4.13,
+      "last_price": 4.260000228881836,
       "last_div_check": "2026-05-08",
-      "highest_close": 4.24
+      "highest_close": 4.26
     },
     "TU.BK": {
       "name": "TU",
