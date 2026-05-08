@@ -3,12 +3,11 @@
 //   LINE_CHANNEL_SECRET  — LINE Developer Console → Basic settings
 //   LINE_TOKEN           — channel access token
 //   GITHUB_PAT           — GitHub fine-grained PAT with Actions read+write
-//   OWNER_USER_ID        — your personal LINE user ID (for private commands)
 
 const REPO = "PP8825/thai-set-trading";
 
 // Commands available to ALL users
-const PUBLIC_COMMANDS = {
+const COMMANDS = {
   signal:    { workflow: "signal-on-demand.yml",    reply: "🔍 Scanning signals… results in ~1 min" },
   signals:   { workflow: "signal-on-demand.yml",    reply: "🔍 Scanning signals… results in ~1 min" },
   scan:      { workflow: "signal-on-demand.yml",    reply: "🔍 Scanning signals… results in ~1 min" },
@@ -18,12 +17,6 @@ const PUBLIC_COMMANDS = {
   ปันผล:     { workflow: "dividend-on-demand.yml",  reply: "💰 Fetching top dividend stocks… ~1 min" },
   watchlist: { workflow: "watchlist-on-demand.yml", reply: "📋 Loading your watchlist… ~1 min" },
   วอชลิสต์:  { workflow: "watchlist-on-demand.yml", reply: "📋 Loading your watchlist… ~1 min" },
-};
-
-// Commands restricted to owner only
-const OWNER_COMMANDS = {
-  report:  { workflow: "report-on-demand.yml", reply: "📋 Generating portfolio report… ~1 min" },
-  รายงาน:  { workflow: "report-on-demand.yml", reply: "📋 Generating portfolio report… ~1 min" },
 };
 
 // Looks like a stock name: 2-10 chars, letters/digits only, no spaces
@@ -103,26 +96,15 @@ export default {
       const raw    = (event.message?.text || "").trim();
       const text   = raw.toLowerCase();
       const userId = event.source?.userId || "";
-      const isOwner = env.OWNER_USER_ID ? userId === env.OWNER_USER_ID : true;
 
       let reply, workflow, inputs = {};
 
       const wlCmd = parseWatchlistCmd(text);
 
-      if (PUBLIC_COMMANDS[text]) {
-        // Public command — any user
-        workflow = PUBLIC_COMMANDS[text].workflow;
-        reply    = PUBLIC_COMMANDS[text].reply;
-        inputs   = { user_id: userId };
-
-      } else if (OWNER_COMMANDS[text]) {
-        // Owner-only command
-        if (!isOwner) {
-          await lineReply(event.replyToken, "⛔ This command is private.", env.LINE_TOKEN);
-          continue;
-        }
-        workflow = OWNER_COMMANDS[text].workflow;
-        reply    = OWNER_COMMANDS[text].reply;
+      if (COMMANDS[text]) {
+        // Known command — any user
+        workflow = COMMANDS[text].workflow;
+        reply    = COMMANDS[text].reply;
         inputs   = { user_id: userId };
 
       } else if (wlCmd) {
