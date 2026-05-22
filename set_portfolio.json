@@ -10,7 +10,7 @@
       "entry_score": 3,
       "last_div_check": "2026-05-08",
       "atr_stop": 19.45,
-      "last_price": 24.0,
+      "last_price": 25.25,
       "highest_close": 20.8,
       "atr": 0.5413
     },
@@ -22,7 +22,7 @@
       "entry_score": 3,
       "last_div_check": "2026-05-08",
       "atr_stop": 17.59,
-      "last_price": 18.0,
+      "last_price": 17.899999618530273,
       "highest_close": 19.0,
       "atr": 0.5625
     },
@@ -34,7 +34,7 @@
       "entry_score": 3,
       "last_div_check": "2026-05-08",
       "atr_stop": 16.01,
-      "last_price": 16.100000381469727,
+      "last_price": 17.799999237060547,
       "highest_close": 17.4
     },
     "WHA.BK": {
@@ -45,7 +45,7 @@
       "entry_score": 3,
       "last_div_check": "2026-05-08",
       "atr_stop": 4.42,
-      "last_price": 4.800000190734863,
+      "last_price": 4.880000114440918,
       "highest_close": 4.7,
       "atr": 0.1117
     },
@@ -57,7 +57,7 @@
       "entry_score": 2,
       "last_div_check": "2026-05-08",
       "atr_stop": 28.31,
-      "last_price": 28.75,
+      "last_price": 29.0,
       "highest_close": 30.0,
       "atr": 0.6779
     },
@@ -69,7 +69,7 @@
       "entry_score": 2,
       "atr": 0.0533,
       "atr_stop": 4.13,
-      "last_price": 4.199999809265137,
+      "last_price": 4.21999979019165,
       "last_div_check": "2026-05-08",
       "highest_close": 4.26
     },
@@ -93,7 +93,7 @@
       "entry_score": 3,
       "atr": 0.0286,
       "atr_stop": 2.57,
-      "last_price": 2.619999885559082,
+      "last_price": 2.5999999046325684,
       "last_div_check": "2026-05-08",
       "highest_close": 2.64
     }
@@ -244,7 +244,7 @@
     }
   ],
   "start_date": "2026-04-27",
-  "day_count": 19,
-  "last_eod_date": "2026-05-21",
-  "peak_value": 313566.1793926954
+  "day_count": 20,
+  "last_eod_date": "2026-05-22",
+  "peak_value": 321999.1744259596
 }
