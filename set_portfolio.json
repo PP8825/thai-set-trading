@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 48730.17694747448,
+  "cash": 52146.21694747448,
   "holdings": {
     "AMATA.BK": {
       "name": "AMATA",
@@ -8,11 +8,11 @@
       "avg_cost": 20.3,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-05-08",
-      "atr_stop": 19.45,
-      "last_price": 24.5,
-      "highest_close": 20.8,
-      "atr": 0.5413
+      "last_div_check": "2026-06-02",
+      "atr_stop": 22.96,
+      "last_price": 24.899999618530273,
+      "highest_close": 24.9,
+      "atr": 0.7752
     },
     "CK.BK": {
       "name": "CK",
@@ -20,11 +20,11 @@
       "avg_cost": 16.5,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-05-08",
-      "atr_stop": 17.59,
-      "last_price": 18.0,
-      "highest_close": 19.0,
-      "atr": 0.5625
+      "last_div_check": "2026-06-02",
+      "atr_stop": 17.81,
+      "last_price": 19.399999618530273,
+      "highest_close": 19.4,
+      "atr": 0.6361
     },
     "TIDLOR.BK": {
       "name": "TIDLOR",
@@ -32,10 +32,11 @@
       "avg_cost": 17.4,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-05-08",
-      "atr_stop": 16.01,
-      "last_price": 18.299999237060547,
-      "highest_close": 17.4
+      "last_div_check": "2026-06-02",
+      "atr_stop": 16.08,
+      "last_price": 17.700000762939453,
+      "highest_close": 17.7,
+      "atr": 0.6476
     },
     "WHA.BK": {
       "name": "WHA",
@@ -43,11 +44,11 @@
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-05-08",
-      "atr_stop": 4.42,
-      "last_price": 4.900000095367432,
-      "highest_close": 4.7,
-      "atr": 0.1117
+      "last_div_check": "2026-06-02",
+      "atr_stop": 4.64,
+      "last_price": 5.0,
+      "highest_close": 5.0,
+      "atr": 0.1454
     },
     "KTC.BK": {
       "name": "KTC",
@@ -55,11 +56,11 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-      "last_div_check": "2026-05-08",
-      "atr_stop": 28.31,
-      "last_price": 30.0,
-      "highest_close": 30.0,
-      "atr": 0.6779
+      "last_div_check": "2026-06-02",
+      "atr_stop": 28.95,
+      "last_price": 30.5,
+      "highest_close": 30.5,
+      "atr": 0.6214
     },
     "KGI.BK": {
       "name": "KGI",
@@ -67,11 +68,11 @@
       "avg_cost": 4.22,
       "entry_date": "2026-05-08",
       "entry_score": 2,
-      "atr": 0.0533,
-      "atr_stop": 4.13,
-      "last_price": 4.260000228881836,
-      "last_div_check": "2026-05-08",
-      "highest_close": 4.26
+      "atr": 0.0519,
+      "atr_stop": 4.15,
+      "last_price": 4.28000020980835,
+      "last_div_check": "2026-06-02",
+      "highest_close": 4.28
     },
     "TU.BK": {
       "name": "TU",
@@ -79,10 +80,10 @@
       "avg_cost": 11.6,
       "entry_date": "2026-05-08",
       "entry_score": 2,
-      "atr": 0.2764,
-      "atr_stop": 10.91,
-      "last_price": 11.199999809265137,
-      "last_div_check": "2026-05-08",
+      "atr": 0.2195,
+      "atr_stop": 11.05,
+      "last_price": 11.300000190734863,
+      "last_div_check": "2026-06-02",
       "highest_close": 11.6
     },
     "BTSGIF.BK": {
@@ -91,10 +92,10 @@
       "avg_cost": 2.62,
       "entry_date": "2026-05-08",
       "entry_score": 3,
-      "atr": 0.0286,
-      "atr_stop": 2.57,
+      "atr": 0.0234,
+      "atr_stop": 2.58,
       "last_price": 2.619999885559082,
-      "last_div_check": "2026-05-08",
+      "last_div_check": "2026-06-02",
       "highest_close": 2.64
     }
   },
@@ -241,6 +242,32 @@
       "pnl": 0,
       "reason": "BUY",
       "time": "15:14"
+    },
+    {
+      "date": "2026-06-02",
+      "action": "DIVIDEND",
+      "ticker": "TIDLOR.BK",
+      "name": "TIDLOR",
+      "shares": 2700,
+      "price": 0.69,
+      "value": 1863.0,
+      "avg_cost": 17.4,
+      "pnl": 1863.0,
+      "reason": "Dividend ฿0.6900/share",
+      "time": "14:31"
+    },
+    {
+      "date": "2026-05-11",
+      "action": "DIVIDEND",
+      "ticker": "WHA.BK",
+      "name": "WHA",
+      "shares": 10800,
+      "price": 0.1438,
+      "value": 1553.04,
+      "avg_cost": 4.38,
+      "pnl": 1553.04,
+      "reason": "Dividend ฿0.1438/share",
+      "time": "14:31"
     }
   ],
   "start_date": "2026-04-27",
