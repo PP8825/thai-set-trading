@@ -10,7 +10,7 @@
       "entry_score": 3,
       "last_div_check": "2026-06-02",
       "atr_stop": 22.96,
-      "last_price": 24.799999237060547,
+      "last_price": 24.700000762939453,
       "highest_close": 24.9,
       "atr": 0.7752
     },
@@ -45,9 +45,9 @@
       "entry_date": "2026-04-27",
       "entry_score": 3,
       "last_div_check": "2026-06-02",
-      "atr_stop": 4.64,
-      "last_price": 5.0,
-      "highest_close": 5.0,
+      "atr_stop": 4.69,
+      "last_price": 5.050000190734863,
+      "highest_close": 5.05,
       "atr": 0.1454
     },
     "KTC.BK": {
@@ -106,7 +106,9 @@
       "entry_score": 2,
       "atr": 0.0645,
       "atr_stop": 3.48,
-      "last_price": 3.640000104904175
+      "last_price": 3.619999885559082,
+      "last_div_check": "2026-06-02",
+      "highest_close": 3.64
     }
   },
   "trades": [
