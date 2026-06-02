@@ -10,7 +10,7 @@
       "entry_score": 3,
       "last_div_check": "2026-06-02",
       "atr_stop": 22.96,
-      "last_price": 24.700000762939453,
+      "last_price": 24.799999237060547,
       "highest_close": 24.9,
       "atr": 0.7752
     },
@@ -46,7 +46,7 @@
       "entry_score": 3,
       "last_div_check": "2026-06-02",
       "atr_stop": 4.69,
-      "last_price": 5.050000190734863,
+      "last_price": 5.0,
       "highest_close": 5.05,
       "atr": 0.1454
     },
@@ -68,11 +68,11 @@
       "avg_cost": 4.22,
       "entry_date": "2026-05-08",
       "entry_score": 2,
-      "atr": 0.0519,
-      "atr_stop": 4.17,
-      "last_price": 4.300000190734863,
+      "atr": 0.0534,
+      "atr_stop": 4.19,
+      "last_price": 4.320000171661377,
       "last_div_check": "2026-06-02",
-      "highest_close": 4.3
+      "highest_close": 4.32
     },
     "TU.BK": {
       "name": "TU",
