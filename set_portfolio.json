@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 45577.8367581749,
+  "cash": 47440.8367581749,
   "holdings": {
     "AMATA.BK": {
       "name": "AMATA",
@@ -8,11 +8,11 @@
       "avg_cost": 20.3,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-02",
-      "atr_stop": 22.96,
+      "last_div_check": "2026-06-03",
+      "atr_stop": 23.18,
       "last_price": 25.0,
-      "highest_close": 24.9,
-      "atr": 0.7752
+      "highest_close": 25.0,
+      "atr": 0.729
     },
     "CK.BK": {
       "name": "CK",
@@ -20,11 +20,11 @@
       "avg_cost": 16.5,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-02",
-      "atr_stop": 17.81,
+      "last_div_check": "2026-06-03",
+      "atr_stop": 18.09,
       "last_price": 19.600000381469727,
-      "highest_close": 19.4,
-      "atr": 0.6361
+      "highest_close": 19.6,
+      "atr": 0.6054
     },
     "TIDLOR.BK": {
       "name": "TIDLOR",
@@ -32,11 +32,11 @@
       "avg_cost": 17.4,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-02",
-      "atr_stop": 16.18,
+      "last_div_check": "2026-06-03",
+      "atr_stop": 16.43,
       "last_price": 17.799999237060547,
       "highest_close": 17.8,
-      "atr": 0.6476
+      "atr": 0.549
     },
     "WHA.BK": {
       "name": "WHA",
@@ -44,11 +44,11 @@
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-02",
-      "atr_stop": 4.69,
+      "last_div_check": "2026-06-03",
+      "atr_stop": 4.71,
       "last_price": 5.0,
       "highest_close": 5.05,
-      "atr": 0.1454
+      "atr": 0.1359
     },
     "KTC.BK": {
       "name": "KTC",
@@ -56,11 +56,11 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-      "last_div_check": "2026-06-02",
-      "atr_stop": 29.2,
+      "last_div_check": "2026-06-03",
+      "atr_stop": 29.29,
       "last_price": 30.75,
       "highest_close": 30.75,
-      "atr": 0.6214
+      "atr": 0.5821
     },
     "KGI.BK": {
       "name": "KGI",
@@ -71,7 +71,7 @@
       "atr": 0.0534,
       "atr_stop": 4.19,
       "last_price": 4.320000171661377,
-      "last_div_check": "2026-06-02",
+      "last_div_check": "2026-06-03",
       "highest_close": 4.32
     },
     "TU.BK": {
@@ -80,10 +80,10 @@
       "avg_cost": 11.6,
       "entry_date": "2026-05-08",
       "entry_score": 2,
-      "atr": 0.2195,
-      "atr_stop": 11.05,
+      "atr": 0.2049,
+      "atr_stop": 11.09,
       "last_price": 11.199999809265137,
-      "last_div_check": "2026-06-02",
+      "last_div_check": "2026-06-03",
       "highest_close": 11.6
     },
     "BTSGIF.BK": {
@@ -95,7 +95,7 @@
       "atr": 0.0234,
       "atr_stop": 2.58,
       "last_price": 2.619999885559082,
-      "last_div_check": "2026-06-02",
+      "last_div_check": "2026-06-03",
       "highest_close": 2.64
     },
     "LH.BK": {
@@ -104,10 +104,10 @@
       "avg_cost": 3.64,
       "entry_date": "2026-06-02",
       "entry_score": 2,
-      "atr": 0.0645,
-      "atr_stop": 3.48,
+      "atr": 0.0603,
+      "atr_stop": 3.49,
       "last_price": 3.640000104904175,
-      "last_div_check": "2026-06-02",
+      "last_div_check": "2026-06-03",
       "highest_close": 3.64
     }
   },
@@ -293,6 +293,19 @@
       "pnl": 0,
       "reason": "BUY",
       "time": "15:01"
+    },
+    {
+      "date": "2026-06-02",
+      "action": "DIVIDEND",
+      "ticker": "TIDLOR.BK",
+      "name": "TIDLOR",
+      "shares": 2700,
+      "price": 0.69,
+      "value": 1863.0,
+      "avg_cost": 17.4,
+      "pnl": 1863.0,
+      "reason": "Dividend ฿0.6900/share",
+      "time": "14:30"
     }
   ],
   "start_date": "2026-04-27",
