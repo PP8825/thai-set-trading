@@ -1562,13 +1562,13 @@
     "fund_fetched": "2026-06-03"
   },
   "_last_reset_date": "2026-06-03",
-  "_check_count": 1,
+  "_check_count": 2,
   "_regime": {
     "regime": "BULL",
     "set_px": 1588.06,
     "ma200": 1351.71,
     "gap_pct": 17.49,
-    "updated": "2026-06-03 14:30"
+    "updated": "2026-06-03 14:45"
   },
   "_gap_alerted_date": "2026-06-02",
   "_fund_stale_alerted_date": "2026-06-02",
