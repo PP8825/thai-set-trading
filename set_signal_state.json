@@ -43,7 +43,7 @@
     "fund_score": 5.0,
     "comp_score": 5.0,
     "fund": {},
-    "vol_20d": 0.016503309126656592,
+    "vol_20d": 0.016503302945592678,
     "avg_volume": 217925200.0,
     "buy_alerted": false,
     "sell_alerted": false,
@@ -1562,13 +1562,13 @@
     "fund_fetched": "2026-06-03"
   },
   "_last_reset_date": "2026-06-03",
-  "_check_count": 6,
+  "_check_count": 7,
   "_regime": {
     "regime": "BULL",
     "set_px": 1588.06,
     "ma200": 1351.71,
     "gap_pct": 17.49,
-    "updated": "2026-06-03 15:46"
+    "updated": "2026-06-03 16:01"
   },
   "_gap_alerted_date": "2026-06-02",
   "_fund_stale_alerted_date": "2026-06-02",
