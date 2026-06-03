@@ -1356,7 +1356,7 @@
     "comp_score": 6.68,
     "fund": {
       "pe": 100.0,
-      "pbv": 0.5793743,
+      "pbv": 0.6013229,
       "roe": -0.03615,
       "div_yld": 1.3,
       "has_div": true,
@@ -1562,13 +1562,13 @@
     "fund_fetched": "2026-06-03"
   },
   "_last_reset_date": "2026-06-03",
-  "_check_count": 4,
+  "_check_count": 5,
   "_regime": {
     "regime": "BULL",
     "set_px": 1588.06,
     "ma200": 1351.71,
     "gap_pct": 17.49,
-    "updated": "2026-06-03 15:15"
+    "updated": "2026-06-03 15:30"
   },
   "_gap_alerted_date": "2026-06-02",
   "_fund_stale_alerted_date": "2026-06-02",
