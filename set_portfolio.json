@@ -8,11 +8,11 @@
       "avg_cost": 20.3,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-03",
-      "atr_stop": 23.18,
-      "last_price": 25.0,
-      "highest_close": 25.0,
-      "atr": 0.729
+      "last_div_check": "2026-06-04",
+      "atr_stop": 24.13,
+      "last_price": 26.0,
+      "highest_close": 26.0,
+      "atr": 0.7483
     },
     "CK.BK": {
       "name": "CK",
@@ -20,11 +20,11 @@
       "avg_cost": 16.5,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-03",
-      "atr_stop": 18.09,
-      "last_price": 19.600000381469727,
-      "highest_close": 19.6,
-      "atr": 0.6054
+      "last_div_check": "2026-06-04",
+      "atr_stop": 18.12,
+      "last_price": 19.700000762939453,
+      "highest_close": 19.7,
+      "atr": 0.6336
     },
     "TIDLOR.BK": {
       "name": "TIDLOR",
@@ -32,11 +32,11 @@
       "avg_cost": 17.4,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-03",
-      "atr_stop": 16.43,
-      "last_price": 17.799999237060547,
+      "last_div_check": "2026-06-04",
+      "atr_stop": 16.47,
+      "last_price": 17.600000381469727,
       "highest_close": 17.8,
-      "atr": 0.549
+      "atr": 0.5312
     },
     "WHA.BK": {
       "name": "WHA",
@@ -44,11 +44,11 @@
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-03",
-      "atr_stop": 4.71,
-      "last_price": 5.0,
+      "last_div_check": "2026-06-04",
+      "atr_stop": 4.72,
+      "last_price": 5.050000190734863,
       "highest_close": 5.05,
-      "atr": 0.1359
+      "atr": 0.1333
     },
     "KTC.BK": {
       "name": "KTC",
@@ -56,11 +56,11 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-      "last_div_check": "2026-06-03",
-      "atr_stop": 29.29,
-      "last_price": 30.75,
+      "last_div_check": "2026-06-04",
+      "atr_stop": 29.31,
+      "last_price": 30.25,
       "highest_close": 30.75,
-      "atr": 0.5821
+      "atr": 0.5762
     },
     "KGI.BK": {
       "name": "KGI",
@@ -70,8 +70,8 @@
       "entry_score": 2,
       "atr": 0.0534,
       "atr_stop": 4.19,
-      "last_price": 4.320000171661377,
-      "last_div_check": "2026-06-03",
+      "last_price": 4.28000020980835,
+      "last_div_check": "2026-06-04",
       "highest_close": 4.32
     },
     "TU.BK": {
@@ -83,7 +83,7 @@
       "atr": 0.2049,
       "atr_stop": 11.09,
       "last_price": 11.199999809265137,
-      "last_div_check": "2026-06-03",
+      "last_div_check": "2026-06-04",
       "highest_close": 11.6
     },
     "BTSGIF.BK": {
@@ -92,10 +92,10 @@
       "avg_cost": 2.62,
       "entry_date": "2026-05-08",
       "entry_score": 3,
-      "atr": 0.0234,
-      "atr_stop": 2.58,
+      "atr": 0.0216,
+      "atr_stop": 2.59,
       "last_price": 2.619999885559082,
-      "last_div_check": "2026-06-03",
+      "last_div_check": "2026-06-04",
       "highest_close": 2.64
     },
     "LH.BK": {
@@ -107,7 +107,7 @@
       "atr": 0.0603,
       "atr_stop": 3.49,
       "last_price": 3.640000104904175,
-      "last_div_check": "2026-06-03",
+      "last_div_check": "2026-06-04",
       "highest_close": 3.64
     }
   },
