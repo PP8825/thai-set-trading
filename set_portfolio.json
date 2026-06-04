@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 47440.8367581749,
+  "cash": 41526.08666256905,
   "holdings": {
     "AMATA.BK": {
       "name": "AMATA",
@@ -10,7 +10,7 @@
       "entry_score": 3,
       "last_div_check": "2026-06-04",
       "atr_stop": 24.13,
-      "last_price": 26.0,
+      "last_price": 25.75,
       "highest_close": 26.0,
       "atr": 0.7483
     },
@@ -22,7 +22,7 @@
       "entry_score": 3,
       "last_div_check": "2026-06-04",
       "atr_stop": 18.12,
-      "last_price": 19.399999618530273,
+      "last_price": 19.5,
       "highest_close": 19.7,
       "atr": 0.6336
     },
@@ -34,7 +34,7 @@
       "entry_score": 3,
       "last_div_check": "2026-06-04",
       "atr_stop": 16.47,
-      "last_price": 17.600000381469727,
+      "last_price": 17.5,
       "highest_close": 17.8,
       "atr": 0.5312
     },
@@ -82,7 +82,7 @@
       "entry_score": 2,
       "atr": 0.2049,
       "atr_stop": 11.09,
-      "last_price": 11.199999809265137,
+      "last_price": 11.300000190734863,
       "last_div_check": "2026-06-04",
       "highest_close": 11.6
     },
@@ -106,9 +106,19 @@
       "entry_score": 2,
       "atr": 0.0588,
       "atr_stop": 3.51,
-      "last_price": 3.6600000858306885,
+      "last_price": 3.640000104904175,
       "last_div_check": "2026-06-04",
       "highest_close": 3.66
+    },
+    "BPP.BK": {
+      "name": "BPP",
+      "shares": 500,
+      "avg_cost": 11.8,
+      "entry_date": "2026-06-04",
+      "entry_score": 2,
+      "atr": 0.2434,
+      "atr_stop": 11.19,
+      "last_price": 11.800000190734863
     }
   },
   "trades": [
@@ -306,6 +316,19 @@
       "pnl": 1863.0,
       "reason": "Dividend ฿0.6900/share",
       "time": "14:30"
+    },
+    {
+      "date": "2026-06-04",
+      "action": "BUY",
+      "ticker": "BPP.BK",
+      "name": "BPP",
+      "shares": 500,
+      "price": 11.8,
+      "value": 5900.0,
+      "avg_cost": 11.8,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "15:16"
     }
   ],
   "start_date": "2026-04-27",
