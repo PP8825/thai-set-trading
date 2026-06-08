@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 47261.71166256905,
+  "cash": 98094.31379345895,
   "holdings": {
     "AMATA.BK": {
       "name": "AMATA",
@@ -14,18 +14,6 @@
       "highest_close": 26.0,
       "atr": 0.74
     },
-    "CK.BK": {
-      "name": "CK",
-      "shares": 2800,
-      "avg_cost": 16.5,
-      "entry_date": "2026-04-27",
-      "entry_score": 3,
-      "last_div_check": "2026-06-08",
-      "atr_stop": 18.23,
-      "last_price": 18.299999237060547,
-      "highest_close": 19.7,
-      "atr": 0.5872
-    },
     "TIDLOR.BK": {
       "name": "TIDLOR",
       "shares": 2700,
@@ -34,7 +22,7 @@
       "entry_score": 3,
       "last_div_check": "2026-06-08",
       "atr_stop": 16.51,
-      "last_price": 17.399999618530273,
+      "last_price": 17.5,
       "highest_close": 17.8,
       "atr": 0.5145
     },
@@ -46,7 +34,7 @@
       "entry_score": 3,
       "last_div_check": "2026-06-08",
       "atr_stop": 4.73,
-      "last_price": 4.980000019073486,
+      "last_price": 5.0,
       "highest_close": 5.05,
       "atr": 0.1271
     },
@@ -58,7 +46,7 @@
       "entry_score": 2,
       "last_div_check": "2026-06-08",
       "atr_stop": 29.31,
-      "last_price": 30.0,
+      "last_price": 30.25,
       "highest_close": 30.75,
       "atr": 0.5762
     },
@@ -332,6 +320,19 @@
       "pnl": -179.12,
       "reason": "SELL",
       "time": "14:30"
+    },
+    {
+      "date": "2026-06-08",
+      "action": "SELL",
+      "ticker": "CK.BK",
+      "name": "CK",
+      "shares": 2800,
+      "price": 18.2,
+      "value": 50960.0,
+      "avg_cost": 16.5,
+      "pnl": 4517.1,
+      "reason": "ATR stop ฿18.23 (--10.3%)",
+      "time": "15:45"
     }
   ],
   "start_date": "2026-04-27",
