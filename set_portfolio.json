@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 41526.08666256905,
+  "cash": 47261.71166256905,
   "holdings": {
     "AMATA.BK": {
       "name": "AMATA",
@@ -8,11 +8,11 @@
       "avg_cost": 20.3,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-04",
-      "atr_stop": 24.13,
-      "last_price": 26.0,
+      "last_div_check": "2026-06-08",
+      "atr_stop": 24.15,
+      "last_price": 25.75,
       "highest_close": 26.0,
-      "atr": 0.7483
+      "atr": 0.74
     },
     "CK.BK": {
       "name": "CK",
@@ -20,11 +20,11 @@
       "avg_cost": 16.5,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-04",
-      "atr_stop": 18.12,
-      "last_price": 18.899999618530273,
+      "last_div_check": "2026-06-08",
+      "atr_stop": 18.23,
+      "last_price": 18.399999618530273,
       "highest_close": 19.7,
-      "atr": 0.6336
+      "atr": 0.5872
     },
     "TIDLOR.BK": {
       "name": "TIDLOR",
@@ -32,11 +32,11 @@
       "avg_cost": 17.4,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-04",
-      "atr_stop": 16.47,
-      "last_price": 17.899999618530273,
+      "last_div_check": "2026-06-08",
+      "atr_stop": 16.51,
+      "last_price": 17.5,
       "highest_close": 17.8,
-      "atr": 0.5312
+      "atr": 0.5145
     },
     "WHA.BK": {
       "name": "WHA",
@@ -44,11 +44,11 @@
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-04",
-      "atr_stop": 4.72,
-      "last_price": 5.050000190734863,
+      "last_div_check": "2026-06-08",
+      "atr_stop": 4.73,
+      "last_price": 5.0,
       "highest_close": 5.05,
-      "atr": 0.1333
+      "atr": 0.1271
     },
     "KTC.BK": {
       "name": "KTC",
@@ -56,9 +56,9 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-      "last_div_check": "2026-06-04",
+      "last_div_check": "2026-06-08",
       "atr_stop": 29.31,
-      "last_price": 30.5,
+      "last_price": 30.25,
       "highest_close": 30.75,
       "atr": 0.5762
     },
@@ -70,8 +70,8 @@
       "entry_score": 2,
       "atr": 0.0534,
       "atr_stop": 4.19,
-      "last_price": 4.380000114440918,
-      "last_div_check": "2026-06-04",
+      "last_price": 4.320000171661377,
+      "last_div_check": "2026-06-08",
       "highest_close": 4.32
     },
     "TU.BK": {
@@ -80,10 +80,10 @@
       "avg_cost": 11.6,
       "entry_date": "2026-05-08",
       "entry_score": 2,
-      "atr": 0.2049,
-      "atr_stop": 11.09,
+      "atr": 0.1922,
+      "atr_stop": 11.12,
       "last_price": 11.399999618530273,
-      "last_div_check": "2026-06-04",
+      "last_div_check": "2026-06-08",
       "highest_close": 11.6
     },
     "BTSGIF.BK": {
@@ -95,7 +95,7 @@
       "atr": 0.0216,
       "atr_stop": 2.59,
       "last_price": 2.640000104904175,
-      "last_div_check": "2026-06-04",
+      "last_div_check": "2026-06-08",
       "highest_close": 2.64
     },
     "LH.BK": {
@@ -104,23 +104,11 @@
       "avg_cost": 3.64,
       "entry_date": "2026-06-02",
       "entry_score": 2,
-      "atr": 0.0588,
-      "atr_stop": 3.51,
-      "last_price": 3.640000104904175,
-      "last_div_check": "2026-06-04",
+      "atr": 0.0554,
+      "atr_stop": 3.52,
+      "last_price": 3.619999885559082,
+      "last_div_check": "2026-06-08",
       "highest_close": 3.66
-    },
-    "BPP.BK": {
-      "name": "BPP",
-      "shares": 500,
-      "avg_cost": 11.8,
-      "entry_date": "2026-06-04",
-      "entry_score": 2,
-      "atr": 0.2434,
-      "atr_stop": 11.19,
-      "last_price": 11.5,
-      "last_div_check": "2026-06-04",
-      "highest_close": 11.8
     }
   },
   "trades": [
@@ -331,6 +319,19 @@
       "pnl": 0,
       "reason": "BUY",
       "time": "15:16"
+    },
+    {
+      "date": "2026-06-08",
+      "action": "SELL",
+      "ticker": "BPP.BK",
+      "name": "BPP",
+      "shares": 500,
+      "price": 11.5,
+      "value": 5750.0,
+      "avg_cost": 11.8,
+      "pnl": -179.12,
+      "reason": "SELL",
+      "time": "14:30"
     }
   ],
   "start_date": "2026-04-27",
