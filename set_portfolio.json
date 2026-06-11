@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 223258.61890951634,
+  "cash": 201925.41860357762,
   "holdings": {
     "WHA.BK": {
       "name": "WHA",
@@ -37,6 +37,16 @@
       "last_price": 4.28000020980835,
       "last_div_check": "2026-06-11",
       "highest_close": 4.34
+    },
+    "BAM.BK": {
+      "name": "BAM",
+      "shares": 3200,
+      "avg_cost": 6.65,
+      "entry_date": "2026-06-11",
+      "entry_score": 3,
+      "atr": 0.1292,
+      "atr_stop": 6.33,
+      "last_price": 6.650000095367432
     }
   },
   "trades": [
@@ -338,6 +348,19 @@
       "pnl": -68.67,
       "reason": "SELL",
       "time": "14:30"
+    },
+    {
+      "date": "2026-06-11",
+      "action": "BUY",
+      "ticker": "BAM.BK",
+      "name": "BAM",
+      "shares": 3200,
+      "price": 6.65,
+      "value": 21280.0,
+      "avg_cost": 6.65,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "16:15"
     }
   ],
   "start_date": "2026-04-27",
