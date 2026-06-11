@@ -1,42 +1,18 @@
 {
   "capital": 300000.0,
-  "cash": 98094.31379345895,
+  "cash": 223258.61890951634,
   "holdings": {
-    "AMATA.BK": {
-      "name": "AMATA",
-      "shares": 2300,
-      "avg_cost": 20.3,
-      "entry_date": "2026-04-27",
-      "entry_score": 3,
-      "last_div_check": "2026-06-08",
-      "atr_stop": 24.15,
-      "last_price": 27.25,
-      "highest_close": 26.0,
-      "atr": 0.74
-    },
-    "TIDLOR.BK": {
-      "name": "TIDLOR",
-      "shares": 2700,
-      "avg_cost": 17.4,
-      "entry_date": "2026-04-27",
-      "entry_score": 3,
-      "last_div_check": "2026-06-08",
-      "atr_stop": 16.51,
-      "last_price": 16.600000381469727,
-      "highest_close": 17.8,
-      "atr": 0.5145
-    },
     "WHA.BK": {
       "name": "WHA",
       "shares": 10800,
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-08",
-      "atr_stop": 4.73,
-      "last_price": 5.0,
+      "last_div_check": "2026-06-11",
+      "atr_stop": 4.74,
+      "last_price": 5.050000190734863,
       "highest_close": 5.05,
-      "atr": 0.1271
+      "atr": 0.1252
     },
     "KTC.BK": {
       "name": "KTC",
@@ -44,9 +20,9 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-      "last_div_check": "2026-06-08",
+      "last_div_check": "2026-06-11",
       "atr_stop": 29.31,
-      "last_price": 29.75,
+      "last_price": 30.0,
       "highest_close": 30.75,
       "atr": 0.5762
     },
@@ -56,47 +32,11 @@
       "avg_cost": 4.22,
       "entry_date": "2026-05-08",
       "entry_score": 2,
-      "atr": 0.0558,
-      "atr_stop": 4.2,
-      "last_price": 4.28000020980835,
-      "last_div_check": "2026-06-08",
+      "atr": 0.0526,
+      "atr_stop": 4.21,
+      "last_price": 4.300000190734863,
+      "last_div_check": "2026-06-11",
       "highest_close": 4.34
-    },
-    "TU.BK": {
-      "name": "TU",
-      "shares": 500,
-      "avg_cost": 11.6,
-      "entry_date": "2026-05-08",
-      "entry_score": 2,
-      "atr": 0.1922,
-      "atr_stop": 11.12,
-      "last_price": 11.100000381469727,
-      "last_div_check": "2026-06-08",
-      "highest_close": 11.6
-    },
-    "BTSGIF.BK": {
-      "name": "BTSGIF",
-      "shares": 2300,
-      "avg_cost": 2.62,
-      "entry_date": "2026-05-08",
-      "entry_score": 3,
-      "atr": 0.0216,
-      "atr_stop": 2.59,
-      "last_price": 2.4200000762939453,
-      "last_div_check": "2026-06-08",
-      "highest_close": 2.64
-    },
-    "LH.BK": {
-      "name": "LH",
-      "shares": 1800,
-      "avg_cost": 3.64,
-      "entry_date": "2026-06-02",
-      "entry_score": 2,
-      "atr": 0.0554,
-      "atr_stop": 3.52,
-      "last_price": 3.5999999046325684,
-      "last_div_check": "2026-06-08",
-      "highest_close": 3.66
     }
   },
   "trades": [
@@ -333,6 +273,71 @@
       "pnl": 4517.1,
       "reason": "ATR stop ฿18.23 (--10.3%)",
       "time": "15:45"
+    },
+    {
+      "date": "2026-06-11",
+      "action": "SELL",
+      "ticker": "AMATA.BK",
+      "name": "AMATA",
+      "shares": 2300,
+      "price": 27.5,
+      "value": 63250.0,
+      "avg_cost": 20.3,
+      "pnl": 16285.15,
+      "reason": "Take-profit +35.5% (target 30%)",
+      "time": "14:30"
+    },
+    {
+      "date": "2026-06-11",
+      "action": "SELL",
+      "ticker": "TIDLOR.BK",
+      "name": "TIDLOR",
+      "shares": 2700,
+      "price": 16.5,
+      "value": 44550.0,
+      "avg_cost": 17.4,
+      "pnl": -2658.82,
+      "reason": "ATR stop ฿16.51 (-5.2%)",
+      "time": "14:30"
+    },
+    {
+      "date": "2026-06-11",
+      "action": "SELL",
+      "ticker": "TU.BK",
+      "name": "TU",
+      "shares": 500,
+      "price": 11.1,
+      "value": 5550.0,
+      "avg_cost": 11.6,
+      "pnl": -278.37,
+      "reason": "ATR stop ฿11.13 (-4.3%)",
+      "time": "14:30"
+    },
+    {
+      "date": "2026-06-11",
+      "action": "SELL",
+      "ticker": "BTSGIF.BK",
+      "name": "BTSGIF",
+      "shares": 2300,
+      "price": 2.44,
+      "value": 5612.0,
+      "avg_cost": 2.62,
+      "pnl": -443.09,
+      "reason": "ATR stop ฿2.59 (-6.9%)",
+      "time": "14:30"
+    },
+    {
+      "date": "2026-06-11",
+      "action": "SELL",
+      "ticker": "LH.BK",
+      "name": "LH",
+      "shares": 1800,
+      "price": 3.62,
+      "value": 6516.0,
+      "avg_cost": 3.64,
+      "pnl": -68.67,
+      "reason": "SELL",
+      "time": "14:30"
     }
   ],
   "start_date": "2026-04-27",
