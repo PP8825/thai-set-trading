@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 201925.41860357762,
+  "cash": 172191.26799170018,
   "holdings": {
     "WHA.BK": {
       "name": "WHA",
@@ -8,9 +8,9 @@
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-11",
+      "last_div_check": "2026-06-15",
       "atr_stop": 4.74,
-      "last_price": 4.980000019073486,
+      "last_price": 5.0,
       "highest_close": 5.05,
       "atr": 0.1252
     },
@@ -20,7 +20,7 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-      "last_div_check": "2026-06-11",
+      "last_div_check": "2026-06-15",
       "atr_stop": 29.31,
       "last_price": 30.25,
       "highest_close": 30.75,
@@ -34,8 +34,8 @@
       "entry_score": 2,
       "atr": 0.0526,
       "atr_stop": 4.21,
-      "last_price": 4.28000020980835,
-      "last_div_check": "2026-06-11",
+      "last_price": 4.320000171661377,
+      "last_div_check": "2026-06-15",
       "highest_close": 4.34
     },
     "BAM.BK": {
@@ -46,7 +46,29 @@
       "entry_score": 3,
       "atr": 0.1292,
       "atr_stop": 6.33,
-      "last_price": 6.699999809265137
+      "last_price": 6.599999904632568,
+      "last_div_check": "2026-06-15",
+      "highest_close": 6.65
+    },
+    "CK.BK": {
+      "name": "CK",
+      "shares": 800,
+      "avg_cost": 19.2,
+      "entry_date": "2026-06-15",
+      "entry_score": 2,
+      "atr": 0.6243,
+      "atr_stop": 17.64,
+      "last_price": 19.200000762939453
+    },
+    "CENTEL.BK": {
+      "name": "CENTEL",
+      "shares": 400,
+      "avg_cost": 35.75,
+      "entry_date": "2026-06-15",
+      "entry_score": 2,
+      "atr": 0.9518,
+      "atr_stop": 33.37,
+      "last_price": 35.75
     }
   },
   "trades": [
@@ -361,6 +383,32 @@
       "pnl": 0,
       "reason": "BUY",
       "time": "16:15"
+    },
+    {
+      "date": "2026-06-15",
+      "action": "BUY",
+      "ticker": "CK.BK",
+      "name": "CK",
+      "shares": 800,
+      "price": 19.2,
+      "value": 15360.0,
+      "avg_cost": 19.2,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "15:42"
+    },
+    {
+      "date": "2026-06-15",
+      "action": "BUY",
+      "ticker": "CENTEL.BK",
+      "name": "CENTEL",
+      "shares": 400,
+      "price": 35.75,
+      "value": 14300.0,
+      "avg_cost": 35.75,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "15:42"
     }
   ],
   "start_date": "2026-04-27",
