@@ -22,7 +22,7 @@
       "entry_score": 2,
       "last_div_check": "2026-06-15",
       "atr_stop": 29.31,
-      "last_price": 30.25,
+      "last_price": 30.0,
       "highest_close": 30.75,
       "atr": 0.5762
     },
@@ -46,7 +46,7 @@
       "entry_score": 3,
       "atr": 0.1292,
       "atr_stop": 6.33,
-      "last_price": 6.650000095367432,
+      "last_price": 6.599999904632568,
       "last_div_check": "2026-06-15",
       "highest_close": 6.65
     },
@@ -57,10 +57,10 @@
       "entry_date": "2026-06-15",
       "entry_score": 2,
       "atr": 0.6243,
-      "atr_stop": 17.74,
-      "last_price": 19.299999237060547,
+      "atr_stop": 17.84,
+      "last_price": 19.399999618530273,
       "last_div_check": "2026-06-15",
-      "highest_close": 19.3
+      "highest_close": 19.4
     },
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -69,10 +69,10 @@
       "entry_date": "2026-06-15",
       "entry_score": 2,
       "atr": 0.9696,
-      "atr_stop": 33.58,
-      "last_price": 36.0,
+      "atr_stop": 33.83,
+      "last_price": 36.25,
       "last_div_check": "2026-06-15",
-      "highest_close": 36.0
+      "highest_close": 36.25
     }
   },
   "trades": [
