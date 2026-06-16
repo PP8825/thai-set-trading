@@ -8,11 +8,11 @@
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-15",
-      "atr_stop": 4.74,
-      "last_price": 4.980000019073486,
-      "highest_close": 5.05,
-      "atr": 0.1252
+      "last_div_check": "2026-06-16",
+      "atr_stop": 4.77,
+      "last_price": 5.099999904632568,
+      "highest_close": 5.1,
+      "atr": 0.1323
     },
     "KTC.BK": {
       "name": "KTC",
@@ -20,9 +20,9 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-      "last_div_check": "2026-06-15",
+      "last_div_check": "2026-06-16",
       "atr_stop": 29.31,
-      "last_price": 30.25,
+      "last_price": 30.5,
       "highest_close": 30.75,
       "atr": 0.5762
     },
@@ -32,10 +32,10 @@
       "avg_cost": 4.22,
       "entry_date": "2026-05-08",
       "entry_score": 2,
-      "atr": 0.0526,
-      "atr_stop": 4.21,
+      "atr": 0.05,
+      "atr_stop": 4.22,
       "last_price": 4.320000171661377,
-      "last_div_check": "2026-06-15",
+      "last_div_check": "2026-06-16",
       "highest_close": 4.34
     },
     "BAM.BK": {
@@ -47,7 +47,7 @@
       "atr": 0.1292,
       "atr_stop": 6.33,
       "last_price": 6.599999904632568,
-      "last_div_check": "2026-06-15",
+      "last_div_check": "2026-06-16",
       "highest_close": 6.65
     },
     "CK.BK": {
@@ -56,10 +56,10 @@
       "avg_cost": 19.2,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 0.6243,
-      "atr_stop": 17.84,
-      "last_price": 19.5,
-      "last_div_check": "2026-06-15",
+      "atr": 0.6083,
+      "atr_stop": 17.88,
+      "last_price": 19.200000762939453,
+      "last_div_check": "2026-06-16",
       "highest_close": 19.4
     },
     "CENTEL.BK": {
@@ -68,10 +68,10 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 0.9696,
-      "atr_stop": 33.83,
-      "last_price": 36.0,
-      "last_div_check": "2026-06-15",
+      "atr": 0.954,
+      "atr_stop": 33.87,
+      "last_price": 35.75,
+      "last_div_check": "2026-06-16",
       "highest_close": 36.25
     }
   },
