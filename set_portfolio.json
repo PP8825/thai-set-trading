@@ -82,7 +82,9 @@
       "entry_score": 2,
       "atr": 0.1,
       "atr_stop": 8.4,
-      "last_price": 8.649999618530273
+      "last_price": 8.600000381469727,
+      "last_div_check": "2026-06-17",
+      "highest_close": 8.65
     },
     "LH.BK": {
       "name": "LH",
@@ -92,7 +94,9 @@
       "entry_score": 3,
       "atr": 0.0545,
       "atr_stop": 3.56,
-      "last_price": 3.700000047683716
+      "last_price": 3.680000066757202,
+      "last_div_check": "2026-06-17",
+      "highest_close": 3.7
     }
   },
   "trades": [
