@@ -22,7 +22,7 @@
       "entry_score": 2,
       "last_div_check": "2026-06-16",
       "atr_stop": 29.31,
-      "last_price": 30.5,
+      "last_price": 30.75,
       "highest_close": 30.75,
       "atr": 0.5762
     },
@@ -70,7 +70,7 @@
       "entry_score": 2,
       "atr": 0.954,
       "atr_stop": 33.87,
-      "last_price": 35.75,
+      "last_price": 36.0,
       "last_div_check": "2026-06-16",
       "highest_close": 36.25
     }
@@ -416,7 +416,7 @@
     }
   ],
   "start_date": "2026-04-27",
-  "day_count": 37,
-  "last_eod_date": "2026-06-16",
+  "day_count": 38,
+  "last_eod_date": "2026-06-17",
   "peak_value": 336560.0870354557
 }
