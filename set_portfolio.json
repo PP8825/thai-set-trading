@@ -8,11 +8,11 @@
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-19",
-      "atr_stop": 4.83,
+      "last_div_check": "2026-06-22",
+      "atr_stop": 4.84,
       "last_price": 5.0,
       "highest_close": 5.15,
-      "atr": 0.13
+      "atr": 0.1232
     },
     "KTC.BK": {
       "name": "KTC",
@@ -20,11 +20,11 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-      "last_div_check": "2026-06-19",
-      "atr_stop": 30.78,
-      "last_price": 32.0,
+      "last_div_check": "2026-06-22",
+      "atr_stop": 30.81,
+      "last_price": 32.25,
       "highest_close": 32.5,
-      "atr": 0.6871
+      "atr": 0.6767
     },
     "KGI.BK": {
       "name": "KGI",
@@ -35,7 +35,7 @@
       "atr": 0.0492,
       "atr_stop": 4.24,
       "last_price": 4.340000152587891,
-      "last_div_check": "2026-06-19",
+      "last_div_check": "2026-06-22",
       "highest_close": 4.36
     },
     "BAM.BK": {
@@ -44,10 +44,10 @@
       "avg_cost": 6.65,
       "entry_date": "2026-06-11",
       "entry_score": 3,
-      "atr": 0.1463,
-      "atr_stop": 6.38,
+      "atr": 0.1432,
+      "atr_stop": 6.39,
       "last_price": 6.599999904632568,
-      "last_div_check": "2026-06-19",
+      "last_div_check": "2026-06-22",
       "highest_close": 6.75
     },
     "CK.BK": {
@@ -56,10 +56,10 @@
       "avg_cost": 19.2,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 0.6419,
-      "atr_stop": 18.7,
-      "last_price": 20.200000762939453,
-      "last_div_check": "2026-06-19",
+      "atr": 0.6318,
+      "atr_stop": 18.72,
+      "last_price": 20.100000381469727,
+      "last_div_check": "2026-06-22",
       "highest_close": 20.3
     },
     "CENTEL.BK": {
@@ -70,8 +70,8 @@
       "entry_score": 2,
       "atr": 0.9394,
       "atr_stop": 33.9,
-      "last_price": 36.25,
-      "last_div_check": "2026-06-19",
+      "last_price": 36.0,
+      "last_div_check": "2026-06-22",
       "highest_close": 36.25
     },
     "LH.BK": {
@@ -82,8 +82,8 @@
       "entry_score": 3,
       "atr": 0.0562,
       "atr_stop": 3.62,
-      "last_price": 3.680000066757202,
-      "last_div_check": "2026-06-19",
+      "last_price": 3.6600000858306885,
+      "last_div_check": "2026-06-22",
       "highest_close": 3.76
     }
   },
