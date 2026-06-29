@@ -21,9 +21,9 @@
       "entry_date": "2026-04-27",
       "entry_score": 2,
       "last_div_check": "2026-06-29",
-      "atr_stop": 31.01,
-      "last_price": 32.75,
-      "highest_close": 32.75,
+      "atr_stop": 31.26,
+      "last_price": 33.0,
+      "highest_close": 33.0,
       "atr": 0.6948
     },
     "KGI.BK": {
@@ -46,7 +46,7 @@
       "entry_score": 2,
       "atr": 0.6277,
       "atr_stop": 18.73,
-      "last_price": 19.899999618530273,
+      "last_price": 19.799999237060547,
       "last_div_check": "2026-06-29",
       "highest_close": 20.3
     },
@@ -70,7 +70,7 @@
       "entry_score": 3,
       "atr": 0.065,
       "atr_stop": 3.66,
-      "last_price": 3.819999933242798,
+      "last_price": 3.799999952316284,
       "last_div_check": "2026-06-29",
       "highest_close": 3.82
     }
