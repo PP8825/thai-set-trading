@@ -10,7 +10,7 @@
       "entry_score": 3,
       "last_div_check": "2026-06-29",
       "atr_stop": 4.84,
-      "last_price": 5.050000190734863,
+      "last_price": 5.099999904632568,
       "highest_close": 5.15,
       "atr": 0.1232
     },
@@ -22,7 +22,7 @@
       "entry_score": 2,
       "last_div_check": "2026-06-29",
       "atr_stop": 31.01,
-      "last_price": 32.75,
+      "last_price": 32.5,
       "highest_close": 32.75,
       "atr": 0.6948
     },
@@ -57,10 +57,10 @@
       "entry_date": "2026-06-15",
       "entry_score": 2,
       "atr": 1.1003,
-      "atr_stop": 34.0,
-      "last_price": 36.75,
+      "atr_stop": 34.25,
+      "last_price": 37.0,
       "last_div_check": "2026-06-29",
-      "highest_close": 36.75
+      "highest_close": 37.0
     },
     "LH.BK": {
       "name": "LH",
