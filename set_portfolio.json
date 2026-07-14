@@ -21,9 +21,9 @@
       "entry_date": "2026-04-27",
       "entry_score": 2,
       "last_div_check": "2026-07-14",
-      "atr_stop": 34.49,
-      "last_price": 36.75,
-      "highest_close": 36.75,
+      "atr_stop": 34.74,
+      "last_price": 37.0,
+      "highest_close": 37.0,
       "atr": 0.906
     },
     "KGI.BK": {
@@ -33,10 +33,10 @@
       "entry_date": "2026-05-08",
       "entry_score": 2,
       "atr": 0.0575,
-      "atr_stop": 4.54,
-      "last_price": 4.679999828338623,
+      "atr_stop": 4.56,
+      "last_price": 4.699999809265137,
       "last_div_check": "2026-07-14",
-      "highest_close": 4.68
+      "highest_close": 4.7
     },
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -58,7 +58,7 @@
       "entry_score": 3,
       "atr": 0.065,
       "atr_stop": 3.66,
-      "last_price": 3.7799999713897705,
+      "last_price": 3.759999990463257,
       "last_div_check": "2026-07-14",
       "highest_close": 3.82
     }
