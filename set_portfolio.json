@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 171563.73212657214,
+  "cash": 186486.33273539782,
   "holdings": {
     "WHA.BK": {
       "name": "WHA",
@@ -8,11 +8,11 @@
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-06-29",
-      "atr_stop": 4.84,
-      "last_price": 5.449999809265137,
-      "highest_close": 5.15,
-      "atr": 0.1232
+      "last_div_check": "2026-07-14",
+      "atr_stop": 5.0,
+      "last_price": 5.400000095367432,
+      "highest_close": 5.4,
+      "atr": 0.1609
     },
     "KTC.BK": {
       "name": "KTC",
@@ -20,11 +20,11 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-      "last_div_check": "2026-06-29",
-      "atr_stop": 31.26,
-      "last_price": 37.25,
-      "highest_close": 33.0,
-      "atr": 0.6948
+      "last_div_check": "2026-07-14",
+      "atr_stop": 34.49,
+      "last_price": 36.75,
+      "highest_close": 36.75,
+      "atr": 0.906
     },
     "KGI.BK": {
       "name": "KGI",
@@ -32,23 +32,11 @@
       "avg_cost": 4.22,
       "entry_date": "2026-05-08",
       "entry_score": 2,
-      "atr": 0.0466,
-      "atr_stop": 4.28,
+      "atr": 0.0575,
+      "atr_stop": 4.54,
       "last_price": 4.679999828338623,
-      "last_div_check": "2026-06-29",
-      "highest_close": 4.4
-    },
-    "CK.BK": {
-      "name": "CK",
-      "shares": 800,
-      "avg_cost": 19.2,
-      "entry_date": "2026-06-15",
-      "entry_score": 2,
-      "atr": 0.6277,
-      "atr_stop": 18.73,
-      "last_price": 19.399999618530273,
-      "last_div_check": "2026-06-29",
-      "highest_close": 20.3
+      "last_div_check": "2026-07-14",
+      "highest_close": 4.68
     },
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -56,10 +44,10 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.1003,
-      "atr_stop": 34.25,
-      "last_price": 36.75,
-      "last_div_check": "2026-06-29",
+      "atr": 1.0614,
+      "atr_stop": 34.35,
+      "last_price": 36.5,
+      "last_div_check": "2026-07-14",
       "highest_close": 37.0
     },
     "LH.BK": {
@@ -71,7 +59,7 @@
       "atr": 0.065,
       "atr_stop": 3.66,
       "last_price": 3.7799999713897705,
-      "last_div_check": "2026-06-29",
+      "last_div_check": "2026-07-14",
       "highest_close": 3.82
     }
   },
@@ -465,6 +453,19 @@
       "pnl": -585.2,
       "reason": "SELL",
       "time": "14:30"
+    },
+    {
+      "date": "2026-07-14",
+      "action": "SELL",
+      "ticker": "CK.BK",
+      "name": "CK",
+      "shares": 800,
+      "price": 18.7,
+      "value": 14960.0,
+      "avg_cost": 19.2,
+      "pnl": -475.8,
+      "reason": "ATR stop ฿18.78 (-2.6%)",
+      "time": "12:17"
     }
   ],
   "start_date": "2026-04-27",
