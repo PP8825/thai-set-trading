@@ -8,11 +8,11 @@
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-07-14",
-      "atr_stop": 5.0,
-      "last_price": 5.400000095367432,
-      "highest_close": 5.4,
-      "atr": 0.1609
+      "last_div_check": "2026-07-15",
+      "atr_stop": 5.05,
+      "last_price": 5.449999809265137,
+      "highest_close": 5.45,
+      "atr": 0.1602
     },
     "KTC.BK": {
       "name": "KTC",
@@ -20,11 +20,11 @@
       "avg_cost": 29.25,
       "entry_date": "2026-04-27",
       "entry_score": 2,
-      "last_div_check": "2026-07-14",
-      "atr_stop": 34.74,
-      "last_price": 36.75,
-      "highest_close": 37.0,
-      "atr": 0.906
+      "last_div_check": "2026-07-15",
+      "atr_stop": 35.42,
+      "last_price": 37.75,
+      "highest_close": 37.75,
+      "atr": 0.9306
     },
     "KGI.BK": {
       "name": "KGI",
@@ -32,11 +32,11 @@
       "avg_cost": 4.22,
       "entry_date": "2026-05-08",
       "entry_score": 2,
-      "atr": 0.0575,
-      "atr_stop": 4.56,
-      "last_price": 4.71999979019165,
-      "last_div_check": "2026-07-14",
-      "highest_close": 4.7
+      "atr": 0.0661,
+      "atr_stop": 4.61,
+      "last_price": 4.78000020980835,
+      "last_div_check": "2026-07-15",
+      "highest_close": 4.78
     },
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -44,10 +44,10 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.0614,
-      "atr_stop": 34.35,
-      "last_price": 36.25,
-      "last_div_check": "2026-07-14",
+      "atr": 1.0213,
+      "atr_stop": 34.45,
+      "last_price": 36.5,
+      "last_div_check": "2026-07-15",
       "highest_close": 37.0
     },
     "LH.BK": {
@@ -58,8 +58,8 @@
       "entry_score": 3,
       "atr": 0.065,
       "atr_stop": 3.66,
-      "last_price": 3.740000009536743,
-      "last_div_check": "2026-07-14",
+      "last_price": 3.7799999713897705,
+      "last_div_check": "2026-07-15",
       "highest_close": 3.82
     }
   },
