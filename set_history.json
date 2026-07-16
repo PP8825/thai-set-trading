@@ -188,5 +188,15 @@
     "pnlPct": 15.82,
     "drawdown": -0.39,
     "trades": 0
+  },
+  {
+    "day": 20,
+    "date": "2026-07-16",
+    "value": 350294.33,
+    "cash": 247932.33,
+    "pnl": 50294.33,
+    "pnlPct": 16.76,
+    "drawdown": 0.17,
+    "trades": 1
   }
 ]

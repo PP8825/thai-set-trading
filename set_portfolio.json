@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 186486.33273539782,
+  "cash": 247932.33273539782,
   "holdings": {
     "WHA.BK": {
       "name": "WHA",
@@ -8,23 +8,11 @@
       "avg_cost": 4.38,
       "entry_date": "2026-04-27",
       "entry_score": 3,
-      "last_div_check": "2026-07-15",
-      "atr_stop": 5.05,
-      "last_price": 5.449999809265137,
+      "last_div_check": "2026-07-16",
+      "atr_stop": 5.06,
+      "last_price": 5.400000095367432,
       "highest_close": 5.45,
-      "atr": 0.1602
-    },
-    "KTC.BK": {
-      "name": "KTC",
-      "shares": 1600,
-      "avg_cost": 29.25,
-      "entry_date": "2026-04-27",
-      "entry_score": 2,
-      "last_div_check": "2026-07-15",
-      "atr_stop": 35.42,
-      "last_price": 38.25,
-      "highest_close": 37.75,
-      "atr": 0.9306
+      "atr": 0.1559
     },
     "KGI.BK": {
       "name": "KGI",
@@ -32,10 +20,10 @@
       "avg_cost": 4.22,
       "entry_date": "2026-05-08",
       "entry_score": 2,
-      "atr": 0.0661,
-      "atr_stop": 4.61,
-      "last_price": 4.739999771118164,
-      "last_div_check": "2026-07-15",
+      "atr": 0.0657,
+      "atr_stop": 4.62,
+      "last_price": 4.760000228881836,
+      "last_div_check": "2026-07-16",
       "highest_close": 4.78
     },
     "CENTEL.BK": {
@@ -44,11 +32,11 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.0213,
-      "atr_stop": 34.45,
-      "last_price": 36.5,
-      "last_div_check": "2026-07-15",
-      "highest_close": 37.0
+      "atr": 1.0542,
+      "atr_stop": 34.61,
+      "last_price": 37.25,
+      "last_div_check": "2026-07-16",
+      "highest_close": 37.25
     },
     "LH.BK": {
       "name": "LH",
@@ -56,11 +44,11 @@
       "avg_cost": 3.7,
       "entry_date": "2026-06-17",
       "entry_score": 3,
-      "atr": 0.065,
-      "atr_stop": 3.66,
-      "last_price": 3.759999990463257,
-      "last_div_check": "2026-07-15",
-      "highest_close": 3.82
+      "atr": 0.0708,
+      "atr_stop": 3.68,
+      "last_price": 3.859999895095825,
+      "last_div_check": "2026-07-16",
+      "highest_close": 3.86
     }
   },
   "trades": [
@@ -466,6 +454,19 @@
       "pnl": -475.8,
       "reason": "ATR stop ฿18.78 (-2.6%)",
       "time": "12:17"
+    },
+    {
+      "date": "2026-07-16",
+      "action": "SELL",
+      "ticker": "KTC.BK",
+      "name": "KTC",
+      "shares": 1600,
+      "price": 38.5,
+      "value": 61600.0,
+      "avg_cost": 29.25,
+      "pnl": 14529.0,
+      "reason": "Take-profit +31.6% (target 30%)",
+      "time": "12:28"
     }
   ],
   "start_date": "2026-04-27",
