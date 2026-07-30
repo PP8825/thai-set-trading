@@ -1,30 +1,18 @@
 {
   "capital": 300000.0,
-  "cash": 247932.33273539782,
+  "cash": 299211.8152011419,
   "holdings": {
-    "WHA.BK": {
-      "name": "WHA",
-      "shares": 10800,
-      "avg_cost": 4.38,
-      "entry_date": "2026-04-27",
-      "entry_score": 3,
-      "last_div_check": "2026-07-17",
-      "atr_stop": 5.06,
-      "last_price": 4.900000095367432,
-      "highest_close": 5.45,
-      "atr": 0.1559
-    },
     "KGI.BK": {
       "name": "KGI",
       "shares": 1500,
       "avg_cost": 4.22,
       "entry_date": "2026-05-08",
       "entry_score": 2,
-      "atr": 0.0657,
-      "atr_stop": 4.62,
+      "atr": 0.087,
+      "atr_stop": 4.93,
       "last_price": 5.150000095367432,
-      "last_div_check": "2026-07-17",
-      "highest_close": 4.78
+      "last_div_check": "2026-07-30",
+      "highest_close": 5.15
     },
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -32,11 +20,11 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.0669,
-      "atr_stop": 35.08,
-      "last_price": 38.25,
-      "last_div_check": "2026-07-17",
-      "highest_close": 37.75
+      "atr": 1.0938,
+      "atr_stop": 36.27,
+      "last_price": 39.0,
+      "last_div_check": "2026-07-30",
+      "highest_close": 39.0
     },
     "LH.BK": {
       "name": "LH",
@@ -44,10 +32,10 @@
       "avg_cost": 3.7,
       "entry_date": "2026-06-17",
       "entry_score": 3,
-      "atr": 0.0708,
-      "atr_stop": 3.68,
-      "last_price": 3.7799999713897705,
-      "last_div_check": "2026-07-17",
+      "atr": 0.0551,
+      "atr_stop": 3.72,
+      "last_price": 3.740000009536743,
+      "last_div_check": "2026-07-30",
       "highest_close": 3.86
     }
   },
@@ -466,6 +454,19 @@
       "avg_cost": 29.25,
       "pnl": 14529.0,
       "reason": "Take-profit +31.6% (target 30%)",
+      "time": "12:28"
+    },
+    {
+      "date": "2026-07-30",
+      "action": "SELL",
+      "ticker": "WHA.BK",
+      "name": "WHA",
+      "shares": 10800,
+      "price": 4.76,
+      "value": 51408.0,
+      "avg_cost": 4.38,
+      "pnl": 3857.22,
+      "reason": "ATR stop ฿5.06 (--8.7%)",
       "time": "12:28"
     }
   ],
