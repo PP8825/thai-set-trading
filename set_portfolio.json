@@ -11,7 +11,7 @@
       "atr": 0.087,
       "atr_stop": 4.93,
       "last_price": 5.099999904632568,
-      "last_div_check": "2026-07-30",
+      "last_div_check": "2026-08-07",
       "highest_close": 5.15
     },
     "CENTEL.BK": {
@@ -23,7 +23,7 @@
       "atr": 1.0938,
       "atr_stop": 36.27,
       "last_price": 38.5,
-      "last_div_check": "2026-07-30",
+      "last_div_check": "2026-08-07",
       "highest_close": 39.0
     },
     "LH.BK": {
@@ -35,7 +35,7 @@
       "atr": 0.0551,
       "atr_stop": 3.72,
       "last_price": 3.7799999713897705,
-      "last_div_check": "2026-07-30",
+      "last_div_check": "2026-08-07",
       "highest_close": 3.86
     }
   },
