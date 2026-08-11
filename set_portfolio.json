@@ -20,11 +20,11 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.1583,
-      "atr_stop": 38.1,
-      "last_price": 40.75,
+      "atr": 1.194,
+      "atr_stop": 38.26,
+      "last_price": 41.25,
       "last_div_check": "2026-08-11",
-      "highest_close": 41.0
+      "highest_close": 41.25
     },
     "LH.BK": {
       "name": "LH",
@@ -46,7 +46,7 @@
       "entry_score": 2,
       "atr": 0.4076,
       "atr_stop": 18.58,
-      "last_price": 19.399999618530273,
+      "last_price": 19.200000762939453,
       "last_div_check": "2026-08-11",
       "highest_close": 19.6
     }
