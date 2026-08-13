@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 0.087,
       "atr_stop": 4.93,
-      "last_price": 5.050000190734863,
-      "last_div_check": "2026-08-11",
+      "last_price": 5.0,
+      "last_div_check": "2026-08-13",
       "highest_close": 5.15
     },
     "CENTEL.BK": {
@@ -20,11 +20,11 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.194,
-      "atr_stop": 38.51,
-      "last_price": 41.0,
-      "last_div_check": "2026-08-11",
-      "highest_close": 41.5
+      "atr": 1.2337,
+      "atr_stop": 39.67,
+      "last_price": 42.75,
+      "last_div_check": "2026-08-13",
+      "highest_close": 42.75
     },
     "LH.BK": {
       "name": "LH",
@@ -35,7 +35,7 @@
       "atr": 0.0533,
       "atr_stop": 3.73,
       "last_price": 3.7799999713897705,
-      "last_div_check": "2026-08-11",
+      "last_div_check": "2026-08-13",
       "highest_close": 3.86
     },
     "TIDLOR.BK": {
@@ -46,8 +46,8 @@
       "entry_score": 2,
       "atr": 0.4076,
       "atr_stop": 18.58,
-      "last_price": 19.299999237060547,
-      "last_div_check": "2026-08-11",
+      "last_price": 19.200000762939453,
+      "last_div_check": "2026-08-13",
       "highest_close": 19.6
     }
   },
