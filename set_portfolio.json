@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 269738.31462750677,
+  "cash": 290889.3047901774,
   "holdings": {
     "KGI.BK": {
       "name": "KGI",
@@ -10,7 +10,7 @@
       "entry_score": 2,
       "atr": 0.087,
       "atr_stop": 4.93,
-      "last_price": 5.0,
+      "last_price": 4.960000038146973,
       "last_div_check": "2026-08-14",
       "highest_close": 5.15
     },
@@ -22,21 +22,9 @@
       "entry_score": 2,
       "atr": 1.1945,
       "atr_stop": 40.01,
-      "last_price": 42.5,
+      "last_price": 42.0,
       "last_div_check": "2026-08-14",
       "highest_close": 43.0
-    },
-    "LH.BK": {
-      "name": "LH",
-      "shares": 5700,
-      "avg_cost": 3.7,
-      "entry_date": "2026-06-17",
-      "entry_score": 3,
-      "atr": 0.0533,
-      "atr_stop": 3.73,
-      "last_price": 3.740000009536743,
-      "last_div_check": "2026-08-14",
-      "highest_close": 3.86
     },
     "TIDLOR.BK": {
       "name": "TIDLOR",
@@ -46,7 +34,7 @@
       "entry_score": 2,
       "atr": 0.3806,
       "atr_stop": 18.65,
-      "last_price": 19.100000381469727,
+      "last_price": 18.799999237060547,
       "last_div_check": "2026-08-14",
       "highest_close": 19.6
     }
@@ -493,6 +481,19 @@
       "pnl": 0,
       "reason": "BUY",
       "time": "15:53"
+    },
+    {
+      "date": "2026-08-14",
+      "action": "SELL",
+      "ticker": "LH.BK",
+      "name": "LH",
+      "shares": 5700,
+      "price": 3.72,
+      "value": 21204.0,
+      "avg_cost": 3.7,
+      "pnl": 8.27,
+      "reason": "ATR stop ฿3.73 (--0.5%)",
+      "time": "15:39"
     }
   ],
   "start_date": "2026-04-27",
