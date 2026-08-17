@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 290889.3047901774,
+  "cash": 262222.8168790722,
   "holdings": {
     "KGI.BK": {
       "name": "KGI",
@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 0.087,
       "atr_stop": 4.93,
-      "last_price": 4.960000038146973,
-      "last_div_check": "2026-08-14",
+      "last_price": 5.050000190734863,
+      "last_div_check": "2026-08-17",
       "highest_close": 5.15
     },
     "CENTEL.BK": {
@@ -22,8 +22,8 @@
       "entry_score": 2,
       "atr": 1.1945,
       "atr_stop": 40.01,
-      "last_price": 42.0,
-      "last_div_check": "2026-08-14",
+      "last_price": 41.75,
+      "last_div_check": "2026-08-17",
       "highest_close": 43.0
     },
     "TIDLOR.BK": {
@@ -34,9 +34,19 @@
       "entry_score": 2,
       "atr": 0.3806,
       "atr_stop": 18.65,
-      "last_price": 18.899999618530273,
-      "last_div_check": "2026-08-14",
+      "last_price": 19.0,
+      "last_div_check": "2026-08-17",
       "highest_close": 19.6
+    },
+    "JASIF.BK": {
+      "name": "JASIF",
+      "shares": 4300,
+      "avg_cost": 6.65,
+      "entry_date": "2026-08-17",
+      "entry_score": 4,
+      "atr": 0.0557,
+      "atr_stop": 6.51,
+      "last_price": 6.650000095367432
     }
   },
   "trades": [
@@ -494,6 +504,19 @@
       "pnl": 8.27,
       "reason": "ATR stop ฿3.73 (--0.5%)",
       "time": "15:39"
+    },
+    {
+      "date": "2026-08-17",
+      "action": "BUY",
+      "ticker": "JASIF.BK",
+      "name": "JASIF",
+      "shares": 4300,
+      "price": 6.65,
+      "value": 28595.0,
+      "avg_cost": 6.65,
+      "pnl": 0,
+      "reason": "STRONG BUY",
+      "time": "10:35"
     }
   ],
   "start_date": "2026-04-27",
