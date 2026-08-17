@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 241160.2914584065,
+  "cash": 212841.67007020954,
   "holdings": {
     "KGI.BK": {
       "name": "KGI",
@@ -22,7 +22,7 @@
       "entry_score": 2,
       "atr": 1.1945,
       "atr_stop": 40.01,
-      "last_price": 41.5,
+      "last_price": 42.0,
       "last_div_check": "2026-08-17",
       "highest_close": 43.0
     },
@@ -58,7 +58,19 @@
       "entry_score": 2,
       "atr": 0.507,
       "atr_stop": 17.83,
-      "last_price": 19.100000381469727
+      "last_price": 19.100000381469727,
+      "last_div_check": "2026-08-17",
+      "highest_close": 19.1
+    },
+    "FM.BK": {
+      "name": "FM",
+      "shares": 6600,
+      "avg_cost": 4.28,
+      "entry_date": "2026-08-17",
+      "entry_score": 2,
+      "atr": 0.0573,
+      "atr_stop": 4.14,
+      "last_price": 4.28000020980835
     }
   },
   "trades": [
@@ -542,6 +554,19 @@
       "pnl": 0,
       "reason": "BUY",
       "time": "15:03"
+    },
+    {
+      "date": "2026-08-17",
+      "action": "BUY",
+      "ticker": "FM.BK",
+      "name": "FM",
+      "shares": 6600,
+      "price": 4.28,
+      "value": 28248.0,
+      "avg_cost": 4.28,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "15:18"
     }
   ],
   "start_date": "2026-04-27",
