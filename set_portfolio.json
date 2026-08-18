@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 212841.67007020954,
+  "cash": 191368.1204717541,
   "holdings": {
     "KGI.BK": {
       "name": "KGI",
@@ -22,7 +22,7 @@
       "entry_score": 2,
       "atr": 1.1945,
       "atr_stop": 40.01,
-      "last_price": 42.0,
+      "last_price": 41.75,
       "last_div_check": "2026-08-18",
       "highest_close": 43.0
     },
@@ -70,9 +70,19 @@
       "entry_score": 2,
       "atr": 0.0561,
       "atr_stop": 4.16,
-      "last_price": 4.300000190734863,
+      "last_price": 4.28000020980835,
       "last_div_check": "2026-08-18",
       "highest_close": 4.3
+    },
+    "GFPT.BK": {
+      "name": "GFPT",
+      "shares": 2100,
+      "avg_cost": 10.2,
+      "entry_date": "2026-08-18",
+      "entry_score": 4,
+      "atr": 0.2326,
+      "atr_stop": 9.62,
+      "last_price": 10.199999809265137
     }
   },
   "trades": [
@@ -569,6 +579,19 @@
       "pnl": 0,
       "reason": "BUY",
       "time": "15:18"
+    },
+    {
+      "date": "2026-08-18",
+      "action": "BUY",
+      "ticker": "GFPT.BK",
+      "name": "GFPT",
+      "shares": 2100,
+      "price": 10.2,
+      "value": 21420.0,
+      "avg_cost": 10.2,
+      "pnl": 0,
+      "reason": "STRONG BUY",
+      "time": "16:12"
     }
   ],
   "start_date": "2026-04-27",
