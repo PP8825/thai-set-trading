@@ -32,11 +32,11 @@
       "avg_cost": 19.6,
       "entry_date": "2026-08-10",
       "entry_score": 2,
-      "atr": 0.3806,
-      "atr_stop": 18.65,
-      "last_price": 19.700000762939453,
+      "atr": 0.4349,
+      "atr_stop": 18.71,
+      "last_price": 19.799999237060547,
       "last_div_check": "2026-08-18",
-      "highest_close": 19.7
+      "highest_close": 19.8
     },
     "JASIF.BK": {
       "name": "JASIF",
@@ -58,7 +58,7 @@
       "entry_score": 2,
       "atr": 0.4851,
       "atr_stop": 18.19,
-      "last_price": 19.399999618530273,
+      "last_price": 19.299999237060547,
       "last_div_check": "2026-08-18",
       "highest_close": 19.4
     },
