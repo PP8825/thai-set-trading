@@ -22,7 +22,7 @@
       "entry_score": 2,
       "atr": 1.1945,
       "atr_stop": 40.01,
-      "last_price": 41.75,
+      "last_price": 42.0,
       "last_div_check": "2026-08-18",
       "highest_close": 43.0
     },
@@ -70,7 +70,7 @@
       "entry_score": 2,
       "atr": 0.0561,
       "atr_stop": 4.16,
-      "last_price": 4.28000020980835,
+      "last_price": 4.300000190734863,
       "last_div_check": "2026-08-18",
       "highest_close": 4.3
     }
