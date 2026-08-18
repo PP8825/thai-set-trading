@@ -22,7 +22,7 @@
       "entry_score": 2,
       "atr": 1.1945,
       "atr_stop": 40.01,
-      "last_price": 42.75,
+      "last_price": 42.5,
       "last_div_check": "2026-08-18",
       "highest_close": 43.0
     },
@@ -56,11 +56,11 @@
       "avg_cost": 19.1,
       "entry_date": "2026-08-17",
       "entry_score": 2,
-      "atr": 0.478,
-      "atr_stop": 18.11,
-      "last_price": 19.299999237060547,
+      "atr": 0.4851,
+      "atr_stop": 18.19,
+      "last_price": 19.399999618530273,
       "last_div_check": "2026-08-18",
-      "highest_close": 19.3
+      "highest_close": 19.4
     },
     "FM.BK": {
       "name": "FM",
@@ -70,7 +70,7 @@
       "entry_score": 2,
       "atr": 0.0573,
       "atr_stop": 4.14,
-      "last_price": 4.28000020980835,
+      "last_price": 4.260000228881836,
       "last_div_check": "2026-08-18",
       "highest_close": 4.28
     }
