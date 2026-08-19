@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 191368.1204717541,
+  "cash": 181022.92083505634,
   "holdings": {
     "KGI.BK": {
       "name": "KGI",
@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 0.087,
       "atr_stop": 4.93,
-      "last_price": 5.050000190734863,
-      "last_div_check": "2026-08-18",
+      "last_price": 5.099999904632568,
+      "last_div_check": "2026-08-19",
       "highest_close": 5.15
     },
     "CENTEL.BK": {
@@ -22,8 +22,8 @@
       "entry_score": 2,
       "atr": 1.1945,
       "atr_stop": 40.01,
-      "last_price": 42.0,
-      "last_div_check": "2026-08-18",
+      "last_price": 41.75,
+      "last_div_check": "2026-08-19",
       "highest_close": 43.0
     },
     "TIDLOR.BK": {
@@ -32,23 +32,11 @@
       "avg_cost": 19.6,
       "entry_date": "2026-08-10",
       "entry_score": 2,
-      "atr": 0.4349,
-      "atr_stop": 18.71,
-      "last_price": 19.399999618530273,
-      "last_div_check": "2026-08-18",
+      "atr": 0.411,
+      "atr_stop": 18.77,
+      "last_price": 19.299999237060547,
+      "last_div_check": "2026-08-19",
       "highest_close": 19.8
-    },
-    "JASIF.BK": {
-      "name": "JASIF",
-      "shares": 4300,
-      "avg_cost": 6.65,
-      "entry_date": "2026-08-17",
-      "entry_score": 4,
-      "atr": 0.0557,
-      "atr_stop": 6.51,
-      "last_price": 6.5,
-      "last_div_check": "2026-08-18",
-      "highest_close": 6.65
     },
     "CK.BK": {
       "name": "CK",
@@ -58,8 +46,8 @@
       "entry_score": 2,
       "atr": 0.4851,
       "atr_stop": 18.19,
-      "last_price": 19.200000762939453,
-      "last_div_check": "2026-08-18",
+      "last_price": 18.899999618530273,
+      "last_div_check": "2026-08-19",
       "highest_close": 19.4
     },
     "FM.BK": {
@@ -70,8 +58,8 @@
       "entry_score": 2,
       "atr": 0.0561,
       "atr_stop": 4.16,
-      "last_price": 4.320000171661377,
-      "last_div_check": "2026-08-18",
+      "last_price": 4.300000190734863,
+      "last_div_check": "2026-08-19",
       "highest_close": 4.3
     },
     "GFPT.BK": {
@@ -80,11 +68,31 @@
       "avg_cost": 10.2,
       "entry_date": "2026-08-18",
       "entry_score": 4,
-      "atr": 0.2326,
-      "atr_stop": 9.62,
+      "atr": 0.216,
+      "atr_stop": 9.66,
       "last_price": 10.100000381469727,
-      "last_div_check": "2026-08-18",
+      "last_div_check": "2026-08-19",
       "highest_close": 10.2
+    },
+    "PTTEP.BK": {
+      "name": "PTTEP",
+      "shares": 100,
+      "avg_cost": 149.5,
+      "entry_date": "2026-08-19",
+      "entry_score": 2,
+      "atr": 2.0455,
+      "atr_stop": 144.39,
+      "last_price": 149.5
+    },
+    "SPRC.BK": {
+      "name": "SPRC",
+      "shares": 1900,
+      "avg_cost": 12.2,
+      "entry_date": "2026-08-19",
+      "entry_score": 2,
+      "atr": 0.3962,
+      "atr_stop": 11.21,
+      "last_price": 12.199999809265137
     }
   },
   "trades": [
@@ -594,6 +602,45 @@
       "pnl": 0,
       "reason": "STRONG BUY",
       "time": "16:12"
+    },
+    {
+      "date": "2026-08-19",
+      "action": "SELL",
+      "ticker": "JASIF.BK",
+      "name": "JASIF",
+      "shares": 4300,
+      "price": 6.5,
+      "value": 27950.0,
+      "avg_cost": 6.65,
+      "pnl": -786.36,
+      "reason": "ATR stop ฿6.51 (-2.3%)",
+      "time": "10:33"
+    },
+    {
+      "date": "2026-08-19",
+      "action": "BUY",
+      "ticker": "PTTEP.BK",
+      "name": "PTTEP",
+      "shares": 100,
+      "price": 149.5,
+      "value": 14950.0,
+      "avg_cost": 149.5,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "10:33"
+    },
+    {
+      "date": "2026-08-19",
+      "action": "BUY",
+      "ticker": "SPRC.BK",
+      "name": "SPRC",
+      "shares": 1900,
+      "price": 12.2,
+      "value": 23180.0,
+      "avg_cost": 12.2,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "10:33"
     }
   ],
   "start_date": "2026-04-27",
