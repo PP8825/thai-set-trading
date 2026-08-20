@@ -34,9 +34,9 @@
       "entry_score": 2,
       "atr": 0.411,
       "atr_stop": 18.77,
-      "last_price": 19.799999237060547,
+      "last_price": 19.899999618530273,
       "last_div_check": "2026-08-20",
-      "highest_close": 19.8
+      "highest_close": 19.9
     },
     "CK.BK": {
       "name": "CK",
@@ -46,7 +46,7 @@
       "entry_score": 2,
       "atr": 0.5076,
       "atr_stop": 18.73,
-      "last_price": 19.899999618530273,
+      "last_price": 20.0,
       "last_div_check": "2026-08-20",
       "highest_close": 20.0
     },
@@ -70,7 +70,7 @@
       "entry_score": 4,
       "atr": 0.2353,
       "atr_stop": 9.71,
-      "last_price": 10.199999809265137,
+      "last_price": 10.100000381469727,
       "last_div_check": "2026-08-20",
       "highest_close": 10.3
     },
@@ -82,7 +82,7 @@
       "entry_score": 2,
       "atr": 2.0346,
       "atr_stop": 144.41,
-      "last_price": 147.0,
+      "last_price": 147.5,
       "last_div_check": "2026-08-20",
       "highest_close": 149.5
     },
