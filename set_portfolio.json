@@ -34,7 +34,7 @@
       "entry_score": 2,
       "atr": 0.411,
       "atr_stop": 18.77,
-      "last_price": 19.600000381469727,
+      "last_price": 19.700000762939453,
       "last_div_check": "2026-08-20",
       "highest_close": 19.9
     },
@@ -46,7 +46,7 @@
       "entry_score": 2,
       "atr": 0.5076,
       "atr_stop": 18.73,
-      "last_price": 19.799999237060547,
+      "last_price": 19.899999618530273,
       "last_div_check": "2026-08-20",
       "highest_close": 20.0
     },
@@ -56,11 +56,11 @@
       "avg_cost": 4.28,
       "entry_date": "2026-08-17",
       "entry_score": 2,
-      "atr": 0.0593,
-      "atr_stop": 4.23,
-      "last_price": 4.380000114440918,
+      "atr": 0.0693,
+      "atr_stop": 4.25,
+      "last_price": 4.420000076293945,
       "last_div_check": "2026-08-20",
-      "highest_close": 4.38
+      "highest_close": 4.42
     },
     "GFPT.BK": {
       "name": "GFPT",
@@ -82,7 +82,7 @@
       "entry_score": 2,
       "atr": 2.0346,
       "atr_stop": 144.41,
-      "last_price": 147.5,
+      "last_price": 148.0,
       "last_div_check": "2026-08-20",
       "highest_close": 149.5
     },
@@ -94,7 +94,7 @@
       "entry_score": 2,
       "atr": 0.3883,
       "atr_stop": 11.23,
-      "last_price": 11.899999618530273,
+      "last_price": 12.0,
       "last_div_check": "2026-08-20",
       "highest_close": 12.2
     }
