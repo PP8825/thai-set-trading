@@ -10,7 +10,7 @@
       "entry_score": 2,
       "atr": 0.0915,
       "atr_stop": 4.97,
-      "last_price": 5.099999904632568,
+      "last_price": 5.150000095367432,
       "last_div_check": "2026-08-21",
       "highest_close": 5.2
     },
@@ -92,11 +92,11 @@
       "avg_cost": 12.2,
       "entry_date": "2026-08-19",
       "entry_score": 2,
-      "atr": 0.4167,
-      "atr_stop": 11.36,
-      "last_price": 12.399999618530273,
+      "atr": 0.4239,
+      "atr_stop": 11.44,
+      "last_price": 12.5,
       "last_div_check": "2026-08-21",
-      "highest_close": 12.4
+      "highest_close": 12.5
     }
   },
   "trades": [
