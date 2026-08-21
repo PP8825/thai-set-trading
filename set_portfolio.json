@@ -34,7 +34,7 @@
       "entry_score": 2,
       "atr": 0.411,
       "atr_stop": 18.77,
-      "last_price": 19.899999618530273,
+      "last_price": 19.799999237060547,
       "last_div_check": "2026-08-21",
       "highest_close": 19.9
     },
@@ -46,7 +46,7 @@
       "entry_score": 2,
       "atr": 0.5076,
       "atr_stop": 18.73,
-      "last_price": 19.5,
+      "last_price": 19.399999618530273,
       "last_div_check": "2026-08-21",
       "highest_close": 20.0
     },
@@ -58,7 +58,7 @@
       "entry_score": 2,
       "atr": 0.0686,
       "atr_stop": 4.27,
-      "last_price": 4.420000076293945,
+      "last_price": 4.440000057220459,
       "last_div_check": "2026-08-21",
       "highest_close": 4.44
     },
@@ -80,11 +80,11 @@
       "avg_cost": 149.5,
       "entry_date": "2026-08-19",
       "entry_score": 2,
-      "atr": 2.0934,
-      "atr_stop": 144.77,
-      "last_price": 150.0,
+      "atr": 2.1291,
+      "atr_stop": 145.18,
+      "last_price": 150.5,
       "last_div_check": "2026-08-21",
-      "highest_close": 150.0
+      "highest_close": 150.5
     },
     "SPRC.BK": {
       "name": "SPRC",
@@ -94,7 +94,7 @@
       "entry_score": 2,
       "atr": 0.4239,
       "atr_stop": 11.44,
-      "last_price": 12.5,
+      "last_price": 12.399999618530273,
       "last_div_check": "2026-08-21",
       "highest_close": 12.5
     }
