@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 0.0915,
       "atr_stop": 4.97,
-      "last_price": 5.150000095367432,
-      "last_div_check": "2026-08-21",
+      "last_price": 5.099999904632568,
+      "last_div_check": "2026-08-24",
       "highest_close": 5.2
     },
     "CENTEL.BK": {
@@ -20,10 +20,10 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.1606,
-      "atr_stop": 40.1,
+      "atr": 1.1466,
+      "atr_stop": 40.13,
       "last_price": 42.0,
-      "last_div_check": "2026-08-21",
+      "last_div_check": "2026-08-24",
       "highest_close": 43.0
     },
     "TIDLOR.BK": {
@@ -34,8 +34,8 @@
       "entry_score": 2,
       "atr": 0.411,
       "atr_stop": 18.77,
-      "last_price": 19.799999237060547,
-      "last_div_check": "2026-08-21",
+      "last_price": 19.200000762939453,
+      "last_div_check": "2026-08-24",
       "highest_close": 19.9
     },
     "CK.BK": {
@@ -46,8 +46,8 @@
       "entry_score": 2,
       "atr": 0.5076,
       "atr_stop": 18.73,
-      "last_price": 19.200000762939453,
-      "last_div_check": "2026-08-21",
+      "last_price": 18.899999618530273,
+      "last_div_check": "2026-08-24",
       "highest_close": 20.0
     },
     "FM.BK": {
@@ -58,8 +58,8 @@
       "entry_score": 2,
       "atr": 0.0686,
       "atr_stop": 4.27,
-      "last_price": 4.380000114440918,
-      "last_div_check": "2026-08-21",
+      "last_price": 4.420000076293945,
+      "last_div_check": "2026-08-24",
       "highest_close": 4.44
     },
     "GFPT.BK": {
@@ -70,8 +70,8 @@
       "entry_score": 4,
       "atr": 0.2256,
       "atr_stop": 9.74,
-      "last_price": 10.100000381469727,
-      "last_div_check": "2026-08-21",
+      "last_price": 9.949999809265137,
+      "last_div_check": "2026-08-24",
       "highest_close": 10.3
     },
     "PTTEP.BK": {
@@ -80,10 +80,10 @@
       "avg_cost": 149.5,
       "entry_date": "2026-08-19",
       "entry_score": 2,
-      "atr": 2.1291,
-      "atr_stop": 145.68,
-      "last_price": 149.5,
-      "last_div_check": "2026-08-21",
+      "atr": 2.0842,
+      "atr_stop": 145.79,
+      "last_price": 149.0,
+      "last_div_check": "2026-08-24",
       "highest_close": 151.0
     },
     "SPRC.BK": {
@@ -92,10 +92,10 @@
       "avg_cost": 12.2,
       "entry_date": "2026-08-19",
       "entry_score": 2,
-      "atr": 0.4453,
-      "atr_stop": 11.79,
-      "last_price": 13.0,
-      "last_div_check": "2026-08-21",
+      "atr": 0.4415,
+      "atr_stop": 11.8,
+      "last_price": 12.899999618530273,
+      "last_div_check": "2026-08-24",
       "highest_close": 12.9
     }
   },
