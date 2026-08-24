@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 181022.92083505634,
+  "cash": 201541.49667219166,
   "holdings": {
     "KGI.BK": {
       "name": "KGI",
@@ -34,21 +34,9 @@
       "entry_score": 2,
       "atr": 0.411,
       "atr_stop": 18.77,
-      "last_price": 19.399999618530273,
+      "last_price": 19.299999237060547,
       "last_div_check": "2026-08-24",
       "highest_close": 19.9
-    },
-    "CK.BK": {
-      "name": "CK",
-      "shares": 1100,
-      "avg_cost": 19.1,
-      "entry_date": "2026-08-17",
-      "entry_score": 2,
-      "atr": 0.5076,
-      "atr_stop": 18.73,
-      "last_price": 18.799999237060547,
-      "last_div_check": "2026-08-24",
-      "highest_close": 20.0
     },
     "FM.BK": {
       "name": "FM",
@@ -82,7 +70,7 @@
       "entry_score": 2,
       "atr": 2.0842,
       "atr_stop": 145.79,
-      "last_price": 149.0,
+      "last_price": 149.5,
       "last_div_check": "2026-08-24",
       "highest_close": 151.0
     },
@@ -645,6 +633,19 @@
       "pnl": 0,
       "reason": "BUY",
       "time": "10:33"
+    },
+    {
+      "date": "2026-08-24",
+      "action": "SELL",
+      "ticker": "CK.BK",
+      "name": "CK",
+      "shares": 1100,
+      "price": 18.7,
+      "value": 20570.0,
+      "avg_cost": 19.1,
+      "pnl": -543.95,
+      "reason": "ATR stop ฿18.73 (-2.1%)",
+      "time": "15:36"
     }
   ],
   "start_date": "2026-04-27",
