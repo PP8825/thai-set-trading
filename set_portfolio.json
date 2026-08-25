@@ -8,10 +8,10 @@
       "avg_cost": 4.22,
       "entry_date": "2026-05-08",
       "entry_score": 2,
-      "atr": 0.0915,
-      "atr_stop": 4.97,
+      "atr": 0.0853,
+      "atr_stop": 4.99,
       "last_price": 5.099999904632568,
-      "last_div_check": "2026-08-24",
+      "last_div_check": "2026-08-25",
       "highest_close": 5.2
     },
     "CENTEL.BK": {
@@ -20,10 +20,10 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.1466,
-      "atr_stop": 40.13,
-      "last_price": 42.25,
-      "last_div_check": "2026-08-24",
+      "atr": 1.117,
+      "atr_stop": 40.21,
+      "last_price": 42.5,
+      "last_div_check": "2026-08-25",
       "highest_close": 43.0
     },
     "TIDLOR.BK": {
@@ -34,8 +34,8 @@
       "entry_score": 2,
       "atr": 0.411,
       "atr_stop": 18.77,
-      "last_price": 19.299999237060547,
-      "last_div_check": "2026-08-24",
+      "last_price": 19.600000381469727,
+      "last_div_check": "2026-08-25",
       "highest_close": 19.9
     },
     "FM.BK": {
@@ -46,8 +46,8 @@
       "entry_score": 2,
       "atr": 0.0686,
       "atr_stop": 4.27,
-      "last_price": 4.440000057220459,
-      "last_div_check": "2026-08-24",
+      "last_price": 4.420000076293945,
+      "last_div_check": "2026-08-25",
       "highest_close": 4.44
     },
     "GFPT.BK": {
@@ -59,7 +59,7 @@
       "atr": 0.2256,
       "atr_stop": 9.74,
       "last_price": 10.100000381469727,
-      "last_div_check": "2026-08-24",
+      "last_div_check": "2026-08-25",
       "highest_close": 10.3
     },
     "PTTEP.BK": {
@@ -68,10 +68,10 @@
       "avg_cost": 149.5,
       "entry_date": "2026-08-19",
       "entry_score": 2,
-      "atr": 2.0842,
-      "atr_stop": 145.79,
-      "last_price": 149.5,
-      "last_div_check": "2026-08-24",
+      "atr": 2.0424,
+      "atr_stop": 145.89,
+      "last_price": 149.0,
+      "last_div_check": "2026-08-25",
       "highest_close": 151.0
     },
     "SPRC.BK": {
@@ -82,8 +82,8 @@
       "entry_score": 2,
       "atr": 0.4415,
       "atr_stop": 11.8,
-      "last_price": 12.699999809265137,
-      "last_div_check": "2026-08-24",
+      "last_price": 12.399999618530273,
+      "last_div_check": "2026-08-25",
       "highest_close": 12.9
     }
   },
