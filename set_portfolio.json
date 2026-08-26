@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 201541.49667219166,
+  "cash": 216055.12167219166,
   "holdings": {
     "KGI.BK": {
       "name": "KGI",
@@ -62,18 +62,6 @@
       "last_div_check": "2026-08-26",
       "highest_close": 10.3
     },
-    "PTTEP.BK": {
-      "name": "PTTEP",
-      "shares": 100,
-      "avg_cost": 149.5,
-      "entry_date": "2026-08-19",
-      "entry_score": 2,
-      "atr": 2.0424,
-      "atr_stop": 145.89,
-      "last_price": 146.0,
-      "last_div_check": "2026-08-26",
-      "highest_close": 151.0
-    },
     "SPRC.BK": {
       "name": "SPRC",
       "shares": 1900,
@@ -82,7 +70,7 @@
       "entry_score": 2,
       "atr": 0.4415,
       "atr_stop": 11.8,
-      "last_price": 12.699999809265137,
+      "last_price": 12.600000381469727,
       "last_div_check": "2026-08-26",
       "highest_close": 12.9
     }
@@ -646,6 +634,19 @@
       "pnl": -543.95,
       "reason": "ATR stop ฿18.73 (-2.1%)",
       "time": "15:36"
+    },
+    {
+      "date": "2026-08-26",
+      "action": "SELL",
+      "ticker": "PTTEP.BK",
+      "name": "PTTEP",
+      "shares": 100,
+      "price": 145.5,
+      "value": 14550.0,
+      "avg_cost": 149.5,
+      "pnl": -473.75,
+      "reason": "ATR stop ฿145.89 (-2.7%)",
+      "time": "16:03"
     }
   ],
   "start_date": "2026-04-27",
