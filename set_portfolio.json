@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 0.0853,
       "atr_stop": 4.99,
-      "last_price": 5.050000190734863,
-      "last_div_check": "2026-08-25",
+      "last_price": 5.150000095367432,
+      "last_div_check": "2026-08-26",
       "highest_close": 5.2
     },
     "CENTEL.BK": {
@@ -20,10 +20,10 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.117,
-      "atr_stop": 40.21,
-      "last_price": 42.5,
-      "last_div_check": "2026-08-25",
+      "atr": 1.0716,
+      "atr_stop": 40.32,
+      "last_price": 42.75,
+      "last_div_check": "2026-08-26",
       "highest_close": 43.0
     },
     "TIDLOR.BK": {
@@ -34,8 +34,8 @@
       "entry_score": 2,
       "atr": 0.411,
       "atr_stop": 18.77,
-      "last_price": 19.700000762939453,
-      "last_div_check": "2026-08-25",
+      "last_price": 19.899999618530273,
+      "last_div_check": "2026-08-26",
       "highest_close": 19.9
     },
     "FM.BK": {
@@ -47,7 +47,7 @@
       "atr": 0.0686,
       "atr_stop": 4.27,
       "last_price": 4.400000095367432,
-      "last_div_check": "2026-08-25",
+      "last_div_check": "2026-08-26",
       "highest_close": 4.44
     },
     "GFPT.BK": {
@@ -58,8 +58,8 @@
       "entry_score": 4,
       "atr": 0.2256,
       "atr_stop": 9.74,
-      "last_price": 10.100000381469727,
-      "last_div_check": "2026-08-25",
+      "last_price": 10.199999809265137,
+      "last_div_check": "2026-08-26",
       "highest_close": 10.3
     },
     "PTTEP.BK": {
@@ -70,8 +70,8 @@
       "entry_score": 2,
       "atr": 2.0424,
       "atr_stop": 145.89,
-      "last_price": 147.5,
-      "last_div_check": "2026-08-25",
+      "last_price": 146.5,
+      "last_div_check": "2026-08-26",
       "highest_close": 151.0
     },
     "SPRC.BK": {
@@ -83,7 +83,7 @@
       "atr": 0.4415,
       "atr_stop": 11.8,
       "last_price": 12.199999809265137,
-      "last_div_check": "2026-08-25",
+      "last_div_check": "2026-08-26",
       "highest_close": 12.9
     }
   },
