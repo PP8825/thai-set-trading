@@ -1,29 +1,17 @@
 {
   "capital": 300000.0,
-  "cash": 216055.12167219166,
+  "cash": 253360.4851938868,
   "holdings": {
-    "KGI.BK": {
-      "name": "KGI",
-      "shares": 1500,
-      "avg_cost": 4.22,
-      "entry_date": "2026-05-08",
-      "entry_score": 2,
-      "atr": 0.0853,
-      "atr_stop": 4.99,
-      "last_price": 5.050000190734863,
-      "last_div_check": "2026-08-26",
-      "highest_close": 5.2
-    },
     "CENTEL.BK": {
       "name": "CENTEL",
       "shares": 400,
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.0716,
-      "atr_stop": 40.32,
+      "atr": 1.0182,
+      "atr_stop": 40.45,
       "last_price": 42.5,
-      "last_div_check": "2026-08-26",
+      "last_div_check": "2026-08-31",
       "highest_close": 43.0
     },
     "TIDLOR.BK": {
@@ -34,21 +22,9 @@
       "entry_score": 2,
       "atr": 0.5065,
       "atr_stop": 19.03,
-      "last_price": 19.799999237060547,
-      "last_div_check": "2026-08-26",
+      "last_price": 19.399999618530273,
+      "last_div_check": "2026-08-31",
       "highest_close": 20.3
-    },
-    "FM.BK": {
-      "name": "FM",
-      "shares": 6600,
-      "avg_cost": 4.28,
-      "entry_date": "2026-08-17",
-      "entry_score": 2,
-      "atr": 0.0686,
-      "atr_stop": 4.27,
-      "last_price": 4.269999980926514,
-      "last_div_check": "2026-08-26",
-      "highest_close": 4.44
     },
     "GFPT.BK": {
       "name": "GFPT",
@@ -56,10 +32,10 @@
       "avg_cost": 10.2,
       "entry_date": "2026-08-18",
       "entry_score": 4,
-      "atr": 0.2256,
-      "atr_stop": 9.74,
-      "last_price": 10.0,
-      "last_div_check": "2026-08-26",
+      "atr": 0.2172,
+      "atr_stop": 9.76,
+      "last_price": 9.949999809265137,
+      "last_div_check": "2026-08-31",
       "highest_close": 10.3
     },
     "SPRC.BK": {
@@ -70,8 +46,8 @@
       "entry_score": 2,
       "atr": 0.4415,
       "atr_stop": 11.8,
-      "last_price": 12.600000381469727,
-      "last_div_check": "2026-08-26",
+      "last_price": 12.699999809265137,
+      "last_div_check": "2026-08-31",
       "highest_close": 12.9
     }
   },
@@ -647,6 +623,58 @@
       "pnl": -473.75,
       "reason": "ATR stop ฿145.89 (-2.7%)",
       "time": "16:03"
+    },
+    {
+      "date": "2026-08-31",
+      "action": "DIVIDEND",
+      "ticker": "FM.BK",
+      "name": "FM",
+      "shares": 6600,
+      "price": 0.15,
+      "value": 990.0,
+      "avg_cost": 4.28,
+      "pnl": 990.0,
+      "reason": "Dividend ฿0.1500/share",
+      "time": "15:55"
+    },
+    {
+      "date": "2026-08-28",
+      "action": "DIVIDEND",
+      "ticker": "SPRC.BK",
+      "name": "SPRC",
+      "shares": 1900,
+      "price": 0.5,
+      "value": 950.0,
+      "avg_cost": 12.2,
+      "pnl": 950.0,
+      "reason": "Dividend ฿0.5000/share",
+      "time": "15:55"
+    },
+    {
+      "date": "2026-08-31",
+      "action": "SELL",
+      "ticker": "KGI.BK",
+      "name": "KGI",
+      "shares": 1500,
+      "price": 4.98,
+      "value": 7470.0,
+      "avg_cost": 4.22,
+      "pnl": 1105.5,
+      "reason": "ATR stop ฿4.99 (--18.0%)",
+      "time": "15:55"
+    },
+    {
+      "date": "2026-08-31",
+      "action": "SELL",
+      "ticker": "FM.BK",
+      "name": "FM",
+      "shares": 6600,
+      "price": 4.24,
+      "value": 27984.0,
+      "avg_cost": 4.28,
+      "pnl": -404.58,
+      "reason": "ATR stop ฿4.27 (-0.9%)",
+      "time": "15:55"
     }
   ],
   "start_date": "2026-04-27",
