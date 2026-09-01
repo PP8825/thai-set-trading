@@ -10,7 +10,7 @@
       "entry_score": 2,
       "atr": 1.0182,
       "atr_stop": 40.45,
-      "last_price": 42.25,
+      "last_price": 42.5,
       "last_div_check": "2026-09-01",
       "highest_close": 43.0
     },
@@ -46,9 +46,9 @@
       "entry_score": 2,
       "atr": 0.4415,
       "atr_stop": 11.8,
-      "last_price": 12.899999618530273,
+      "last_price": 13.0,
       "last_div_check": "2026-09-01",
-      "highest_close": 12.9
+      "highest_close": 13.0
     },
     "PTT.BK": {
       "name": "PTT",
@@ -58,7 +58,9 @@
       "entry_score": 2,
       "atr": 0.6827,
       "atr_stop": 39.79,
-      "last_price": 41.5
+      "last_price": 41.5,
+      "last_div_check": "2026-09-01",
+      "highest_close": 41.5
     }
   },
   "trades": [
