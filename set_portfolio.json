@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 253360.4851938868,
+  "cash": 228398.2351938868,
   "holdings": {
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 1.0182,
       "atr_stop": 40.45,
-      "last_price": 43.25,
-      "last_div_check": "2026-08-31",
+      "last_price": 42.25,
+      "last_div_check": "2026-09-01",
       "highest_close": 43.0
     },
     "TIDLOR.BK": {
@@ -20,10 +20,10 @@
       "avg_cost": 19.6,
       "entry_date": "2026-08-10",
       "entry_score": 2,
-      "atr": 0.5065,
-      "atr_stop": 19.03,
-      "last_price": 19.399999618530273,
-      "last_div_check": "2026-08-31",
+      "atr": 0.4955,
+      "atr_stop": 19.06,
+      "last_price": 19.200000762939453,
+      "last_div_check": "2026-09-01",
       "highest_close": 20.3
     },
     "GFPT.BK": {
@@ -35,7 +35,7 @@
       "atr": 0.2172,
       "atr_stop": 9.76,
       "last_price": 9.949999809265137,
-      "last_div_check": "2026-08-31",
+      "last_div_check": "2026-09-01",
       "highest_close": 10.3
     },
     "SPRC.BK": {
@@ -46,9 +46,19 @@
       "entry_score": 2,
       "atr": 0.4415,
       "atr_stop": 11.8,
-      "last_price": 13.199999809265137,
-      "last_div_check": "2026-08-31",
+      "last_price": 12.899999618530273,
+      "last_div_check": "2026-09-01",
       "highest_close": 12.9
+    },
+    "PTT.BK": {
+      "name": "PTT",
+      "shares": 600,
+      "avg_cost": 41.5,
+      "entry_date": "2026-09-01",
+      "entry_score": 2,
+      "atr": 0.6827,
+      "atr_stop": 39.79,
+      "last_price": 41.5
     }
   },
   "trades": [
@@ -675,6 +685,19 @@
       "pnl": -404.58,
       "reason": "ATR stop ฿4.27 (-0.9%)",
       "time": "15:55"
+    },
+    {
+      "date": "2026-09-01",
+      "action": "BUY",
+      "ticker": "PTT.BK",
+      "name": "PTT",
+      "shares": 600,
+      "price": 41.5,
+      "value": 24900.0,
+      "avg_cost": 41.5,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "14:59"
     }
   ],
   "start_date": "2026-04-27",
