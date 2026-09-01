@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 228398.2351938868,
+  "cash": 256826.9851938868,
   "holdings": {
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -10,21 +10,9 @@
       "entry_score": 2,
       "atr": 1.0182,
       "atr_stop": 40.45,
-      "last_price": 42.25,
+      "last_price": 42.0,
       "last_div_check": "2026-09-01",
       "highest_close": 43.0
-    },
-    "TIDLOR.BK": {
-      "name": "TIDLOR",
-      "shares": 1500,
-      "avg_cost": 19.6,
-      "entry_date": "2026-08-10",
-      "entry_score": 2,
-      "atr": 0.4955,
-      "atr_stop": 19.06,
-      "last_price": 19.100000381469727,
-      "last_div_check": "2026-09-01",
-      "highest_close": 20.3
     },
     "GFPT.BK": {
       "name": "GFPT",
@@ -700,6 +688,19 @@
       "pnl": 0,
       "reason": "BUY",
       "time": "14:59"
+    },
+    {
+      "date": "2026-09-01",
+      "action": "SELL",
+      "ticker": "TIDLOR.BK",
+      "name": "TIDLOR",
+      "shares": 1500,
+      "price": 19.0,
+      "value": 28500.0,
+      "avg_cost": 19.6,
+      "pnl": -1044.75,
+      "reason": "ATR stop ฿19.06 (-3.1%)",
+      "time": "15:45"
     }
   ],
   "start_date": "2026-04-27",
