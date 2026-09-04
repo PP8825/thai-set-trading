@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 1.0182,
       "atr_stop": 40.45,
-      "last_price": 41.75,
-      "last_div_check": "2026-09-03",
+      "last_price": 42.75,
+      "last_div_check": "2026-09-04",
       "highest_close": 43.0
     },
     "GFPT.BK": {
@@ -20,11 +20,11 @@
       "avg_cost": 10.2,
       "entry_date": "2026-08-18",
       "entry_score": 4,
-      "atr": 0.2172,
-      "atr_stop": 9.76,
-      "last_price": 10.100000381469727,
-      "last_div_check": "2026-09-03",
-      "highest_close": 10.3
+      "atr": 0.2259,
+      "atr_stop": 9.84,
+      "last_price": 10.399999618530273,
+      "last_div_check": "2026-09-04",
+      "highest_close": 10.4
     },
     "SPRC.BK": {
       "name": "SPRC",
@@ -32,10 +32,10 @@
       "avg_cost": 12.2,
       "entry_date": "2026-08-19",
       "entry_score": 2,
-      "atr": 0.4861,
-      "atr_stop": 12.18,
-      "last_price": 13.0,
-      "last_div_check": "2026-09-03",
+      "atr": 0.4799,
+      "atr_stop": 12.2,
+      "last_price": 13.100000381469727,
+      "last_div_check": "2026-09-04",
       "highest_close": 13.4
     },
     "PTT.BK": {
@@ -46,8 +46,8 @@
       "entry_score": 2,
       "atr": 0.6827,
       "atr_stop": 39.79,
-      "last_price": 41.75,
-      "last_div_check": "2026-09-03",
+      "last_price": 41.5,
+      "last_div_check": "2026-09-04",
       "highest_close": 41.5
     }
   },
