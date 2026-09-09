@@ -10,7 +10,7 @@
       "entry_score": 2,
       "atr": 1.1368,
       "atr_stop": 41.66,
-      "last_price": 44.25,
+      "last_price": 44.0,
       "last_div_check": "2026-09-09",
       "highest_close": 44.5
     },
@@ -21,10 +21,10 @@
       "entry_date": "2026-08-18",
       "entry_score": 4,
       "atr": 0.235,
-      "atr_stop": 9.91,
-      "last_price": 10.5,
+      "atr_stop": 10.01,
+      "last_price": 10.600000381469727,
       "last_div_check": "2026-09-09",
-      "highest_close": 10.5
+      "highest_close": 10.6
     },
     "SPRC.BK": {
       "name": "SPRC",
@@ -33,10 +33,10 @@
       "entry_date": "2026-08-19",
       "entry_score": 2,
       "atr": 0.5063,
-      "atr_stop": 12.73,
-      "last_price": 14.0,
+      "atr_stop": 12.83,
+      "last_price": 14.100000381469727,
       "last_div_check": "2026-09-09",
-      "highest_close": 14.0
+      "highest_close": 14.1
     },
     "PTT.BK": {
       "name": "PTT",
@@ -45,10 +45,10 @@
       "entry_date": "2026-09-01",
       "entry_score": 2,
       "atr": 0.717,
-      "atr_stop": 40.46,
-      "last_price": 42.25,
+      "atr_stop": 40.71,
+      "last_price": 42.5,
       "last_div_check": "2026-09-09",
-      "highest_close": 42.25
+      "highest_close": 42.5
     }
   },
   "trades": [
