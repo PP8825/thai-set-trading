@@ -15,12 +15,12 @@
   "SCB.BK": {
     "score": -2,
     "signal": "SELL",
-    "price": 149.5,
+    "price": 149.0,
     "fund_score": 5.0,
     "comp_score": 3.8,
     "fund": {},
-    "vol_20d": 0.005345575551224064,
-    "avg_volume": 12422015.4,
+    "vol_20d": 0.0051616663750316295,
+    "avg_volume": 12424150.75,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-17"
@@ -28,36 +28,36 @@
   "TRUE.BK": {
     "score": 0,
     "signal": "HOLD",
-    "price": 13.100000381469727,
+    "price": 13.0,
     "fund_score": 5.0,
     "comp_score": 5.0,
     "fund": {},
-    "vol_20d": 0.009815087047531581,
-    "avg_volume": 96675866.95,
+    "vol_20d": 0.009925921317026078,
+    "avg_volume": 97014897.95,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-30"
   },
   "PTT.BK": {
-    "score": 2,
+    "score": 3,
     "signal": "BUY",
-    "price": 42.25,
-    "fund_score": 6.8,
-    "comp_score": 6.92,
+    "price": 42.0,
+    "fund_score": 7.4,
+    "comp_score": 7.76,
     "fund": {
-      "pe": 9.735023,
-      "pbv": 1.002111,
+      "pe": 9.677419,
+      "pbv": 0.9961813,
       "roe": 0.10313,
       "div_yld": 4.97,
       "has_div": true,
       "ex_div_date": "2026-03-05",
       "de_ratio": 0.58869,
       "eps_growth": 1.457,
-      "fcf_yield": 0.03270068586714239,
+      "fcf_yield": 0.032895335037223056,
       "avg_volume": 102029820
     },
-    "vol_20d": 0.010470670876357021,
-    "avg_volume": 107240923.85,
+    "vol_20d": 0.0106637616622925,
+    "avg_volume": 107597342.8,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -70,7 +70,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.01054459994173826,
-    "avg_volume": 23604032.7,
+    "avg_volume": 23609554.25,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-13"
@@ -78,12 +78,12 @@
   "DELTA.BK": {
     "score": 1,
     "signal": "WATCH",
-    "price": 269.0,
+    "price": 268.0,
     "fund_score": 5.0,
     "comp_score": 5.6,
     "fund": {},
-    "vol_20d": 0.027569732998773282,
-    "avg_volume": 16658519.8,
+    "vol_20d": 0.027612133014735557,
+    "avg_volume": 16674649.2,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-07"
@@ -96,7 +96,7 @@
     "comp_score": 5.6,
     "fund": {},
     "vol_20d": 0.009916857961607106,
-    "avg_volume": 10491840.1,
+    "avg_volume": 10497759.95,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-10"
@@ -104,12 +104,12 @@
   "BH.BK": {
     "score": 1,
     "signal": "WATCH",
-    "price": 197.5,
+    "price": 198.0,
     "fund_score": 5.0,
     "comp_score": 5.6,
     "fund": {},
-    "vol_20d": 0.014610700371279258,
-    "avg_volume": 4538263.2,
+    "vol_20d": 0.014640423978742627,
+    "avg_volume": 4544324.8,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-26"
@@ -122,7 +122,7 @@
     "comp_score": 4.4,
     "fund": {},
     "vol_20d": 0.011096080704026743,
-    "avg_volume": 5214155.4,
+    "avg_volume": 5216958.15,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-17"
@@ -130,12 +130,12 @@
   "GULF.BK": {
     "score": -2,
     "signal": "SELL",
-    "price": 62.25,
+    "price": 62.0,
     "fund_score": 5.0,
     "comp_score": 3.8,
     "fund": {},
-    "vol_20d": 0.009690810369775966,
-    "avg_volume": 37088191.0,
+    "vol_20d": 0.009856995108320428,
+    "avg_volume": 37111310.6,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-07"
@@ -143,12 +143,12 @@
   "BBL.BK": {
     "score": 0,
     "signal": "HOLD",
-    "price": 190.5,
+    "price": 190.0,
     "fund_score": 5.0,
     "comp_score": 5.0,
     "fund": {},
-    "vol_20d": 0.0057611336085912224,
-    "avg_volume": 9375953.9,
+    "vol_20d": 0.0057344987308587106,
+    "avg_volume": 9381295.3,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-17"
@@ -156,12 +156,12 @@
   "MINT.BK": {
     "score": 0,
     "signal": "HOLD",
-    "price": 22.100000381469727,
+    "price": 22.200000762939453,
     "fund_score": 5.0,
     "comp_score": 5.0,
     "fund": {},
-    "vol_20d": 0.007833592377872466,
-    "avg_volume": 20112778.85,
+    "vol_20d": 0.007944278963511037,
+    "avg_volume": 20117040.6,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-06-29"
@@ -185,7 +185,7 @@
       "avg_volume": 36379245
     },
     "vol_20d": 0.031911275337606335,
-    "avg_volume": 48435952.1,
+    "avg_volume": 48444172.7,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -209,7 +209,7 @@
       "avg_volume": 35084812
     },
     "vol_20d": 0.028476136727790532,
-    "avg_volume": 36867204.3,
+    "avg_volume": 36885656.6,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -233,7 +233,7 @@
       "avg_volume": 19416186
     },
     "vol_20d": 0.009842576666756826,
-    "avg_volume": 16103870.55,
+    "avg_volume": 16110689.85,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -257,7 +257,7 @@
       "avg_volume": 22931860
     },
     "vol_20d": 0.031211490417464943,
-    "avg_volume": 27448801.7,
+    "avg_volume": 27508947.9,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -281,7 +281,7 @@
       "avg_volume": 152006417
     },
     "vol_20d": 0.0340445647349799,
-    "avg_volume": 153043729.8,
+    "avg_volume": 153424904.0,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -289,23 +289,23 @@
   "RATCH.BK": {
     "score": 2,
     "signal": "BUY",
-    "price": 38.0,
+    "price": 37.75,
     "fund_score": 4.2,
     "comp_score": 5.88,
     "fund": {
-      "pe": 14.84375,
-      "pbv": 0.82068115,
+      "pe": 14.746094,
+      "pbv": 0.8152819,
       "roe": 0.06091,
       "div_yld": 3.66,
       "has_div": true,
       "ex_div_date": "2026-09-08",
       "de_ratio": 1.00332,
       "eps_growth": -0.32,
-      "fcf_yield": -0.06375310210650849,
+      "fcf_yield": -0.06417530976571667,
       "avg_volume": 7198678
     },
-    "vol_20d": 0.018941759665497368,
-    "avg_volume": 6086683.3,
+    "vol_20d": 0.019106625750797687,
+    "avg_volume": 6107866.95,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -313,23 +313,23 @@
   "BANPU.BK": {
     "score": 2,
     "signal": "BUY",
-    "price": 15.300000190734863,
+    "price": 15.399999618530273,
     "fund_score": 4.7,
     "comp_score": 6.08,
     "fund": {
-      "pe": 5.604396,
-      "pbv": 1.2485951,
+      "pe": 5.6410255,
+      "pbv": 1.2567558,
       "roe": 0.03342,
       "div_yld": 5.48,
       "has_div": true,
       "ex_div_date": "2026-09-11",
       "de_ratio": 1.44959,
       "eps_growth": null,
-      "fcf_yield": -0.006501795090409202,
+      "fcf_yield": -0.006459575932843326,
       "avg_volume": 2634864
     },
-    "vol_20d": 0.05877716797534224,
-    "avg_volume": 5752436.8,
+    "vol_20d": 0.05900448696839692,
+    "avg_volume": 5760843.9,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -361,12 +361,12 @@
   "GPSC.BK": {
     "score": -1,
     "signal": "WATCH",
-    "price": 50.25,
+    "price": 50.5,
     "fund_score": 5.0,
     "comp_score": 4.4,
     "fund": {},
-    "vol_20d": 0.021107616122115508,
-    "avg_volume": 10563911.1,
+    "vol_20d": 0.02088499423093699,
+    "avg_volume": 10565881.85,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-02"
@@ -390,7 +390,7 @@
       "avg_volume": 31839564
     },
     "vol_20d": 0.038231925382652986,
-    "avg_volume": 33273865.25,
+    "avg_volume": 33309497.3,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -414,7 +414,7 @@
       "avg_volume": 1536454
     },
     "vol_20d": 0.013005919463257225,
-    "avg_volume": 1149653.9,
+    "avg_volume": 1149653.95,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -427,7 +427,7 @@
     "comp_score": 3.2,
     "fund": {},
     "vol_20d": 0.01758686808195743,
-    "avg_volume": 10964162.0,
+    "avg_volume": 10970857.05,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-11"
@@ -440,7 +440,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.010573918227795276,
-    "avg_volume": 30976770.05,
+    "avg_volume": 30978683.4,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-18"
@@ -448,12 +448,12 @@
   "CRC.BK": {
     "score": 1,
     "signal": "WATCH",
-    "price": 29.0,
+    "price": 28.75,
     "fund_score": 5.0,
     "comp_score": 5.6,
     "fund": {},
-    "vol_20d": 0.038695164988099884,
-    "avg_volume": 16353557.15,
+    "vol_20d": 0.03900108754101216,
+    "avg_volume": 16359163.6,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-26"
@@ -461,12 +461,12 @@
   "COM7.BK": {
     "score": -2,
     "signal": "SELL",
-    "price": 29.25,
+    "price": 29.0,
     "fund_score": 5.0,
     "comp_score": 3.8,
     "fund": {},
-    "vol_20d": 0.026866626857394146,
-    "avg_volume": 9782084.2,
+    "vol_20d": 0.02691898443192833,
+    "avg_volume": 9782744.2,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-04"
@@ -479,7 +479,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.016335099294794802,
-    "avg_volume": 13020549.6,
+    "avg_volume": 13023819.8,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-18"
@@ -503,7 +503,7 @@
       "avg_volume": 9426004
     },
     "vol_20d": 0.02815352308421801,
-    "avg_volume": 11660790.35,
+    "avg_volume": 11672341.4,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -511,12 +511,12 @@
   "TU.BK": {
     "score": 0,
     "signal": "HOLD",
-    "price": 12.699999809265137,
+    "price": 12.800000190734863,
     "fund_score": 5.0,
     "comp_score": 5.0,
     "fund": {},
-    "vol_20d": 0.015926569079928152,
-    "avg_volume": 12357948.5,
+    "vol_20d": 0.015847494890660747,
+    "avg_volume": 12359464.0,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-03"
@@ -529,44 +529,44 @@
     "comp_score": 5.6,
     "fund": {},
     "vol_20d": 0.01892990439252956,
-    "avg_volume": 6690440.95,
+    "avg_volume": 6690476.2,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-26"
   },
   "GFPT.BK": {
-    "score": 2,
+    "score": 3,
     "signal": "BUY",
-    "price": 10.699999809265137,
+    "price": 10.600000381469727,
     "fund_score": 7.9,
-    "comp_score": 7.36,
+    "comp_score": 7.96,
     "fund": {
-      "pe": 5.879121,
-      "pbv": 0.5988024,
+      "pe": 5.824176,
+      "pbv": 0.59320617,
       "roe": 0.10637,
       "div_yld": 1.9,
       "has_div": true,
       "ex_div_date": "2026-03-04",
       "de_ratio": 0.17337,
       "eps_growth": -0.065,
-      "fcf_yield": 0.06118606623694324,
+      "fcf_yield": 0.06176329109769337,
       "avg_volume": 3906516
     },
-    "vol_20d": 0.018965822355397212,
-    "avg_volume": 4461925.55,
+    "vol_20d": 0.01871470467120156,
+    "avg_volume": 4462805.55,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
   },
   "MTC.BK": {
-    "score": -2,
+    "score": -3,
     "signal": "SELL",
-    "price": 30.0,
+    "price": 30.25,
     "fund_score": 5.0,
-    "comp_score": 3.8,
+    "comp_score": 3.2,
     "fund": {},
-    "vol_20d": 0.01290149199178218,
-    "avg_volume": 11801043.2,
+    "vol_20d": 0.013228819214138906,
+    "avg_volume": 11803504.0,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-17"
@@ -579,7 +579,7 @@
     "comp_score": 5.6,
     "fund": {},
     "vol_20d": 0.017029915829574083,
-    "avg_volume": 29063529.0,
+    "avg_volume": 29105674.75,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-09"
@@ -592,7 +592,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.01662359361156858,
-    "avg_volume": 11449811.6,
+    "avg_volume": 11454855.6,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-17"
@@ -616,7 +616,7 @@
       "avg_volume": 12798385
     },
     "vol_20d": 0.01666408207775478,
-    "avg_volume": 10974715.6,
+    "avg_volume": 11040370.65,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -624,12 +624,12 @@
   "KTB.BK": {
     "score": 1,
     "signal": "WATCH",
-    "price": 44.0,
+    "price": 43.75,
     "fund_score": 5.0,
     "comp_score": 5.6,
     "fund": {},
-    "vol_20d": 0.009282481922925382,
-    "avg_volume": 46556075.9,
+    "vol_20d": 0.00879253565225245,
+    "avg_volume": 46568261.0,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-10"
@@ -637,12 +637,12 @@
   "TTB.BK": {
     "score": 3,
     "signal": "BUY",
-    "price": 2.9600000381469727,
+    "price": 2.940000057220459,
     "fund_score": 5.3,
     "comp_score": 6.92,
     "fund": {
-      "pe": 12.869565,
-      "pbv": 1.1671925,
+      "pe": 12.782609,
+      "pbv": 1.159306,
       "roe": 0.08997,
       "div_yld": 5.59,
       "has_div": true,
@@ -652,8 +652,8 @@
       "fcf_yield": null,
       "avg_volume": 529543868
     },
-    "vol_20d": 0.016392070379207417,
-    "avg_volume": 866202359.1,
+    "vol_20d": 0.01599829944496554,
+    "avg_volume": 866521986.8,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -666,7 +666,7 @@
     "comp_score": 3.2,
     "fund": {},
     "vol_20d": 0.007855659072664294,
-    "avg_volume": 3168539.75,
+    "avg_volume": 3170380.95,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-08"
@@ -679,7 +679,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.013582528575641439,
-    "avg_volume": 25944286.65,
+    "avg_volume": 25945704.2,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-26"
@@ -687,23 +687,23 @@
   "THRE.BK": {
     "score": 3,
     "signal": "BUY",
-    "price": 0.6499999761581421,
+    "price": 0.6399999856948853,
     "fund_score": 4.7,
     "comp_score": 6.68,
     "fund": {
-      "pe": 16.25,
-      "pbv": 0.7206208,
+      "pe": 16.0,
+      "pbv": 0.70953435,
       "roe": 0.04336,
       "div_yld": 0.0,
       "has_div": false,
       "ex_div_date": "2021-04-29",
       "de_ratio": 0.0027800000000000004,
       "eps_growth": 0.197,
-      "fcf_yield": 0.31427968611490814,
+      "fcf_yield": 0.31919030015226596,
       "avg_volume": 9558540
     },
-    "vol_20d": 0.09027848004444948,
-    "avg_volume": 27667195.7,
+    "vol_20d": 0.09081943095373043,
+    "avg_volume": 27831495.7,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -716,7 +716,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.015541867720286078,
-    "avg_volume": 1795274.6,
+    "avg_volume": 1797010.1,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-17"
@@ -729,7 +729,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.01887037833046362,
-    "avg_volume": 18088293.2,
+    "avg_volume": 18090553.2,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-26"
@@ -753,7 +753,7 @@
       "avg_volume": 4608758
     },
     "vol_20d": 0.018829197662304027,
-    "avg_volume": 4808569.3,
+    "avg_volume": 4836444.3,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -766,7 +766,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.011231580912829773,
-    "avg_volume": 13533698.8,
+    "avg_volume": 13535533.8,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-17"
@@ -779,7 +779,7 @@
     "comp_score": 3.2,
     "fund": {},
     "vol_20d": 0.008717070922406868,
-    "avg_volume": 19246915.9,
+    "avg_volume": 19305177.7,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-06-22"
@@ -787,25 +787,25 @@
   "ITD.BK": {
     "score": 1,
     "signal": "WATCH",
-    "price": 0.3499999940395355,
+    "price": 0.3400000035762787,
     "fund_score": 5.0,
     "comp_score": 5.6,
     "fund": {},
-    "vol_20d": 0.02906174261407736,
-    "avg_volume": 8952339.55,
+    "vol_20d": 0.02984864132320357,
+    "avg_volume": 8952399.55,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-26"
   },
   "THAI.BK": {
-    "score": 1,
-    "signal": "WATCH",
-    "price": 5.900000095367432,
+    "score": 0,
+    "signal": "HOLD",
+    "price": 5.849999904632568,
     "fund_score": 5.0,
-    "comp_score": 5.6,
+    "comp_score": 5.0,
     "fund": {},
-    "vol_20d": 0.017232535259250042,
-    "avg_volume": 83907857.5,
+    "vol_20d": 0.016619955165448768,
+    "avg_volume": 83938506.95,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-06-16"
@@ -818,7 +818,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.01315972333197074,
-    "avg_volume": 1311024.45,
+    "avg_volume": 1311239.45,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-15"
@@ -831,7 +831,7 @@
     "comp_score": 5.0,
     "fund": {},
     "vol_20d": 0.012753966993531828,
-    "avg_volume": 6947769.2,
+    "avg_volume": 6958664.2,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-13"
@@ -844,7 +844,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.01741331470058053,
-    "avg_volume": 33009239.25,
+    "avg_volume": 33075245.5,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-24"
@@ -852,12 +852,12 @@
   "BTS.BK": {
     "score": -3,
     "signal": "SELL",
-    "price": 2.0399999618530273,
+    "price": 2.0199999809265137,
     "fund_score": 5.0,
     "comp_score": 3.2,
     "fund": {},
-    "vol_20d": 0.008465514043870087,
-    "avg_volume": 27983660.45,
+    "vol_20d": 0.008660907762935417,
+    "avg_volume": 27992215.45,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-18"
@@ -870,7 +870,7 @@
     "comp_score": 3.2,
     "fund": {},
     "vol_20d": 0.020971364498189864,
-    "avg_volume": 8541898.85,
+    "avg_volume": 8542023.85,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-25"
@@ -883,7 +883,7 @@
     "comp_score": 5.0,
     "fund": {},
     "vol_20d": 0.016156081420168198,
-    "avg_volume": 493601.55,
+    "avg_volume": 493601.6,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-26"
@@ -896,7 +896,7 @@
     "comp_score": 3.2,
     "fund": {},
     "vol_20d": 0.026772065249180046,
-    "avg_volume": 5403641.7,
+    "avg_volume": 5404316.9,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-21"
@@ -909,7 +909,7 @@
     "comp_score": 4.4,
     "fund": {},
     "vol_20d": 0.025391643394467,
-    "avg_volume": 8793032.5,
+    "avg_volume": 8809112.5,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-20"
@@ -922,7 +922,7 @@
     "comp_score": 5.6,
     "fund": {},
     "vol_20d": 0.01988874096355651,
-    "avg_volume": 10082806.9,
+    "avg_volume": 10121941.9,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-26"
@@ -946,20 +946,20 @@
       "avg_volume": 40173627
     },
     "vol_20d": 0.007568035730982103,
-    "avg_volume": 35321599.45,
+    "avg_volume": 35323250.3,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
   },
   "LH.BK": {
-    "score": -1,
-    "signal": "WATCH",
-    "price": 3.640000104904175,
+    "score": -3,
+    "signal": "SELL",
+    "price": 3.619999885559082,
     "fund_score": 5.0,
-    "comp_score": 4.4,
+    "comp_score": 3.2,
     "fund": {},
-    "vol_20d": 0.007639761533429473,
-    "avg_volume": 20309458.05,
+    "vol_20d": 0.007446194616009282,
+    "avg_volume": 20313827.2,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-17"
@@ -972,7 +972,7 @@
     "comp_score": 5.0,
     "fund": {},
     "vol_20d": 0.009638864768254438,
-    "avg_volume": 8589075.55,
+    "avg_volume": 8589854.05,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-07"
@@ -985,7 +985,7 @@
     "comp_score": 3.2,
     "fund": {},
     "vol_20d": 0.012192414860243887,
-    "avg_volume": 1527920.3,
+    "avg_volume": 1529170.3,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-30"
@@ -993,12 +993,12 @@
   "WHA.BK": {
     "score": 0,
     "signal": "HOLD",
-    "price": 4.78000020980835,
+    "price": 4.760000228881836,
     "fund_score": 5.0,
     "comp_score": 5.0,
     "fund": {},
-    "vol_20d": 0.013704902339612695,
-    "avg_volume": 101013536.15,
+    "vol_20d": 0.013800995307772231,
+    "avg_volume": 101075941.7,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-17"
@@ -1011,7 +1011,7 @@
     "comp_score": 4.4,
     "fund": {},
     "vol_20d": 0.00503622120878665,
-    "avg_volume": 2226610.6,
+    "avg_volume": 2226875.6,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-07"
@@ -1035,7 +1035,7 @@
       "avg_volume": 11026553
     },
     "vol_20d": 0.04065747229371846,
-    "avg_volume": 10443100.75,
+    "avg_volume": 10469680.25,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -1048,7 +1048,7 @@
     "comp_score": 5.0,
     "fund": {},
     "vol_20d": 0.011165978603399533,
-    "avg_volume": 1952960.4,
+    "avg_volume": 1952960.8,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-06-29"
@@ -1061,7 +1061,7 @@
     "comp_score": 2.6,
     "fund": {},
     "vol_20d": 0.011277937600583517,
-    "avg_volume": 918320.0,
+    "avg_volume": 919685.0,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-21"
@@ -1074,7 +1074,7 @@
     "comp_score": 3.2,
     "fund": {},
     "vol_20d": 0.01469619286423604,
-    "avg_volume": 169464.5,
+    "avg_volume": 169459.5,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-13"
@@ -1098,7 +1098,7 @@
       "avg_volume": 4248191
     },
     "vol_20d": 0.01570964542025507,
-    "avg_volume": 2031206.8,
+    "avg_volume": 2031677.8,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -1111,7 +1111,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.011798623521511873,
-    "avg_volume": 1730379.85,
+    "avg_volume": 1730960.1,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-16"
@@ -1124,31 +1124,20 @@
     "comp_score": 5.6,
     "fund": {},
     "vol_20d": 0.010194927826249216,
-    "avg_volume": 5911832.35,
+    "avg_volume": 5913722.4,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-31"
   },
   "ERW.BK": {
-    "score": 3,
-    "signal": "BUY",
-    "price": 3.859999895095825,
-    "fund_score": 3.7,
-    "comp_score": 6.28,
-    "fund": {
-      "pe": 21.444443,
-      "pbv": 2.0652754,
-      "roe": 0.09596,
-      "div_yld": 1.82,
-      "has_div": true,
-      "ex_div_date": "2026-03-10",
-      "de_ratio": 1.4738999999999998,
-      "eps_growth": 0.14,
-      "fcf_yield": -0.00266737309191001,
-      "avg_volume": 27140867
-    },
-    "vol_20d": 0.016503321542094624,
-    "avg_volume": 20768446.65,
+    "score": 1,
+    "signal": "WATCH",
+    "price": 3.819999933242798,
+    "fund_score": 5.0,
+    "comp_score": 5.6,
+    "fund": {},
+    "vol_20d": 0.016560281240713313,
+    "avg_volume": 20926216.65,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -1161,7 +1150,7 @@
     "comp_score": 5.6,
     "fund": {},
     "vol_20d": 0.021038346004965045,
-    "avg_volume": 8280686.95,
+    "avg_volume": 8284831.95,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-03"
@@ -1169,23 +1158,23 @@
   "PR9.BK": {
     "score": 3,
     "signal": "BUY",
-    "price": 19.5,
+    "price": 19.600000381469727,
     "fund_score": 5.3,
     "comp_score": 6.92,
     "fund": {
-      "pe": 18.93204,
-      "pbv": 2.552022,
+      "pe": 19.029127,
+      "pbv": 2.5651095,
       "roe": 0.1391,
       "div_yld": 2.59,
       "has_div": true,
       "ex_div_date": "2026-08-24",
       "de_ratio": 0.00231,
       "eps_growth": 0.013,
-      "fcf_yield": 0.00681963622601736,
+      "fcf_yield": 0.006784842214500547,
       "avg_volume": 3692777
     },
-    "vol_20d": 0.01234002347828974,
-    "avg_volume": 3665779.75,
+    "vol_20d": 0.012519973026078414,
+    "avg_volume": 3667589.75,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -1193,23 +1182,23 @@
   "BDMS.BK": {
     "score": 3,
     "signal": "BUY",
-    "price": 20.100000381469727,
+    "price": 20.0,
     "fund_score": 4.2,
     "comp_score": 6.48,
     "fund": {
-      "pe": 20.72165,
-      "pbv": 3.0937355,
+      "pe": 20.618557,
+      "pbv": 3.0783436,
       "roe": 0.14871,
       "div_yld": 3.79,
       "has_div": true,
       "ex_div_date": "2026-09-08",
       "de_ratio": 0.17787,
       "eps_growth": -0.069,
-      "fcf_yield": 0.022824833646331064,
+      "fcf_yield": 0.022938958897010097,
       "avg_volume": 78099167
     },
-    "vol_20d": 0.012801557920619403,
-    "avg_volume": 93900094.55,
+    "vol_20d": 0.012580610185535714,
+    "avg_volume": 93932927.35,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
@@ -1235,7 +1224,7 @@
     "comp_score": 4.4,
     "fund": {},
     "vol_20d": 0.03408507999120337,
-    "avg_volume": 142487806.15,
+    "avg_volume": 142544931.15,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-26"
@@ -1248,7 +1237,7 @@
     "comp_score": 5.0,
     "fund": {},
     "vol_20d": 0.008094400892241456,
-    "avg_volume": 66760.0,
+    "avg_volume": 66755.0,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-09"
@@ -1256,12 +1245,12 @@
   "PSH.BK": {
     "score": 0,
     "signal": "HOLD",
-    "price": 3.799999952316284,
+    "price": 3.7799999713897705,
     "fund_score": 5.0,
     "comp_score": 5.0,
     "fund": {},
-    "vol_20d": 0.013075765016484678,
-    "avg_volume": 908376.25,
+    "vol_20d": 0.013423609093221605,
+    "avg_volume": 911111.25,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-20"
@@ -1274,7 +1263,7 @@
     "comp_score": 5.6,
     "fund": {},
     "vol_20d": 0.023916253493198092,
-    "avg_volume": 2281930.0,
+    "avg_volume": 2281430.0,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-14"
@@ -1313,7 +1302,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.01383947815413107,
-    "avg_volume": 952564.15,
+    "avg_volume": 956919.15,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-11"
@@ -1326,7 +1315,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.015878648205917268,
-    "avg_volume": 6300200.35,
+    "avg_volume": 6301765.5,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-17"
@@ -1339,7 +1328,7 @@
     "comp_score": 3.8,
     "fund": {},
     "vol_20d": 0.11644209437672802,
-    "avg_volume": 2893201.4,
+    "avg_volume": 2893301.4,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": null
@@ -1347,12 +1336,12 @@
   "CPN.BK": {
     "score": -2,
     "signal": "SELL",
-    "price": 64.75,
+    "price": 65.0,
     "fund_score": 5.0,
     "comp_score": 3.8,
     "fund": {},
-    "vol_20d": 0.012370133578580465,
-    "avg_volume": 7757866.6,
+    "vol_20d": 0.012478494625154301,
+    "avg_volume": 7760246.6,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-07"
@@ -1365,7 +1354,7 @@
     "comp_score": 5.6,
     "fund": {},
     "vol_20d": 0.012650062163471691,
-    "avg_volume": 720810.0,
+    "avg_volume": 720820.0,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-07"
@@ -1373,12 +1362,12 @@
   "PLANB.BK": {
     "score": -1,
     "signal": "WATCH",
-    "price": 6.199999809265137,
+    "price": 6.150000095367432,
     "fund_score": 5.0,
     "comp_score": 4.4,
     "fund": {},
-    "vol_20d": 0.036966855188565795,
-    "avg_volume": 31300632.75,
+    "vol_20d": 0.03717481261401371,
+    "avg_volume": 31304752.75,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-31"
@@ -1402,19 +1391,19 @@
       "avg_volume": 30559651
     },
     "vol_20d": 0.03664892122120804,
-    "avg_volume": 31822429.55,
+    "avg_volume": 31828944.55,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-09-10"
   },
   "_last_reset_date": "2026-09-10",
-  "_check_count": 4,
+  "_check_count": 5,
   "_regime": {
     "regime": "BULL",
     "set_px": 1616.67,
     "ma200": 1406.01,
     "gap_pct": 14.98,
-    "updated": "2026-09-10 15:16"
+    "updated": "2026-09-10 15:31"
   },
   "_gap_alerted_date": "2026-09-09",
   "_fund_stale_alerted_date": "2026-09-09",
@@ -1440,7 +1429,7 @@
     "comp_score": 5.6,
     "fund": {},
     "vol_20d": 0.017791239615714795,
-    "avg_volume": 2054480.1,
+    "avg_volume": 2054410.1,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-08-26"
@@ -1453,7 +1442,7 @@
     "comp_score": 4.4,
     "fund": {},
     "vol_20d": 0.021948309543852997,
-    "avg_volume": 24592045.75,
+    "avg_volume": 24596955.75,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-06-19"
@@ -1466,7 +1455,7 @@
     "comp_score": 3.2,
     "fund": {},
     "vol_20d": 0.008629838831179924,
-    "avg_volume": 3972303.3,
+    "avg_volume": 3972308.3,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-17"
@@ -1487,12 +1476,12 @@
   "BTSGIF.BK": {
     "score": -2,
     "signal": "SELL",
-    "price": 2.119999885559082,
+    "price": 2.0999999046325684,
     "fund_score": 5.0,
     "comp_score": 3.8,
     "fund": {},
-    "vol_20d": 0.02171839738140887,
-    "avg_volume": 5204745.5,
+    "vol_20d": 0.021675406432195517,
+    "avg_volume": 5210295.5,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-05-08"
@@ -1500,12 +1489,12 @@
   "KGI.BK": {
     "score": -2,
     "signal": "SELL",
-    "price": 4.880000114440918,
+    "price": 4.900000095367432,
     "fund_score": 5.0,
     "comp_score": 3.8,
     "fund": {},
-    "vol_20d": 0.01073813750309606,
-    "avg_volume": 2952994.0,
+    "vol_20d": 0.010800345562531817,
+    "avg_volume": 2953934.05,
     "buy_alerted": false,
     "sell_alerted": false,
     "fund_fetched": "2026-07-30"
