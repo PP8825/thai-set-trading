@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 256826.9851938868,
+  "cash": 230060.2351938868,
   "holdings": {
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -49,6 +49,16 @@
       "last_price": 42.75,
       "last_div_check": "2026-09-15",
       "highest_close": 42.75
+    },
+    "KTB.BK": {
+      "name": "KTB",
+      "shares": 600,
+      "avg_cost": 44.5,
+      "entry_date": "2026-09-15",
+      "entry_score": 2,
+      "atr": 0.7967,
+      "atr_stop": 42.51,
+      "last_price": 44.5
     }
   },
   "trades": [
@@ -701,6 +711,19 @@
       "pnl": -1044.75,
       "reason": "ATR stop ฿19.06 (-3.1%)",
       "time": "15:45"
+    },
+    {
+      "date": "2026-09-15",
+      "action": "BUY",
+      "ticker": "KTB.BK",
+      "name": "KTB",
+      "shares": 600,
+      "price": 44.5,
+      "value": 26700.0,
+      "avg_cost": 44.5,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "15:17"
     }
   ],
   "start_date": "2026-04-27",
