@@ -11,7 +11,7 @@
       "atr": 1.0913,
       "atr_stop": 41.77,
       "last_price": 42.75,
-      "last_div_check": "2026-09-16",
+      "last_div_check": "2026-09-17",
       "highest_close": 44.5
     },
     "GFPT.BK": {
@@ -22,8 +22,8 @@
       "entry_score": 4,
       "atr": 0.2256,
       "atr_stop": 10.14,
-      "last_price": 10.5,
-      "last_div_check": "2026-09-16",
+      "last_price": 10.699999809265137,
+      "last_div_check": "2026-09-17",
       "highest_close": 10.7
     },
     "SPRC.BK": {
@@ -34,8 +34,8 @@
       "entry_score": 2,
       "atr": 0.5014,
       "atr_stop": 12.85,
-      "last_price": 13.399999618530273,
-      "last_div_check": "2026-09-16",
+      "last_price": 13.699999809265137,
+      "last_div_check": "2026-09-17",
       "highest_close": 14.1
     },
     "PTT.BK": {
@@ -44,10 +44,10 @@
       "avg_cost": 41.5,
       "entry_date": "2026-09-01",
       "entry_score": 2,
-      "atr": 0.7083,
-      "atr_stop": 40.98,
-      "last_price": 42.0,
-      "last_div_check": "2026-09-16",
+      "atr": 0.6934,
+      "atr_stop": 41.02,
+      "last_price": 42.5,
+      "last_div_check": "2026-09-17",
       "highest_close": 42.75
     },
     "KTB.BK": {
@@ -56,11 +56,11 @@
       "avg_cost": 44.5,
       "entry_date": "2026-09-15",
       "entry_score": 2,
-      "atr": 0.7933,
-      "atr_stop": 42.52,
-      "last_price": 44.5,
-      "last_div_check": "2026-09-16",
-      "highest_close": 44.5
+      "atr": 0.7902,
+      "atr_stop": 43.02,
+      "last_price": 45.0,
+      "last_div_check": "2026-09-17",
+      "highest_close": 45.0
     }
   },
   "trades": [
