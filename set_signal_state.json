@@ -1375,13 +1375,13 @@
     "fund_fetched": "2026-09-10"
   },
   "_last_reset_date": "2026-09-22",
-  "_check_count": 1,
+  "_check_count": 2,
   "_regime": {
     "regime": "BULL",
     "set_px": null,
     "ma200": null,
     "gap_pct": 0.0,
-    "updated": "2026-09-22 10:00"
+    "updated": "2026-09-22 10:15"
   },
   "_gap_alerted_date": "2026-09-21",
   "_fund_stale_alerted_date": "2026-09-21",
