@@ -10,7 +10,7 @@
       "entry_score": 2,
       "atr": 1.0913,
       "atr_stop": 41.77,
-      "last_price": 44.5,
+      "last_price": 44.25,
       "last_div_check": "2026-09-22",
       "highest_close": 44.5
     },
@@ -34,7 +34,7 @@
       "entry_score": 2,
       "atr": 0.5341,
       "atr_stop": 13.06,
-      "last_price": 14.199999809265137,
+      "last_price": 14.100000381469727,
       "last_div_check": "2026-09-22",
       "highest_close": 14.4
     },
@@ -46,7 +46,7 @@
       "entry_score": 2,
       "atr": 0.6549,
       "atr_stop": 41.11,
-      "last_price": 42.25,
+      "last_price": 42.0,
       "last_div_check": "2026-09-22",
       "highest_close": 42.75
     },
@@ -58,7 +58,7 @@
       "entry_score": 2,
       "atr": 0.7731,
       "atr_stop": 43.57,
-      "last_price": 45.0,
+      "last_price": 45.25,
       "last_div_check": "2026-09-22",
       "highest_close": 45.5
     }
