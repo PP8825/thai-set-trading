@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 230060.2351938868,
+  "cash": 230348.2351938868,
   "holdings": {
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 1.0913,
       "atr_stop": 41.77,
-      "last_price": 43.25,
-      "last_div_check": "2026-09-21",
+      "last_price": 43.5,
+      "last_div_check": "2026-09-22",
       "highest_close": 44.5
     },
     "GFPT.BK": {
@@ -23,7 +23,7 @@
       "atr": 0.258,
       "atr_stop": 10.55,
       "last_price": 11.100000381469727,
-      "last_div_check": "2026-09-21",
+      "last_div_check": "2026-09-22",
       "highest_close": 11.2
     },
     "SPRC.BK": {
@@ -34,8 +34,8 @@
       "entry_score": 2,
       "atr": 0.5444,
       "atr_stop": 13.04,
-      "last_price": 14.399999618530273,
-      "last_div_check": "2026-09-21",
+      "last_price": 14.199999809265137,
+      "last_div_check": "2026-09-22",
       "highest_close": 14.4
     },
     "PTT.BK": {
@@ -47,7 +47,7 @@
       "atr": 0.6668,
       "atr_stop": 41.08,
       "last_price": 42.0,
-      "last_div_check": "2026-09-21",
+      "last_div_check": "2026-09-22",
       "highest_close": 42.75
     },
     "KTB.BK": {
@@ -56,10 +56,10 @@
       "avg_cost": 44.5,
       "entry_date": "2026-09-15",
       "entry_score": 2,
-      "atr": 0.8025,
-      "atr_stop": 43.49,
-      "last_price": 45.25,
-      "last_div_check": "2026-09-21",
+      "atr": 0.7941,
+      "atr_stop": 43.51,
+      "last_price": 45.02000045776367,
+      "last_div_check": "2026-09-22",
       "highest_close": 45.5
     }
   },
@@ -726,6 +726,19 @@
       "pnl": 0,
       "reason": "BUY",
       "time": "15:17"
+    },
+    {
+      "date": "2026-09-22",
+      "action": "DIVIDEND",
+      "ticker": "KTB.BK",
+      "name": "KTB",
+      "shares": 600,
+      "price": 0.48,
+      "value": 288.0,
+      "avg_cost": 44.5,
+      "pnl": 288.0,
+      "reason": "Dividend ฿0.4800/share",
+      "time": "10:00"
     }
   ],
   "start_date": "2026-04-27",
