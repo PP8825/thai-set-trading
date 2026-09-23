@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 230348.2351938868,
+  "cash": 230636.2351938868,
   "holdings": {
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -8,11 +8,11 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.0913,
-      "atr_stop": 41.77,
-      "last_price": 44.5,
-      "last_div_check": "2026-09-22",
-      "highest_close": 44.5
+      "atr": 1.2377,
+      "atr_stop": 41.91,
+      "last_price": 45.0,
+      "last_div_check": "2026-09-23",
+      "highest_close": 45.0
     },
     "GFPT.BK": {
       "name": "GFPT",
@@ -23,7 +23,7 @@
       "atr": 0.258,
       "atr_stop": 10.55,
       "last_price": 10.899999618530273,
-      "last_div_check": "2026-09-22",
+      "last_div_check": "2026-09-23",
       "highest_close": 11.2
     },
     "SPRC.BK": {
@@ -32,10 +32,10 @@
       "avg_cost": 12.2,
       "entry_date": "2026-08-19",
       "entry_score": 2,
-      "atr": 0.5341,
-      "atr_stop": 13.06,
-      "last_price": 14.0,
-      "last_div_check": "2026-09-22",
+      "atr": 0.5174,
+      "atr_stop": 13.11,
+      "last_price": 13.899999618530273,
+      "last_div_check": "2026-09-23",
       "highest_close": 14.4
     },
     "PTT.BK": {
@@ -44,10 +44,10 @@
       "avg_cost": 41.5,
       "entry_date": "2026-09-01",
       "entry_score": 2,
-      "atr": 0.6549,
-      "atr_stop": 41.11,
-      "last_price": 42.0,
-      "last_div_check": "2026-09-22",
+      "atr": 0.6438,
+      "atr_stop": 41.14,
+      "last_price": 41.75,
+      "last_div_check": "2026-09-23",
       "highest_close": 42.75
     },
     "KTB.BK": {
@@ -59,7 +59,7 @@
       "atr": 0.7731,
       "atr_stop": 43.57,
       "last_price": 45.0,
-      "last_div_check": "2026-09-22",
+      "last_div_check": "2026-09-23",
       "highest_close": 45.5
     }
   },
@@ -739,6 +739,19 @@
       "pnl": 288.0,
       "reason": "Dividend ฿0.4800/share",
       "time": "10:00"
+    },
+    {
+      "date": "2026-09-22",
+      "action": "DIVIDEND",
+      "ticker": "KTB.BK",
+      "name": "KTB",
+      "shares": 600,
+      "price": 0.48,
+      "value": 288.0,
+      "avg_cost": 44.5,
+      "pnl": 288.0,
+      "reason": "Dividend ฿0.4800/share",
+      "time": "14:59"
     }
   ],
   "start_date": "2026-04-27",
