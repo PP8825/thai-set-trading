@@ -10,7 +10,7 @@
       "entry_score": 2,
       "atr": 1.2377,
       "atr_stop": 41.91,
-      "last_price": 44.0,
+      "last_price": 43.75,
       "last_div_check": "2026-09-24",
       "highest_close": 45.0
     },
@@ -32,11 +32,11 @@
       "avg_cost": 12.2,
       "entry_date": "2026-08-19",
       "entry_score": 2,
-      "atr": 0.5174,
-      "atr_stop": 13.11,
-      "last_price": 14.399999618530273,
+      "atr": 0.5289,
+      "atr_stop": 13.28,
+      "last_price": 14.600000381469727,
       "last_div_check": "2026-09-24",
-      "highest_close": 14.4
+      "highest_close": 14.6
     },
     "PTT.BK": {
       "name": "PTT",
@@ -46,7 +46,7 @@
       "entry_score": 2,
       "atr": 0.6871,
       "atr_stop": 41.53,
-      "last_price": 43.25,
+      "last_price": 43.0,
       "last_div_check": "2026-09-24",
       "highest_close": 43.25
     },
