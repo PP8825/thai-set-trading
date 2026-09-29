@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 230636.2351938868,
+  "cash": 229003.4840466166,
   "holdings": {
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 1.188,
       "atr_stop": 42.03,
-      "last_price": 44.5,
-      "last_div_check": "2026-09-28",
+      "last_price": 44.25,
+      "last_div_check": "2026-09-29",
       "highest_close": 45.0
     },
     "GFPT.BK": {
@@ -20,10 +20,10 @@
       "avg_cost": 10.2,
       "entry_date": "2026-08-18",
       "entry_score": 4,
-      "atr": 0.2546,
-      "atr_stop": 10.56,
+      "atr": 0.2465,
+      "atr_stop": 10.58,
       "last_price": 10.899999618530273,
-      "last_div_check": "2026-09-28",
+      "last_div_check": "2026-09-29",
       "highest_close": 11.2
     },
     "SPRC.BK": {
@@ -34,8 +34,8 @@
       "entry_score": 2,
       "atr": 0.5197,
       "atr_stop": 13.3,
-      "last_price": 14.5,
-      "last_div_check": "2026-09-28",
+      "last_price": 14.600000381469727,
+      "last_div_check": "2026-09-29",
       "highest_close": 14.6
     },
     "PTT.BK": {
@@ -46,21 +46,19 @@
       "entry_score": 2,
       "atr": 0.6871,
       "atr_stop": 41.53,
-      "last_price": 42.5,
-      "last_div_check": "2026-09-28",
+      "last_price": 42.0,
+      "last_div_check": "2026-09-29",
       "highest_close": 43.25
     },
-    "KTB.BK": {
-      "name": "KTB",
-      "shares": 600,
-      "avg_cost": 44.5,
-      "entry_date": "2026-09-15",
+    "CK.BK": {
+      "name": "CK",
+      "shares": 1500,
+      "avg_cost": 18.2,
+      "entry_date": "2026-09-29",
       "entry_score": 2,
-      "atr": 0.752,
-      "atr_stop": 43.62,
-      "last_price": 43.75,
-      "last_div_check": "2026-09-28",
-      "highest_close": 45.5
+      "atr": 0.4388,
+      "atr_stop": 17.1,
+      "last_price": 18.200000762939453
     }
   },
   "trades": [
@@ -752,6 +750,32 @@
       "pnl": 288.0,
       "reason": "Dividend ฿0.4800/share",
       "time": "14:59"
+    },
+    {
+      "date": "2026-09-29",
+      "action": "SELL",
+      "ticker": "KTB.BK",
+      "name": "KTB",
+      "shares": 600,
+      "price": 43.0,
+      "value": 25800.0,
+      "avg_cost": 44.5,
+      "pnl": -1031.25,
+      "reason": "ATR stop ฿43.62 (-3.4%)",
+      "time": "16:07"
+    },
+    {
+      "date": "2026-09-29",
+      "action": "BUY",
+      "ticker": "CK.BK",
+      "name": "CK",
+      "shares": 1500,
+      "price": 18.2,
+      "value": 27300.0,
+      "avg_cost": 18.2,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "16:07"
     }
   ],
   "start_date": "2026-04-27",
