@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 229003.4840466166,
+  "cash": 253541.9840466166,
   "holdings": {
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 1.188,
       "atr_stop": 42.03,
-      "last_price": 44.5,
-      "last_div_check": "2026-09-29",
+      "last_price": 43.75,
+      "last_div_check": "2026-09-30",
       "highest_close": 45.0
     },
     "GFPT.BK": {
@@ -22,8 +22,8 @@
       "entry_score": 4,
       "atr": 0.2465,
       "atr_stop": 10.58,
-      "last_price": 10.699999809265137,
-      "last_div_check": "2026-09-29",
+      "last_price": 10.600000381469727,
+      "last_div_check": "2026-09-30",
       "highest_close": 11.2
     },
     "SPRC.BK": {
@@ -34,21 +34,9 @@
       "entry_score": 2,
       "atr": 0.5197,
       "atr_stop": 13.3,
-      "last_price": 14.5,
-      "last_div_check": "2026-09-29",
+      "last_price": 14.300000190734863,
+      "last_div_check": "2026-09-30",
       "highest_close": 14.6
-    },
-    "PTT.BK": {
-      "name": "PTT",
-      "shares": 600,
-      "avg_cost": 41.5,
-      "entry_date": "2026-09-01",
-      "entry_score": 2,
-      "atr": 0.6871,
-      "atr_stop": 41.53,
-      "last_price": 42.0,
-      "last_div_check": "2026-09-29",
-      "highest_close": 43.25
     },
     "CK.BK": {
       "name": "CK",
@@ -58,8 +46,8 @@
       "entry_score": 2,
       "atr": 0.446,
       "atr_stop": 17.29,
-      "last_price": 18.299999237060547,
-      "last_div_check": "2026-09-29",
+      "last_price": 18.399999618530273,
+      "last_div_check": "2026-09-30",
       "highest_close": 18.4
     }
   },
@@ -778,6 +766,19 @@
       "pnl": 0,
       "reason": "BUY",
       "time": "16:07"
+    },
+    {
+      "date": "2026-09-30",
+      "action": "SELL",
+      "ticker": "PTT.BK",
+      "name": "PTT",
+      "shares": 600,
+      "price": 41.0,
+      "value": 24600.0,
+      "avg_cost": 41.5,
+      "pnl": -423.75,
+      "reason": "ATR stop ฿41.53 (-1.2%)",
+      "time": "16:02"
     }
   ],
   "start_date": "2026-04-27",
