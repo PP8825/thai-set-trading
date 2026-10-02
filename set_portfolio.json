@@ -22,9 +22,9 @@
       "entry_score": 4,
       "atr": 0.2465,
       "atr_stop": 10.58,
-      "last_price": 11.199999809265137,
+      "last_price": 11.300000190734863,
       "last_div_check": "2026-10-02",
-      "highest_close": 11.2
+      "highest_close": 11.3
     },
     "SPRC.BK": {
       "name": "SPRC",
@@ -46,7 +46,7 @@
       "entry_score": 2,
       "atr": 0.457,
       "atr_stop": 17.36,
-      "last_price": 18.0,
+      "last_price": 18.100000381469727,
       "last_div_check": "2026-10-02",
       "highest_close": 18.5
     }
