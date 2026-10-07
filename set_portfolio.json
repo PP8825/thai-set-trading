@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 253541.9840466166,
+  "cash": 284624.0833236361,
   "holdings": {
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 1.188,
       "atr_stop": 42.03,
-      "last_price": 43.5,
-      "last_div_check": "2026-10-06",
+      "last_price": 43.75,
+      "last_div_check": "2026-10-07",
       "highest_close": 45.0
     },
     "GFPT.BK": {
@@ -20,23 +20,11 @@
       "avg_cost": 10.2,
       "entry_date": "2026-08-18",
       "entry_score": 4,
-      "atr": 0.2913,
-      "atr_stop": 10.77,
+      "atr": 0.2848,
+      "atr_stop": 10.79,
       "last_price": 11.5,
-      "last_div_check": "2026-10-06",
+      "last_div_check": "2026-10-07",
       "highest_close": 11.5
-    },
-    "SPRC.BK": {
-      "name": "SPRC",
-      "shares": 1900,
-      "avg_cost": 12.2,
-      "entry_date": "2026-08-19",
-      "entry_score": 2,
-      "atr": 0.5942,
-      "atr_stop": 14.11,
-      "last_price": 15.699999809265137,
-      "last_div_check": "2026-10-06",
-      "highest_close": 15.6
     },
     "CK.BK": {
       "name": "CK",
@@ -44,10 +32,10 @@
       "avg_cost": 18.2,
       "entry_date": "2026-09-29",
       "entry_score": 2,
-      "atr": 0.457,
-      "atr_stop": 17.36,
+      "atr": 0.4462,
+      "atr_stop": 17.38,
       "last_price": 18.100000381469727,
-      "last_div_check": "2026-10-06",
+      "last_div_check": "2026-10-07",
       "highest_close": 18.5
     }
   },
@@ -779,6 +767,19 @@
       "pnl": -423.75,
       "reason": "ATR stop ฿41.53 (-1.2%)",
       "time": "16:02"
+    },
+    {
+      "date": "2026-10-07",
+      "action": "SELL",
+      "ticker": "SPRC.BK",
+      "name": "SPRC",
+      "shares": 1900,
+      "price": 16.4,
+      "value": 31160.0,
+      "avg_cost": 12.2,
+      "pnl": 7844.15,
+      "reason": "Take-profit +34.4% (target 30%)",
+      "time": "16:23"
     }
   ],
   "start_date": "2026-04-27",
