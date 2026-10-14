@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 284624.0833236361,
+  "cash": 295170.207752862,
   "holdings": {
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 1.188,
       "atr_stop": 42.03,
-      "last_price": 44.0,
-      "last_div_check": "2026-10-07",
+      "last_price": 43.0,
+      "last_div_check": "2026-10-14",
       "highest_close": 45.0
     },
     "GFPT.BK": {
@@ -20,23 +20,21 @@
       "avg_cost": 10.2,
       "entry_date": "2026-08-18",
       "entry_score": 4,
-      "atr": 0.2848,
-      "atr_stop": 10.79,
+      "atr": 0.2631,
+      "atr_stop": 10.84,
       "last_price": 11.199999809265137,
-      "last_div_check": "2026-10-07",
+      "last_div_check": "2026-10-14",
       "highest_close": 11.5
     },
-    "CK.BK": {
-      "name": "CK",
-      "shares": 1500,
-      "avg_cost": 18.2,
-      "entry_date": "2026-09-29",
+    "PTTEP.BK": {
+      "name": "PTTEP",
+      "shares": 100,
+      "avg_cost": 154.5,
+      "entry_date": "2026-10-14",
       "entry_score": 2,
-      "atr": 0.4462,
-      "atr_stop": 17.38,
-      "last_price": 17.299999237060547,
-      "last_div_check": "2026-10-07",
-      "highest_close": 18.5
+      "atr": 2.7975,
+      "atr_stop": 147.51,
+      "last_price": 154.5
     }
   },
   "trades": [
@@ -780,6 +778,32 @@
       "pnl": 7844.15,
       "reason": "Take-profit +34.4% (target 30%)",
       "time": "16:23"
+    },
+    {
+      "date": "2026-10-14",
+      "action": "SELL",
+      "ticker": "CK.BK",
+      "name": "CK",
+      "shares": 1500,
+      "price": 17.4,
+      "value": 26100.0,
+      "avg_cost": 18.2,
+      "pnl": -1333.5,
+      "reason": "ATR stop ฿17.47 (-4.4%)",
+      "time": "15:03"
+    },
+    {
+      "date": "2026-10-14",
+      "action": "BUY",
+      "ticker": "PTTEP.BK",
+      "name": "PTTEP",
+      "shares": 100,
+      "price": 154.5,
+      "value": 15450.0,
+      "avg_cost": 154.5,
+      "pnl": 0,
+      "reason": "BUY",
+      "time": "15:03"
     }
   ],
   "start_date": "2026-04-27",
