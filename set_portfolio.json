@@ -8,10 +8,10 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.188,
-      "atr_stop": 42.03,
+      "atr": 1.1593,
+      "atr_stop": 42.1,
       "last_price": 43.0,
-      "last_div_check": "2026-10-14",
+      "last_div_check": "2026-10-15",
       "highest_close": 45.0
     },
     "GFPT.BK": {
@@ -20,10 +20,10 @@
       "avg_cost": 10.2,
       "entry_date": "2026-08-18",
       "entry_score": 4,
-      "atr": 0.2631,
-      "atr_stop": 10.84,
-      "last_price": 11.100000381469727,
-      "last_div_check": "2026-10-14",
+      "atr": 0.2515,
+      "atr_stop": 10.87,
+      "last_price": 11.199999809265137,
+      "last_div_check": "2026-10-15",
       "highest_close": 11.5
     },
     "PTTEP.BK": {
@@ -34,8 +34,8 @@
       "entry_score": 2,
       "atr": 2.7975,
       "atr_stop": 147.51,
-      "last_price": 155.5,
-      "last_div_check": "2026-10-14",
+      "last_price": 153.5,
+      "last_div_check": "2026-10-15",
       "highest_close": 154.5
     }
   },
