@@ -1331,13 +1331,13 @@
     "fund_fetched": "2026-10-16"
   },
   "_last_reset_date": "2026-10-16",
-  "_check_count": 4,
+  "_check_count": 5,
   "_regime": {
     "regime": "BULL",
     "set_px": null,
     "ma200": null,
     "gap_pct": 0.0,
-    "updated": "2026-10-16 15:18"
+    "updated": "2026-10-16 15:33"
   },
   "_gap_alerted_date": "2026-10-15",
   "_fund_stale_alerted_date": "2026-10-15",
