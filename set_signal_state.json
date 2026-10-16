@@ -1331,17 +1331,17 @@
     "fund_fetched": "2026-10-16"
   },
   "_last_reset_date": "2026-10-16",
-  "_check_count": 7,
+  "_check_count": 8,
   "_regime": {
     "regime": "BULL",
     "set_px": null,
     "ma200": null,
     "gap_pct": 0.0,
-    "updated": "2026-10-16 16:03"
+    "updated": "2026-10-16 16:18"
   },
-  "_gap_alerted_date": "2026-10-15",
-  "_fund_stale_alerted_date": "2026-10-15",
-  "_max_hold_alerted_date": "2026-10-15",
+  "_gap_alerted_date": "2026-10-16",
+  "_fund_stale_alerted_date": "2026-10-16",
+  "_max_hold_alerted_date": "2026-10-16",
   "FM.BK": {
     "score": -3,
     "signal": "SELL",
@@ -1456,7 +1456,7 @@
     "SPRC.BK": "2026-10-07"
   },
   "_last_buy_date": "2026-10-14",
-  "_heartbeat_sent_date": "2026-10-15",
+  "_heartbeat_sent_date": "2026-10-16",
   "_div_summary_date": "2026-09-28",
   "_drought_alerted_date": "2026-08-07"
 }
