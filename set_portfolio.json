@@ -46,7 +46,9 @@
       "entry_score": 2,
       "atr": 0.5204,
       "atr_stop": 22.0,
-      "last_price": 23.299999237060547
+      "last_price": 23.299999237060547,
+      "last_div_check": "2026-10-19",
+      "highest_close": 23.3
     },
     "KTB.BK": {
       "name": "KTB",
@@ -55,8 +57,10 @@
       "entry_date": "2026-10-19",
       "entry_score": 2,
       "atr": 0.8447,
-      "atr_stop": 41.64,
-      "last_price": 43.75
+      "atr_stop": 41.89,
+      "last_price": 44.0,
+      "last_div_check": "2026-10-19",
+      "highest_close": 44.0
     }
   },
   "trades": [
