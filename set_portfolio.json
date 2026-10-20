@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 249882.27101770882,
+  "cash": 271458.19641725067,
   "holdings": {
     "CENTEL.BK": {
       "name": "CENTEL",
@@ -8,23 +8,11 @@
       "avg_cost": 35.75,
       "entry_date": "2026-06-15",
       "entry_score": 2,
-      "atr": 1.1479,
-      "atr_stop": 42.13,
-      "last_price": 43.0,
-      "last_div_check": "2026-10-19",
+      "atr": 1.1195,
+      "atr_stop": 42.2,
+      "last_price": 43.25,
+      "last_div_check": "2026-10-20",
       "highest_close": 45.0
-    },
-    "GFPT.BK": {
-      "name": "GFPT",
-      "shares": 2100,
-      "avg_cost": 10.2,
-      "entry_date": "2026-08-18",
-      "entry_score": 4,
-      "atr": 0.2515,
-      "atr_stop": 10.87,
-      "last_price": 11.0,
-      "last_div_check": "2026-10-19",
-      "highest_close": 11.5
     },
     "PTTEP.BK": {
       "name": "PTTEP",
@@ -32,11 +20,11 @@
       "avg_cost": 154.5,
       "entry_date": "2026-10-14",
       "entry_score": 2,
-      "atr": 2.7491,
-      "atr_stop": 149.63,
-      "last_price": 156.5,
-      "last_div_check": "2026-10-19",
-      "highest_close": 156.5
+      "atr": 2.7287,
+      "atr_stop": 151.18,
+      "last_price": 158.0,
+      "last_div_check": "2026-10-20",
+      "highest_close": 158.0
     },
     "SAWAD.BK": {
       "name": "SAWAD",
@@ -46,8 +34,8 @@
       "entry_score": 2,
       "atr": 0.5204,
       "atr_stop": 22.1,
-      "last_price": 23.200000762939453,
-      "last_div_check": "2026-10-19",
+      "last_price": 22.899999618530273,
+      "last_div_check": "2026-10-20",
       "highest_close": 23.4
     },
     "KTB.BK": {
@@ -58,8 +46,8 @@
       "entry_score": 2,
       "atr": 0.8447,
       "atr_stop": 41.89,
-      "last_price": 44.0,
-      "last_div_check": "2026-10-19",
+      "last_price": 43.25,
+      "last_div_check": "2026-10-20",
       "highest_close": 44.0
     }
   },
@@ -856,6 +844,19 @@
       "pnl": 0,
       "reason": "BUY",
       "time": "15:06"
+    },
+    {
+      "date": "2026-10-20",
+      "action": "SELL",
+      "ticker": "GFPT.BK",
+      "name": "GFPT",
+      "shares": 2100,
+      "price": 10.3,
+      "value": 21630.0,
+      "avg_cost": 10.2,
+      "pnl": 102.38,
+      "reason": "ATR stop ฿10.87 (--1.0%)",
+      "time": "14:56"
     }
   ],
   "start_date": "2026-04-27",
