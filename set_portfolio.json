@@ -1,30 +1,18 @@
 {
   "capital": 300000.0,
-  "cash": 271458.19641725067,
+  "cash": 290011.69641725067,
   "holdings": {
-    "CENTEL.BK": {
-      "name": "CENTEL",
-      "shares": 400,
-      "avg_cost": 35.75,
-      "entry_date": "2026-06-15",
-      "entry_score": 2,
-      "atr": 1.2525,
-      "atr_stop": 42.37,
-      "last_price": 46.0,
-      "last_div_check": "2026-10-22",
-      "highest_close": 45.5
-    },
     "PTTEP.BK": {
       "name": "PTTEP",
       "shares": 100,
       "avg_cost": 154.5,
       "entry_date": "2026-10-14",
       "entry_score": 2,
-      "atr": 3.0753,
-      "atr_stop": 155.31,
-      "last_price": 162.0,
-      "last_div_check": "2026-10-22",
-      "highest_close": 163.0
+      "atr": 3.1338,
+      "atr_stop": 156.17,
+      "last_price": 164.0,
+      "last_div_check": "2026-10-27",
+      "highest_close": 164.0
     },
     "SAWAD.BK": {
       "name": "SAWAD",
@@ -32,10 +20,10 @@
       "avg_cost": 23.3,
       "entry_date": "2026-10-19",
       "entry_score": 2,
-      "atr": 0.5099,
-      "atr_stop": 22.13,
-      "last_price": 22.600000381469727,
-      "last_div_check": "2026-10-22",
+      "atr": 0.5008,
+      "atr_stop": 22.15,
+      "last_price": 22.399999618530273,
+      "last_div_check": "2026-10-27",
       "highest_close": 23.4
     },
     "KTB.BK": {
@@ -44,10 +32,10 @@
       "avg_cost": 43.75,
       "entry_date": "2026-10-19",
       "entry_score": 2,
-      "atr": 0.8399,
-      "atr_stop": 41.9,
+      "atr": 0.8263,
+      "atr_stop": 41.93,
       "last_price": 44.0,
-      "last_div_check": "2026-10-22",
+      "last_div_check": "2026-10-27",
       "highest_close": 44.0
     }
   },
@@ -857,6 +845,19 @@
       "pnl": 102.38,
       "reason": "ATR stop ฿10.87 (--1.0%)",
       "time": "14:56"
+    },
+    {
+      "date": "2026-10-27",
+      "action": "SELL",
+      "ticker": "CENTEL.BK",
+      "name": "CENTEL",
+      "shares": 400,
+      "price": 46.5,
+      "value": 18600.0,
+      "avg_cost": 35.75,
+      "pnl": 4217.75,
+      "reason": "Take-profit +30.1% (target 30%)",
+      "time": "15:24"
     }
   ],
   "start_date": "2026-04-27",
