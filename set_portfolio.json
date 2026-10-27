@@ -8,11 +8,11 @@
       "avg_cost": 154.5,
       "entry_date": "2026-10-14",
       "entry_score": 2,
-      "atr": 3.1695,
-      "atr_stop": 157.08,
-      "last_price": 165.0,
+      "atr": 3.2767,
+      "atr_stop": 157.81,
+      "last_price": 166.0,
       "last_div_check": "2026-10-27",
-      "highest_close": 165.0
+      "highest_close": 166.0
     },
     "SAWAD.BK": {
       "name": "SAWAD",
@@ -22,7 +22,7 @@
       "entry_score": 2,
       "atr": 0.5008,
       "atr_stop": 22.15,
-      "last_price": 22.299999237060547,
+      "last_price": 22.399999618530273,
       "last_div_check": "2026-10-27",
       "highest_close": 23.4
     },
@@ -34,7 +34,7 @@
       "entry_score": 2,
       "atr": 0.8263,
       "atr_stop": 42.18,
-      "last_price": 44.25,
+      "last_price": 44.0,
       "last_div_check": "2026-10-27",
       "highest_close": 44.25
     }
