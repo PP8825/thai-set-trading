@@ -33,10 +33,10 @@
       "entry_date": "2026-10-19",
       "entry_score": 2,
       "atr": 0.8208,
-      "atr_stop": 42.45,
-      "last_price": 44.5,
+      "atr_stop": 42.7,
+      "last_price": 44.75,
       "last_div_check": "2026-10-28",
-      "highest_close": 44.5
+      "highest_close": 44.75
     }
   },
   "trades": [
