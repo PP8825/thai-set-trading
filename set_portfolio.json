@@ -10,8 +10,8 @@
       "entry_score": 2,
       "atr": 3.2767,
       "atr_stop": 157.81,
-      "last_price": 162.5,
-      "last_div_check": "2026-10-28",
+      "last_price": 163.0,
+      "last_div_check": "2026-10-29",
       "highest_close": 166.0
     },
     "SAWAD.BK": {
@@ -22,8 +22,8 @@
       "entry_score": 2,
       "atr": 0.4936,
       "atr_stop": 22.17,
-      "last_price": 22.399999618530273,
-      "last_div_check": "2026-10-28",
+      "last_price": 22.600000381469727,
+      "last_div_check": "2026-10-29",
       "highest_close": 23.4
     },
     "KTB.BK": {
@@ -32,10 +32,10 @@
       "avg_cost": 43.75,
       "entry_date": "2026-10-19",
       "entry_score": 2,
-      "atr": 0.8208,
-      "atr_stop": 42.7,
-      "last_price": 44.5,
-      "last_div_check": "2026-10-28",
+      "atr": 0.8158,
+      "atr_stop": 42.71,
+      "last_price": 44.0,
+      "last_div_check": "2026-10-29",
       "highest_close": 44.75
     }
   },
