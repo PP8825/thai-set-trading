@@ -1,6 +1,6 @@
 {
   "capital": 300000.0,
-  "cash": 290011.69641725067,
+  "cash": 312056.4467977667,
   "holdings": {
     "PTTEP.BK": {
       "name": "PTTEP",
@@ -10,21 +10,9 @@
       "entry_score": 2,
       "atr": 3.2767,
       "atr_stop": 157.81,
-      "last_price": 163.5,
-      "last_div_check": "2026-10-29",
+      "last_price": 164.0,
+      "last_div_check": "2026-10-30",
       "highest_close": 166.0
-    },
-    "SAWAD.BK": {
-      "name": "SAWAD",
-      "shares": 1000,
-      "avg_cost": 23.3,
-      "entry_date": "2026-10-19",
-      "entry_score": 2,
-      "atr": 0.4936,
-      "atr_stop": 22.17,
-      "last_price": 22.5,
-      "last_div_check": "2026-10-29",
-      "highest_close": 23.4
     },
     "KTB.BK": {
       "name": "KTB",
@@ -32,10 +20,10 @@
       "avg_cost": 43.75,
       "entry_date": "2026-10-19",
       "entry_score": 2,
-      "atr": 0.8158,
-      "atr_stop": 42.71,
-      "last_price": 44.0,
-      "last_div_check": "2026-10-29",
+      "atr": 0.8111,
+      "atr_stop": 42.72,
+      "last_price": 43.75,
+      "last_div_check": "2026-10-30",
       "highest_close": 44.75
     }
   },
@@ -858,6 +846,19 @@
       "pnl": 4217.75,
       "reason": "Take-profit +30.1% (target 30%)",
       "time": "15:24"
+    },
+    {
+      "date": "2026-10-30",
+      "action": "SELL",
+      "ticker": "SAWAD.BK",
+      "name": "SAWAD",
+      "shares": 1000,
+      "price": 22.1,
+      "value": 22100.0,
+      "avg_cost": 23.3,
+      "pnl": -1313.5,
+      "reason": "ATR stop ฿22.17 (-5.2%)",
+      "time": "16:04"
     }
   ],
   "start_date": "2026-04-27",
